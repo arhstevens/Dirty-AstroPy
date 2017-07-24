@@ -667,12 +667,10 @@ def centreonhalo(haloid,star,gas,dm,bh=None):
 
 
 	if len(xf)>0:
-		print('\nNumber of baryon particles from (sub)halo '+str(haloid)+' = '+str(len(xf)))
+#		print('\nNumber of baryon particles from (sub)halo '+str(haloid)+' = '+str(len(xf)))
 		xf0,yf0,zf0,vxf0,vyf0,vzf0 = xf[0],yf[0],zf[0],vxf[0],vyf[0],vzf[0] # Store original coords/velocities of 1 particle
 		
-#		mdx,mdy,mdz = xf*mf,yf*mf,zf*mf # Mass-distance vectors for the particles pertaining to the original halo
-
-#		xf,yf,zf,vxf,vyf,vzf = xf-divide(np.mean(mdx), np.mean(mf)), yf-divide(np.mean(mdy), np.mean(mf)), zf-divide(np.mean(mdz), np.mean(mf)), vxf-np.mean(vx), vyf-np.mean(vy), vzf-np.mean(vz)
+        # Why not recentregalall?
 		xf,yf,zf,vxf,vyf,vzf = recentregal(xf,yf,zf,vxf,vyf,vzf,mf) # Properly centre on the halo
 		
 		delta_x, delta_y, delta_z = xf[0]-xf0, yf[0]-yf0, zf[0]-zf0
@@ -711,7 +709,9 @@ def centreonhalo(haloid,star,gas,dm,bh=None):
 		else: # If still not enough, then don't bother with rotating
 			print 'centreonhalo will not rotate particles due to lack of baryons'
 			rot = False
-
+                
+		halo_coords = -np.array([delta_x, delta_y, delta_z])
+		halo_vel = -np.array([delta_vx, delta_vy, delta_vz])
 
 		if rot==True:
 			x,y,z = rotate(x,y,z,axis,angle) # Rotate positions so z is normal to the disk
@@ -737,6 +737,7 @@ def centreonhalo(haloid,star,gas,dm,bh=None):
 	else: # Just in case one gets through that doesn't actually have any particles (happened in trials)
 		halo_coords, halo_vel = np.array([0,0,0]), np.array([0,0,0])
 		print 'centreonhalo failed due to lack of baryons in the desired halo'
+
 
 	if bh is None:
 		return [halo_coords,halo_vel],[x,y,z],[vx,vy,vz],[x_g,y_g,z_g],[vx_g,vy_g,vz_g],[x_dm,y_dm,z_dm],[vx_dm,vy_dm,vz_dm] # Returns the original coordinates if the halo particles can't be identified.
