@@ -4,11 +4,10 @@ This repository comprises a range of various functions for reading, plotting, an
 
 Note, at the moment, there are some other dependencies on others' code, which I intentionally have not added to this repository.  For now, if any routines look of interest you, rip them out and add them into your own codebase.  I will slowly make efforts to improve descriptions / comments / code efficiency throughout.
 
-In principle, the way one would directly import these routines is to have the following code at the top of your Python script:
-`
-import sys  
-sys.path.insert(0, '/path/Dirty-AstroPy/')  
-from galprops import galplot as gp  
-from galprops import galread as gr  
-from galprops import galcalc as gc  
-`
+In principle, the way one would directly import these routines is to have the following code at the top of your Python script:  
+`import sys`  
+`sys.path.insert(0, '/path/Dirty-AstroPy/')`  
+`from galprops import galplot as gp`  
+`from galprops import galread as gr`  
+`from galprops import galcalc as gc`  
+
