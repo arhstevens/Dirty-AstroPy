@@ -6,9 +6,9 @@ Note, at the moment, there are some other dependencies on others' code, which I 
 
 In principle, the way one would directly import these routines is to have the following code at the top of your Python script:
 `
-import sys
-sys.path.insert(0, '/path/Dirty-AstroPy/')
-from galprops import galplot as gp
-from galprops import galread as gr
-from galprops import galcalc as gc
+import sys  
+sys.path.insert(0, '/path/Dirty-AstroPy/')  
+from galprops import galplot as gp  
+from galprops import galread as gr  
+from galprops import galcalc as gc  
 `
