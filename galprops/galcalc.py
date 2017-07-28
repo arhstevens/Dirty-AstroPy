@@ -883,7 +883,7 @@ def bulgemass(r,a,d,n,steps=512):
 
 
 
-def virrad(mass,x,y,z,rho_crit,r_max=400000.,it_max=400,densfac=200.):
+def virial_radius(mass,r,rho_crit,r_max=400000.,it_max=400,densfac=200.):
 	# Find the radius of a halo with an internal average density 200 times greater than the critical density of the universe.
 	
 	###  INPUTS ###
@@ -895,9 +895,8 @@ def virrad(mass,x,y,z,rho_crit,r_max=400000.,it_max=400,densfac=200.):
 	# densfac = factor of critical density to find within the radius
 	### ------- ###
 	#print('\nEntering virrad')
-	start = time()
-	
-	r = np.sqrt(x**2+y**2+z**2) # Actual radii of the particles
+#	start = time()
+
 	rho_av = lambda r_sph : np.sum(mass[r<r_sph])/((4./3.)*np.pi*r_sph**3) # r_sph is the radius of a sphere to find the internal average density
 	
 	tol = 1e-3 # This is the tolerance, i.e. must find r_200 to within 0.1%
@@ -919,6 +918,9 @@ def virrad(mass,x,y,z,rho_crit,r_max=400000.,it_max=400,densfac=200.):
 	return r_try
 
 
+def virrad(mass,x,y,z,rho_crit,r_max=400000.,it_max=400,densfac=200.):
+    r = np.sqrt(x**2+y**2+z**2) # Actual radii of the particles
+    return virial_radius(mass,r,rho_crit,r_max,it_max,densfac)
 
 
 
