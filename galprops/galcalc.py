@@ -895,7 +895,7 @@ def virial_radius(mass,r,rho_crit,r_max=400000.,it_max=400,densfac=200.):
 	# densfac = factor of critical density to find within the radius
 	### ------- ###
 	#print('\nEntering virrad')
-#	start = time()
+	start = time()
 
 	rho_av = lambda r_sph : np.sum(mass[r<r_sph])/((4./3.)*np.pi*r_sph**3) # r_sph is the radius of a sphere to find the internal average density
 	
