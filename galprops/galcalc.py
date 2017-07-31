@@ -751,8 +751,13 @@ def centreonhalo2(haloid, pos, vel, mass, ids):
     star = [pos[0][:,0], pos[0][:,1], pos[0][:,2], mass[0], ids[0], vel[0][:,0], vel[0][:,1], vel[0][:,2]]
     gas = [pos[1][:,0], pos[1][:,1], pos[1][:,2], mass[1], ids[1], vel[1][:,0], vel[1][:,1], vel[1][:,2]]
     dm = [pos[2][:,0], pos[2][:,1], pos[2][:,2], mass[2], ids[2], vel[2][:,0], vel[2][:,1], vel[2][:,2]]
-    [halo_coords,halo_vel], posl_s, vell_s, posl_g, vell_g, posl_dm, vell_dm = centreonhalo(haloid,star,gas,dm)
-    return [halo_coords,halo_vel], [np.array(posl_s).T, np.array(posl_g).T, np.array(posl_dm).T], [np.array(vell_s).T, np.array(vell_g).T, np.array(vell_dm).T]
+    if len(pos)==4:
+        bh = [pos[3][:,0], pos[3][:,1], pos[3][:,2]]
+        [halo_coords,halo_vel], posl_s, vell_s, posl_g, vell_g, posl_dm, vell_dm, posl_bh = centreonhalo(haloid,star,gas,dm,bh)
+        return [halo_coords,halo_vel], [np.array(posl_s).T, np.array(posl_g).T, np.array(posl_dm).T, np.array(posl_bh).T], [np.array(vell_s).T, np.array(vell_g).T, np.array(vell_dm).T]
+    else:
+        [halo_coords,halo_vel], posl_s, vell_s, posl_g, vell_g, posl_dm, vell_dm = centreonhalo(haloid,star,gas,dm)
+        return [halo_coords,halo_vel], [np.array(posl_s).T, np.array(posl_g).T, np.array(posl_dm).T], [np.array(vell_s).T, np.array(vell_g).T, np.array(vell_dm).T]
 
 
 
