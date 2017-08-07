@@ -455,6 +455,13 @@ def massgain(id1,x1,y1,z1,r1,t1,mass,id2,x2,y2,z2,r2,t2):
 
 def recentre(x,y,z,vx,vy,vz,mass,r=0):
 	# Recentre particles to have the COM at 0,0 based on mass within a prescribed radius and find frame where galaxy has no net velocity
+    assert np.all(np.isfinite(x))
+    assert np.all(np.isfinite(y))
+    assert np.all(np.isfinite(z))
+    assert np.all(np.isfinite(vx))
+    assert np.all(np.isfinite(vy))
+    assert np.all(np.isfinite(vz))
+    assert np.all(np.isfinite(mass))
     if r==0:
         filt = np.array([True]*len(x))
     else:
@@ -713,7 +720,7 @@ def centreonhalo(haloid,star,gas,dm,bh=None):
 		halo_coords = -np.array([delta_x, delta_y, delta_z])
 		halo_vel = -np.array([delta_vx, delta_vy, delta_vz])
 
-		if rot==True:
+		if rot:
 			x,y,z = rotate(x,y,z,axis,angle) # Rotate positions so z is normal to the disk
 			vx,vy,vz = rotate(vx,vy,vz,axis,angle)
 			
@@ -725,7 +732,7 @@ def centreonhalo(haloid,star,gas,dm,bh=None):
 
 		if bh is not None:
 			x_bh, y_bh, z_bh = x_bh+delta_x, y_bh+delta_y, z_bh+delta_z # Recentre DM to match coords
-			if rot==True: x_bh, y_bh, z_bh = rotate(x_bh,y_bh,z_bh,axis,angle) # Rotate to match coords
+			if rot: x_bh, y_bh, z_bh = rotate(x_bh,y_bh,z_bh,axis,angle) # Rotate to match coords
 
 	elif len(x_dm)>0: # If no baryons to centre on, then just use DM data (won't rotate)
 		halo_coords = np.array([np.mean(x_dm[fdm]*mass_dm[fdm])/np.mean(x_dm[fdm]), np.mean(y_dm[fdm]*mass_dm[fdm])/np.mean(y_dm[fdm]), np.mean(y_dm[fdm]*mass_dm[fdm])/np.mean(y_dm[fdm])])
@@ -733,10 +740,21 @@ def centreonhalo(haloid,star,gas,dm,bh=None):
 		
 		x_dm, y_dm, z_dm = x_dm-halo_coords[0], y_dm-halo_coords[1], z_dm-halo_coords[2] # Recentre DM to match coords
 		vx_dm,vy_dm,vz_dm = vx_dm-halo_vel[0], vy_dm-halo_vel[1], vz_dm-halo_vel[2]
+    
+        x, y, z = x-halo_coords[0], y-halo_coords[1], z-halo_coords[2]
+        vx, vy, vz = vx-halo_vel[0], vy-halo_vel[1], vz-halo_vel[2]
+
+        x_g, y_g, z_g = x_g-halo_coords[0], y_g-halo_coords[1], z_g-halo_coords[2]
+        vx_g, vy_g, vz_g = vx_g-halo_vel[0], vy_g-halo_vel[1], vz_g-halo_vel[2]
+
+        if bh is not None:
+            x_bh, y_bh, z_bh = x_bh-halo_coords[0], y_bh-halo_coords[1], z_bh-halo_coords[2]
 
 	else: # Just in case one gets through that doesn't actually have any particles (happened in trials)
 		halo_coords, halo_vel = np.array([0,0,0]), np.array([0,0,0])
 		print 'centreonhalo failed due to lack of baryons in the desired halo'
+
+	assert np.all(np.isfinite(x))
 
 
 	if bh is None:
@@ -2433,7 +2451,7 @@ def rahmati2013_neutral_frac(redshift, nH, T, onlyA1=True,noCol = False,onlyCol 
         beta_hi      =  1.77
         f_hi         =  0.01
     else:
-        print '[rahmati2013_neutral_frac] ERROR: parameters only valid for z < 5, you asked for z = ', z
+        print '[rahmati2013_neutral_frac] ERROR: parameters only valid for z < 5, you asked for z = ', redshift
         exit()
     
     
@@ -2695,8 +2713,11 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=1):
     data = gr.HaardtMadau12()
     redshiftHM12 = data[0,:]
     UVbackground = data[1,:]/2.2e-12
-    arg = np.where(redshiftHM12 >= redshift)[0][0]
-    ISRF_floor = UVbackground[arg-1] + (redshift-redshiftHM12[arg-1])*(UVbackground[arg]-UVbackground[arg-1])/(redshiftHM12[arg]-redshiftHM12[arg-1]) if arg>0 else UVbackground[0]
+    try:
+        arg = np.where(redshiftHM12 >= redshift)[0][0]
+        ISRF_floor = UVbackground[arg-1] + (redshift-redshiftHM12[arg-1])*(UVbackground[arg]-UVbackground[arg-1])/(redshiftHM12[arg]-redshiftHM12[arg-1]) if arg>0 else UVbackground[0]
+    except IndexError:
+        ISRF_floor = 0.0
 
 
     f_th = 1.0 # Assuming all gas is thermal
