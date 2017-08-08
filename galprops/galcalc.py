@@ -656,10 +656,10 @@ def centreonhalo(haloid,star,gas,dm,bh=None):
 	# Centres on stars or baryons centre of mass.
 	# Each of stars, gas, dm should be lists of arrays in the order [x,y,z,mass,hid,vx,vy,vz]
 	# At this stage, bh only requires [x,y,z]
-	
 	[x, y, z, mass, hid, vx, vy, vz] = star
 	[x_g, y_g, z_g, mass_g, hid_g, vx_g, vy_g, vz_g] = gas
 	[x_dm, y_dm, z_dm, mass_dm, hid_dm, vx_dm, vy_dm, vz_dm] = dm
+	assert np.all(np.isfinite(x))
 	
 	if bh is not None:
 		x_bh, y_bh, z_bh = bh[0], bh[1], bh[2] # Read Black Holes if they're provided
@@ -690,6 +690,8 @@ def centreonhalo(haloid,star,gas,dm,bh=None):
 		vx += delta_vx
 		vy += delta_vy
 		vz += delta_vz
+    
+		assert np.all(np.isfinite(x))
         
 		# Translate all the gas
 		x_g += delta_x
@@ -723,7 +725,8 @@ def centreonhalo(haloid,star,gas,dm,bh=None):
 		if rot:
 			x,y,z = rotate(x,y,z,axis,angle) # Rotate positions so z is normal to the disk
 			vx,vy,vz = rotate(vx,vy,vz,axis,angle)
-			
+			assert np.all(np.isfinite(x))
+            
 			x_g, y_g, z_g = rotate(x_g,y_g,z_g,axis,angle) # Rotate gas to match coords
 			vx_g,vy_g,vz_g = rotate(vx_g,vy_g,vz_g,axis,angle) # Ditto velocities
 			
@@ -743,6 +746,7 @@ def centreonhalo(haloid,star,gas,dm,bh=None):
     
         x, y, z = x-halo_coords[0], y-halo_coords[1], z-halo_coords[2]
         vx, vy, vz = vx-halo_vel[0], vy-halo_vel[1], vz-halo_vel[2]
+        assert np.all(np.isfinite(x))
 
         x_g, y_g, z_g = x_g-halo_coords[0], y_g-halo_coords[1], z_g-halo_coords[2]
         vx_g, vy_g, vz_g = vx_g-halo_vel[0], vy_g-halo_vel[1], vz_g-halo_vel[2]
@@ -2000,19 +2004,29 @@ def hernquist_2Dannulus_mass(r_2D_bins, a, r_trunc, mass_trunc, N=1e6):
 
 
 def compute_rotation_to_z(x,y,z,vx,vy,vz,m):
-    # Copied from Marie but added mass dependence
-    Lxtot=sum(m*y*vz-m*z*vy)
-    Lytot=sum(m*z*vx-m*x*vz)
-    Lztot=sum(m*x*vy-m*y*vx)
+    # Modified version of Marie's function
+    Lxtot = sum(m*y*vz-m*z*vy)
+    Lytot = sum(m*z*vx-m*x*vz)
+    Lztot = sum(m*x*vy-m*y*vx)
     
-    axis=np.zeros(3)
-    Lnorm=np.sqrt(Lxtot**2+Lytot**2+Lztot**2)
-    Lnorm2=np.sqrt(Lxtot**2+Lytot**2)
+    axis = np.zeros(3)
+    Lnorm = np.sqrt(Lxtot**2+Lytot**2+Lztot**2)
+    Lnorm2 = np.sqrt(Lxtot**2+Lytot**2)
     
-    axis[0]=Lytot/Lnorm2
-    axis[1]=-Lxtot/Lnorm2
-    axis[2]=0
-    angle=np.arccos(Lztot/Lnorm)
+    if Lnorm2>0:
+        axis[0]=Lytot/Lnorm2
+        axis[1]=-Lxtot/Lnorm2
+    else:
+        print 'No appropriate rotation axis found in compute_rotation_to_z'
+        axis[0] = 0.
+        axis[1] = 0.
+    axis[2]=0.
+
+    if Lnorm>0:
+        angle = np.arccos(Lztot/Lnorm)
+    else:
+        print 'No appropriate angle found in compute_rotation_to_z'
+        angle = 0.
     
     return axis, angle
 
