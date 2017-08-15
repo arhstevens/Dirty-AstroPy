@@ -679,25 +679,23 @@ def centreonhalo(haloid,star,gas,dm,bh=None,use_baryons=True):
 
 		if len(x[fs])>5: # use stars if enough for centering
 			x0,y0,z0,vx0,vy0,vz0 = x[fs][0], y[fs][0], z[fs][0], vx[fs][0], vy[fs][0], vz[fs][0]
-			x,y,z,vx,vy,vz = recentregal(x[fs],y[fs],z[fs],vx[fs],vy[fs],vz[fs],m[fs])
-			delta_x, delta_y, delta_z = x[0]-x0, y[0]-y0, z[0]-z0
+			xc,yc,zc,vxc,vyc,vzc = recentregal(x[fs],y[fs],z[fs],vx[fs],vy[fs],vz[fs],mass[fs])
+			delta_x, delta_y, delta_z = xc[0]-x0, yc[0]-y0, zc[0]-z0
 			delta_vx, delta_vy, delta_vz = vx[0]-vx0, vy[0]-vy0, vz[0]-vz0
 		else:
 			xf0,yf0,zf0,vxf0,vyf0,vzf0 = xf[0],yf[0],zf[0],vxf[0],vyf[0],vzf[0] # Store original coords/velocities of 1 particle
-		
 			# Why not recentregalall?
 			xf,yf,zf,vxf,vyf,vzf = recentregal(xf,yf,zf,vxf,vyf,vzf,mf) # Properly centre on the halo
-            
 			delta_x, delta_y, delta_z = xf[0]-xf0, yf[0]-yf0, zf[0]-zf0
 			delta_vx, delta_vy, delta_vz = vxf[0]-vxf0, vyf[0]-vyf0, vzf[0]-vzf0
             
-			# Translate all the stars
-			x += delta_x
-			y += delta_y
-			z += delta_z
-			vx += delta_vx
-			vy += delta_vy
-			vz += delta_vz
+        # Translate all the stars
+        x += delta_x
+        y += delta_y
+        z += delta_z
+        vx += delta_vx
+        vy += delta_vy
+        vz += delta_vz
     
 		assert np.all(np.isfinite(x))
         
@@ -717,7 +715,7 @@ def centreonhalo(haloid,star,gas,dm,bh=None,use_baryons=True):
 		vy_dm += delta_vy
 		vz_dm += delta_vz
 
-		if len(x)>5: # Use stars to determine the disk
+		if len(x[fs])>5: # Use stars to determine the disk
 			axis, angle = compute_rotation_to_z(x[fs],y[fs],z[fs],vx[fs],vy[fs],vz[fs],mass[fs]) # Calculate angle to rotate coordinates
 			rot = True
 		elif len(xf)>5: # If not enough particles use all baryons
