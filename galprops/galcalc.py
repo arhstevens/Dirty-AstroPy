@@ -489,14 +489,15 @@ def com(x,y,z,mass):
 def recentregal(x,y,z,vx,vy,vz,mass):
 	# Run recentre multiple times to ensure the centre of coords is in fact the galaxy's COM
 	x,y,z,vx,vy,vz = recentre(x,y,z,vx,vy,vz,mass,0.)
-	x,y,z,vx,vy,vz = recentre(x,y,z,vx,vy,vz,mass,200000.)        
-	x,y,z,vx,vy,vz = recentre(x,y,z,vx,vy,vz,mass,40000.)
+	x,y,z,vx,vy,vz = recentre(x,y,z,vx,vy,vz,mass,200000.)
+	x,y,z,vx,vy,vz = recentre(x,y,z,vx,vy,vz,mass,100000.)
+	x,y,z,vx,vy,vz = recentre(x,y,z,vx,vy,vz,mass,50000.)
 	x,y,z,vx,vy,vz = recentre(x,y,z,vx,vy,vz,mass,30000.)
+	x,y,z,vx,vy,vz = recentre(x,y,z,vx,vy,vz,mass,25000.)
 	x,y,z,vx,vy,vz = recentre(x,y,z,vx,vy,vz,mass,20000.)
-	x,y,z,vx,vy,vz = recentre(x,y,z,vx,vy,vz,mass,20000.)
-	x,y,z,vx,vy,vz = recentre(x,y,z,vx,vy,vz,mass,10000.)
-	x,y,z,vx,vy,vz = recentre(x,y,z,vx,vy,vz,mass,10000.)
-	x,y,z,vx,vy,vz = recentre(x,y,z,vx,vy,vz,mass,5000.)
+#	x,y,z,vx,vy,vz = recentre(x,y,z,vx,vy,vz,mass,10000.)
+#	x,y,z,vx,vy,vz = recentre(x,y,z,vx,vy,vz,mass,10000.)
+#	x,y,z,vx,vy,vz = recentre(x,y,z,vx,vy,vz,mass,5000.)
 	return x,y,z,vx,vy,vz
 
 
@@ -651,7 +652,7 @@ def rotategalall2(pos,vel,m,r=25e3):
     return x,y,z,vx,vy,vz,angle
 
 
-def centreonhalo(haloid,star,gas,dm,bh=None):
+def centreonhalo(haloid,star,gas,dm,bh=None,use_baryons=True):
 	# Recentre the coordinate system and frame of reference onto a DIFFERENT halo/galaxy.
 	# Centres on stars or baryons centre of mass.
 	# Each of stars, gas, dm should be lists of arrays in the order [x,y,z,mass,hid,vx,vy,vz]
@@ -673,23 +674,30 @@ def centreonhalo(haloid,star,gas,dm,bh=None):
 	mf = np.concatenate((mass[fs],mass_g[fg])) # Filtered baryons' masses
 
 
-	if len(xf)>0:
+	if (len(xf)>5 or len(xf)>len(x_dm)) and use_baryons: # set minimum number of particles, else use DM
 #		print('\nNumber of baryon particles from (sub)halo '+str(haloid)+' = '+str(len(xf)))
-		xf0,yf0,zf0,vxf0,vyf0,vzf0 = xf[0],yf[0],zf[0],vxf[0],vyf[0],vzf[0] # Store original coords/velocities of 1 particle
+
+		if len(x[fs])>5: # use stars if enough for centering
+			x0,y0,z0,vx0,vy0,vz0 = x[fs][0], y[fs][0], z[fs][0], vx[fs][0], vy[fs][0], vz[fs][0]
+			x,y,z,vx,vy,vz = recentregal(x[fs],y[fs],z[fs],vx[fs],vy[fs],vz[fs],m[fs])
+			delta_x, delta_y, delta_z = x[0]-x0, y[0]-y0, z[0]-z0
+			delta_vx, delta_vy, delta_vz = vx[0]-vx0, vy[0]-vy0, vz[0]-vz0
+		else:
+			xf0,yf0,zf0,vxf0,vyf0,vzf0 = xf[0],yf[0],zf[0],vxf[0],vyf[0],vzf[0] # Store original coords/velocities of 1 particle
 		
-        # Why not recentregalall?
-		xf,yf,zf,vxf,vyf,vzf = recentregal(xf,yf,zf,vxf,vyf,vzf,mf) # Properly centre on the halo
-		
-		delta_x, delta_y, delta_z = xf[0]-xf0, yf[0]-yf0, zf[0]-zf0
-		delta_vx, delta_vy, delta_vz = vxf[0]-vxf0, vyf[0]-vyf0, vzf[0]-vzf0
-        
-		# Translate all the stars
-		x += delta_x
-		y += delta_y
-		z += delta_z
-		vx += delta_vx
-		vy += delta_vy
-		vz += delta_vz
+			# Why not recentregalall?
+			xf,yf,zf,vxf,vyf,vzf = recentregal(xf,yf,zf,vxf,vyf,vzf,mf) # Properly centre on the halo
+            
+			delta_x, delta_y, delta_z = xf[0]-xf0, yf[0]-yf0, zf[0]-zf0
+			delta_vx, delta_vy, delta_vz = vxf[0]-vxf0, vyf[0]-vyf0, vzf[0]-vzf0
+            
+			# Translate all the stars
+			x += delta_x
+			y += delta_y
+			z += delta_z
+			vx += delta_vx
+			vy += delta_vy
+			vz += delta_vz
     
 		assert np.all(np.isfinite(x))
         
@@ -756,7 +764,7 @@ def centreonhalo(haloid,star,gas,dm,bh=None):
 
 	else: # Just in case one gets through that doesn't actually have any particles (happened in trials)
 		halo_coords, halo_vel = np.array([0,0,0]), np.array([0,0,0])
-		print 'centreonhalo failed due to lack of baryons in the desired halo'
+		print 'centreonhalo failed due to lack of particles in the desired halo'
 
 	assert np.all(np.isfinite(x))
 
@@ -767,7 +775,7 @@ def centreonhalo(haloid,star,gas,dm,bh=None):
 		return [halo_coords,halo_vel],[x,y,z],[vx,vy,vz],[x_g,y_g,z_g],[vx_g,vy_g,vz_g],[x_dm,y_dm,z_dm],[vx_dm,vy_dm,vz_dm],[x_bh,y_bh,z_bh]
 
 
-def centreonhalo2(haloid, pos, vel, mass, ids):
+def centreonhalo2(haloid, pos, vel, mass, ids, use_baryons=True):
     # Each input (except haloid) is a list, where stars are first, gas second, DM third
     
     star = [pos[0][:,0], pos[0][:,1], pos[0][:,2], mass[0], ids[0], vel[0][:,0], vel[0][:,1], vel[0][:,2]]
@@ -775,10 +783,10 @@ def centreonhalo2(haloid, pos, vel, mass, ids):
     dm = [pos[2][:,0], pos[2][:,1], pos[2][:,2], mass[2], ids[2], vel[2][:,0], vel[2][:,1], vel[2][:,2]]
     if len(pos)==4:
         bh = [pos[3][:,0], pos[3][:,1], pos[3][:,2]]
-        [halo_coords,halo_vel], posl_s, vell_s, posl_g, vell_g, posl_dm, vell_dm, posl_bh = centreonhalo(haloid,star,gas,dm,bh)
+        [halo_coords,halo_vel], posl_s, vell_s, posl_g, vell_g, posl_dm, vell_dm, posl_bh = centreonhalo(haloid,star,gas,dm,bh,use_baryons)
         return [halo_coords,halo_vel], [np.array(posl_s).T, np.array(posl_g).T, np.array(posl_dm).T, np.array(posl_bh).T], [np.array(vell_s).T, np.array(vell_g).T, np.array(vell_dm).T]
     else:
-        [halo_coords,halo_vel], posl_s, vell_s, posl_g, vell_g, posl_dm, vell_dm = centreonhalo(haloid,star,gas,dm)
+        [halo_coords,halo_vel], posl_s, vell_s, posl_g, vell_g, posl_dm, vell_dm = centreonhalo(haloid,star,gas,dm,use_baryons=use_baryons)
         return [halo_coords,halo_vel], [np.array(posl_s).T, np.array(posl_g).T, np.array(posl_dm).T], [np.array(vell_s).T, np.array(vell_g).T, np.array(vell_dm).T]
 
 
