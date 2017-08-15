@@ -689,13 +689,13 @@ def centreonhalo(haloid,star,gas,dm,bh=None,use_baryons=True):
 			delta_x, delta_y, delta_z = xf[0]-xf0, yf[0]-yf0, zf[0]-zf0
 			delta_vx, delta_vy, delta_vz = vxf[0]-vxf0, vyf[0]-vyf0, vzf[0]-vzf0
             
-        # Translate all the stars
-        x += delta_x
-        y += delta_y
-        z += delta_z
-        vx += delta_vx
-        vy += delta_vy
-        vz += delta_vz
+		# Translate all the stars
+		x += delta_x
+		y += delta_y
+		z += delta_z
+		vx += delta_vx
+		vy += delta_vy
+		vz += delta_vz
     
 		assert np.all(np.isfinite(x))
         
