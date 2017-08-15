@@ -924,7 +924,7 @@ def virial_radius(mass,r,rho_crit,r_max=400000.,it_max=400,densfac=200.):
 	#print('\nEntering virrad')
 	start = time()
 
-	rho_av = lambda r_sph : np.sum(mass[r<r_sph])/((4./3.)*np.pi*r_sph**3) # r_sph is the radius of a sphere to find the internal average density
+	rho_av = lambda r_sph : np.sum(mass[r<=r_sph])/((4./3.)*np.pi*r_sph**3) # r_sph is the radius of a sphere to find the internal average density
 	
 	tol = 1e-3 # This is the tolerance, i.e. must find r_200 to within 0.1%
 	left = 0. # Left bound for selecting new radius

@@ -3831,6 +3831,25 @@ def csv_dict(fname, skiprows, dtypes, keylist=None, delimiter=','):
     return dict
 
 
+def csv_dict_multifile(fpre, fsuf, fnumbers, skiprows, dtypes, keylist=None, delimiter=','):
+    with open(fpre+str(fnumbers[0])+fsuf, 'r') as f:
+        for i in xrange(skiprows[0]): line = f.readline()
+    keys = line.split(',')
+    keys[-1] = keys[-1][:-1] # gets rid of \n at the end
+    if keylist==None: keylist = keys
+    if type(skiprows)==int: skiprows = np.array([skiprows]*len(fnumbers))
+    print 'Number of properties =', len(keys)
+    dict = {}
+    for i, key in enumerate(keys):
+        if key in keylist:
+            j = np.where(np.array(keylist)==key)[0][0]
+            print 'Reading', j, i, key
+            prop = np.array([], dtype=dtypes[j])
+            for fi, fno in enumerate(fnumbers): prop = np.append(prop, np.loadtxt(fpre+str(fno)+fsuf, skiprows=skiprows[fi], usecols=(i,), dtype=dtypes[j], delimiter=delimiter))
+            dict[key] = prop
+    print 'finished reading csv file'
+    return dict
+
 
 def zlist_eagle():
     return ['20.000', '15.132', '9.993', '8.988', '8.075', '7.050', '5.971', '5.487', '5.037', '4.485', '3.984', '3.528', '3.017', '2.478', '2.237', '2.012', '1.737', '1.487', '1.259', '1.004', '0.865', '0.736', '0.615', '0.503', '0.366', '0.271', '0.183', '0.101', '0.000']
