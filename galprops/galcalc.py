@@ -1151,7 +1151,7 @@ def lumfilt(spec,wl,filt_resp,filt_wl):
 	### INPUTS ###
 	# spec = spectrum intensity (although actually luminosity per unit wavelength)
 	# wl = wavelength vector in Angstroms corresponding to this spectrum
-	# filt_resp = vector of the filters response
+	# filt_resp = vector of the filter's response
 	# filt_wl = wavelength vector corresponding to the filter's response.
 	### ------ ###
 	

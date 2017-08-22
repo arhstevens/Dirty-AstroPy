@@ -1239,62 +1239,6 @@ def galdtype_carnage_workshop():
                     ('infallVvir'                   , np.float32),
                     ('infallVmax'                   , np.float32)
                     ]
-
-    names = [Galdesc_full[i][0] for i in xrange(len(Galdesc_full))]
-    formats = [Galdesc_full[i][1] for i in xrange(len(Galdesc_full))]
-    Galdesc = np.dtype({'names':names, 'formats':formats}, align=True)
-    return Galdesc
-
-def galdtype_carnage_workshop():
-    Galdesc_full = [
-                    ('Type'                         , np.int32),
-                    ('GalaxyIndex'                  , np.int64),
-                    ('HaloIndex'                    , np.int32),
-                    ('FOFHaloIdx'                   , np.int64),
-                    ('CentralHaloIdx'               , np.int64),
-                    ('TreeIdx'                      , np.int32),
-                    ('SnapNum'                      , np.int32),
-                    ('CentralGal'                   , np.int32),
-                    ('CentralMvir'                  , np.float32),
-                    ('mergeType'                    , np.int32),
-                    ('mergeIntoID'                  , np.int32),
-                    ('mergeIntoSnapNum'             , np.int32),
-                    ('dT'                           , np.float32),
-                    ('Pos'                          , (np.float32, 3)),
-                    ('Vel'                          , (np.float32, 3)),
-                    ('Spin'                         , (np.float32, 3)),
-                    ('Len'                          , np.int32),
-                    ('Mvir'                         , np.float32),
-                    ('Rvir'                         , np.float32),
-                    ('Vvir'                         , np.float32),
-                    ('Vmax'                         , np.float32),
-                    ('VelDisp'                      , np.float32),
-                    ('ColdGas'                      , np.float32),
-                    ('StellarMass'                  , np.float32),
-                    ('BulgeMass'                    , np.float32),
-                    ('HotGas'                       , np.float32),
-                    ('EjectedMass'                  , np.float32),
-                    ('BlackHoleMass'                , np.float32),
-                    ('IntraClusterStars'            , np.float32),
-                    ('MetalsColdGas'                , np.float32),
-                    ('MetalsStellarMass'            , np.float32),
-                    ('MetalsBulgeMass'              , np.float32),
-                    ('MetalsHotGas'                 , np.float32),
-                    ('MetalsEjectedMass'            , np.float32),
-                    ('MetalsIntraClusterStars'      , np.float32),
-                    ('SfrDisk'                      , np.float32),
-                    ('SfrBulge'                     , np.float32),
-                    ('SfrDiskZ'                     , np.float32),
-                    ('SfrBulgeZ'                    , np.float32),
-                    ('DiskRadius'                   , np.float32),
-                    ('Cooling'                      , np.float32),
-                    ('Heating'                      , np.float32),
-                    ('LastMajorMerger'              , np.float32),
-                    ('OutflowRate'                  , np.float32),
-                    ('infallMvir'                   , np.float32),
-                    ('infallVvir'                   , np.float32),
-                    ('infallVmax'                   , np.float32)
-                    ]
     names = [Galdesc_full[i][0] for i in xrange(len(Galdesc_full))]
     formats = [Galdesc_full[i][1] for i in xrange(len(Galdesc_full))]
     Galdesc = np.dtype({'names':names, 'formats':formats}, align=True)
@@ -3840,16 +3784,154 @@ def csv_dict_multifile(fpre, fsuf, fnumbers, skiprows, dtypes, keylist=None, del
     if type(skiprows)==int: skiprows = np.array([skiprows]*len(fnumbers))
     print 'Number of properties =', len(keys)
     dict = {}
+    fnum = np.array([])
     for i, key in enumerate(keys):
         if key in keylist:
             j = np.where(np.array(keylist)==key)[0][0]
             print 'Reading', j, i, key
             prop = np.array([], dtype=dtypes[j])
-            for fi, fno in enumerate(fnumbers): prop = np.append(prop, np.loadtxt(fpre+str(fno)+fsuf, skiprows=skiprows[fi], usecols=(i,), dtype=dtypes[j], delimiter=delimiter))
+            for fi, fno in enumerate(fnumbers):
+                prop = np.append(prop, np.loadtxt(fpre+str(fno)+fsuf, skiprows=skiprows[fi], usecols=(i,), dtype=dtypes[j], delimiter=delimiter))
+                if key==keylist[0]: fnum = np.append(fnum, fno*np.ones(len(prop)-len(fnum),dtype=np.int32))
             dict[key] = prop
+    dict['FileNumber'] = fnum
     print 'finished reading csv file'
     return dict
 
 
 def zlist_eagle():
     return ['20.000', '15.132', '9.993', '8.988', '8.075', '7.050', '5.971', '5.487', '5.037', '4.485', '3.984', '3.528', '3.017', '2.478', '2.237', '2.012', '1.737', '1.487', '1.259', '1.004', '0.865', '0.736', '0.615', '0.503', '0.366', '0.271', '0.183', '0.101', '0.000']
+
+
+def Brown_HI_fractions_satcen(h):
+    ### Observational data for HI frac with m* for sat/cen
+    logM = np.array([[9.2209911, 9.6852989, 10.180009, 10.665453, 11.098589],
+                     [9.2085762, 9.6402225, 10.141238, 10.599669, 11.026575],
+                     [9.2121296, 9.6528578, 10.139588, 10.615245, 11.054683]]) + 2*np.log10(0.7/h) + np.log10(0.61/0.66)
+
+    logHIfrac = np.array([[ 0.37694988,  0.0076254,  -0.45345795, -0.90604609, -1.39503932],
+                          [ 0.15731917, -0.16941574, -0.6199488,  -0.99943721, -1.30476058],
+                          [ 0.19498822, -0.27559358, -0.74410361, -1.12869251, -1.49363434]]) - np.log10(0.61/0.66)
+
+    Ngal = np.array([[120, 318, 675, 1132, 727],
+                     [3500, 4359, 3843, 2158, 268],
+                     [2203, 3325, 2899, 1784, 356]])
+
+    logHIfrac_err = np.array([[0.044044334229208275, 0.036943084240966269, 0.015790838627011444, 0.017046581090793569, 0.033233075844263882],
+                              [0.0097479231133465009, 0.0080264859983698953, 0.0026645765732298959, 0.013221412853921718, 0.038249326158796226],
+                              [0.019933333457406766, 0.008115267925045043, 0.016097124168277393, 0.017141607902103756, 0.042458119603051923]])
+
+    logM_cen = np.log10((10**logM[0,:] * Ngal[0,:] + 10**logM[1,:] * Ngal[1,:]) / (Ngal[0,:]+Ngal[1,:]))
+    logHIfrac_cen = np.log10((10**logHIfrac[0,:] * Ngal[0,:] + 10**logHIfrac[1,:] * Ngal[1,:]) / (Ngal[0,:]+Ngal[1,:]))
+    logHIfrac_err_cen = np.sqrt((logHIfrac_err[0,:]*Ngal[0,:])**2 + (logHIfrac_err[1,:]*Ngal[1,:])**2) / (Ngal[0,:]+Ngal[1,:])
+
+    logM_sat = logM[2,:]
+    logHIfrac_sat = logHIfrac[2,:]
+    logHIfrac_err_sat = logHIfrac_err[2,:]
+    ### ===================
+
+
+    ### Observational data for sSFR plot
+    logsSFR = 9+np.array([[-11.984118, -10.985614, -10.039345, -9.3237801],
+                          [-11.822327, -10.961091, -9.9707727, -9.3765173],
+                          [-11.829823, -11.01907, -10.010489, -9.3605328]]) + np.log10(0.63/0.67) - np.log10(0.61/0.66)
+
+    logHIfrac_sSFR = np.array([[-1.19850969, -0.68417609, -0.1457182,   0.3424041 ],
+                               [-1.22263718, -0.6337834,  -0.08348971,  0.2980288 ],
+                               [-1.24741423, -0.69113463,  0.01750424,  0.50645626]]) - np.log10(0.61/0.66)
+
+    logHIfrac_sSFR_err = np.array([[0.0101160053080814, 0.038387703324331612, 0.015336414293913735, 0.035059814816840985],
+                                   [0.070986564156433327, 0.0089297650771804002, 0.0025412392934365089, 0.011826374505400481],
+                                   [0.038234615293696067, 0.029941097250883182, 0.014058875616031209, 0.031036043642364026]])
+
+    Ngal_sSFR = np.array([[1299, 645, 966, 62],
+                          [1834, 2930, 8737, 627],
+                          [2550, 3616, 4100, 300]])
+
+    logHIfrac_sSFR_cen = np.log10((10**logHIfrac_sSFR[0,:] * Ngal_sSFR[0,:] + 10**logHIfrac_sSFR[1,:] * Ngal_sSFR[1,:]) / (Ngal_sSFR[0,:]+Ngal_sSFR[1,:]))
+    logsSFR_cen = np.log10((10**logsSFR[0,:] * Ngal_sSFR[0,:] + 10**logsSFR[1,:] * Ngal_sSFR[1,:]) / (Ngal_sSFR[0,:]+Ngal_sSFR[1,:]))
+    logHIfrac_sSFR_err_cen = np.sqrt((logHIfrac_sSFR_err[0,:]*Ngal_sSFR[0,:])**2 + (logHIfrac_sSFR_err[1,:]*Ngal_sSFR[1,:])**2) / (Ngal_sSFR[0,:]+Ngal_sSFR[1,:])
+
+    logHIfrac_sSFR_sat = logHIfrac_sSFR[2,:]
+    logsSFR_sat = logsSFR[2,:]
+    logHIfrac_sSFR_err_sat = logHIfrac_sSFR_err[2,:]
+    ### ===================
+
+    return [logM_cen, logHIfrac_cen, logHIfrac_err_cen], [logM_sat, logHIfrac_sat, logHIfrac_err_sat], [logHIfrac_sSFR_cen, logsSFR_cen, logHIfrac_sSFR_err_cen], [logHIfrac_sSFR_sat, logsSFR_sat, logHIfrac_sSFR_err_sat]
+
+
+def carnage(fname, fields_of_interest=None):
+    # For full details on fields, see http://cosmiccarnage2015.pbworks.com/w/page/95901731/File%20Formats
+    all_fields = [['haloid', np.int64],
+                  ['galaxyhostid', np.int64],
+                  ['galaxy_is_orphan', bool],
+                  ['X', np.float32],
+                  ['Y', np.float32],
+                  ['Z', np.float32],
+                  ['Vx', np.float32],
+                  ['Vy', np.float32],
+                  ['Vz', np.float32],
+                  ['Mcold', np.float32],
+                  ['Mhot', np.float32],
+                  ['Mstar', np.float32],
+                  ['Mbh', np.float32],
+                  ['Z_gas', np.float32],
+                  ['Z_stars', np.float32],
+                  ['T_stars', np.float32],
+                  ['SFR', np.float32],
+                  ['SFRbulge', np.float32],
+                  ['M_hot,halo', np.float32],
+                  ['M_cold,halo', np.float32],
+                  ['Meject', np.float32],
+                  ['M_outflowed', np.float32],
+                  ['M_gas.disk', np.float32],
+                  ['M_gas,spheroid', np.float32],
+                  ['M_stars,disk', np.float32],
+                  ['M_stars,spheroid', np.float32],
+                  ['M_bh', np.float32],
+                  ['M_ICstars', np.float32],
+                  ['M_total', np.float32],
+                  ['MZ_hot,halo', np.float32],
+                  ['MZ_cold,halo', np.float32],
+                  ['MZeject', np.float32],
+                  ['MZ_outflowed', np.float32],
+                  ['MZ_gas,disk', np.float32],
+                  ['MZ_gas,spheroid', np.float32],
+                  ['MZ_stars,disk', np.float32],
+                  ['MZ_stars,spheroid', np.float32],
+                  ['MZ_bh', np.float32],
+                  ['MZ_ICstars', np.float32],
+                  ['BoverT', np.float32],
+                  ['r1/2', np.float32],
+                  ['r1/2_bulge', np.float32],
+                  ['r1/2_disk', np.float32],
+                  ['nuv_ext', np.float32],
+                  ['B_ext', np.float32],
+                  ['V_ext', np.float32],
+                  ['g_ext', np.float32],
+                  ['r_ext', np.float32],
+                  ['K_ext', np.float32],
+                  ['nuv', np.float32],
+                  ['B', np.float32],
+                  ['V', np.float32],
+                  ['g', np.float32],
+                  ['r', np.float32],
+                  ['K', np.float32]]
+
+    if fields==None: # none means all in this case
+        fields = all_fields
+    else:
+        i_fields = []
+        for i, field in all_fields:
+            if field[0] in fields_of_interest: i_fields += [i]
+        fields = all_fields[i_fields]
+    data = np.loadtxt(fname, skiprows=1)
+    dict = {}
+    for col, field in enumerate(fields):
+        dict[field[0]] = np.array(data[:,col], dtype=field[1])
+    return dict
+
+
+
+
+
