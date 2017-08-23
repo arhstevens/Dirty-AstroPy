@@ -2330,6 +2330,36 @@ def hydrogen_decomp_exp_disc(mass_gas, j_disc, v_rot, R_vir, mass_star, Z_gas, P
     return m_HI, m_H2
 
 
+def hydrogen_decomp_exp_disc2(mass_gas, r_eff, mass_star, Z_gas, P_0=5.93e-13, chi_0=0.92, f_He=0.75, f_warm=1/1.3, sig_gas=11., elements=1e3):
+    # Calculate the HI and H2 content of a disc given its integrated properties, assuming it follows an exponential surface density profile
+    
+    # masses from solar masses to kg
+    mass_gas = np.array(mass_gas, dtype=np.float64)*1.989e30
+    mass_star = np.array(mass_star, dtype=np.float64)*1.989e30
+    # velocities from km/s to m/s
+    sig_gas *= 1e3
+    
+    # distances from kpc to m
+    r_eff = np.array(r_eff*3.0857e19, dtype=np.float64)
+    
+    G = 6.67408e-11
+    
+    r = (np.ones((len(mass_gas),elements)) * np.linspace(0, 1, elements)).T * 20*r_eff
+    Sigma_gas = np.exp(-r/r_eff) * mass_gas / (2*np.pi*r_eff**2)
+    Sigma_star = np.exp(-r/r_eff) * mass_star / (2*np.pi*r_eff**2)
+    sig_star = np.sqrt(np.pi*G/7.3 * Sigma_star * r_eff) # velocity dispersion
+    P_ext = np.pi*G/2 * Sigma_gas * (Sigma_gas + sig_gas/sig_star * Sigma_star)
+    R_H2 = (P_ext / P_0)**chi_0
+    f_H2 = f_He*f_warm/(1./R_H2 + 1) * (1-Z_gas)
+    integrand = 2*np.pi*f_H2*Sigma_gas*r
+    m_H2 = np.sum(np.diff(r, axis=0) * (integrand[1:,:]+integrand[:-1,:])/2., axis=0)
+    m_HI = mass_gas*f_He*f_warm*(1-Z_gas) - m_H2
+    m_HI[mass_gas==0] = 0
+    m_H2[mass_gas==0] = 0
+    m_HI /= 1.989e30
+    m_H2 /= 1.989e30
+    assert len(m_H2) == len(R_vir)
+    return m_HI, m_H2
 
 
 

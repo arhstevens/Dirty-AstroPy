@@ -3884,7 +3884,7 @@ def carnage(fname, fields_of_interest=None):
                   ['M_cold,halo', np.float32],
                   ['Meject', np.float32],
                   ['M_outflowed', np.float32],
-                  ['M_gas.disk', np.float32],
+                  ['M_gas,disk', np.float32],
                   ['M_gas,spheroid', np.float32],
                   ['M_stars,disk', np.float32],
                   ['M_stars,spheroid', np.float32],
@@ -3918,16 +3918,17 @@ def carnage(fname, fields_of_interest=None):
                   ['r', np.float32],
                   ['K', np.float32]]
 
-    if fields==None: # none means all in this case
+    if fields_of_interest==None: # none means all in this case
         fields = all_fields
     else:
-        i_fields = []
-        for i, field in all_fields:
-            if field[0] in fields_of_interest: i_fields += [i]
-        fields = all_fields[i_fields]
+        fields = []
+        for i, field in enumerate(all_fields):
+            if field[0] in fields_of_interest:
+                fields += [field]
     data = np.loadtxt(fname, skiprows=1)
     dict = {}
     for col, field in enumerate(fields):
+        print 'Reading', field[0]
         dict[field[0]] = np.array(data[:,col], dtype=field[1])
     return dict
 
