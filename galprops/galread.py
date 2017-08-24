@@ -3860,7 +3860,7 @@ def Brown_HI_fractions_satcen(h):
     return [logM_cen, logHIfrac_cen, logHIfrac_err_cen], [logM_sat, logHIfrac_sat, logHIfrac_err_sat], [logHIfrac_sSFR_cen, logsSFR_cen, logHIfrac_sSFR_err_cen], [logHIfrac_sSFR_sat, logsSFR_sat, logHIfrac_sSFR_err_sat]
 
 
-def carnage(fname, fields_of_interest=None):
+def carnage(fname, dir='', addH=False, fields_of_interest=None):
     # For full details on fields, see http://cosmiccarnage2015.pbworks.com/w/page/95901731/File%20Formats
     all_fields = [['haloid', np.int64],
                   ['galaxyhostid', np.int64],
@@ -3920,16 +3920,23 @@ def carnage(fname, fields_of_interest=None):
 
     if fields_of_interest==None: # none means all in this case
         fields = all_fields
+        cols = range(len(fields))
     else:
         fields = []
+        cols = []
         for i, field in enumerate(all_fields):
             if field[0] in fields_of_interest:
                 fields += [field]
-    data = np.loadtxt(fname, skiprows=1)
+                cols += [i]
+    data = np.loadtxt(dir+fname, skiprows=1)
     dict = {}
-    for col, field in enumerate(fields):
+    for i, field in enumerate(fields):
         print 'Reading', field[0]
-        dict[field[0]] = np.array(data[:,col], dtype=field[1])
+        dict[field[0]] = np.array(data[:,cols[i]], dtype=field[1])
+
+    if addH:
+        dict['M_HI'] = np.loadtxt(dir+'Mass_HI.txt')
+        dict['M_H2'] = np.loadtxt(dir+'Mass_H2.txt')
     return dict
 
 

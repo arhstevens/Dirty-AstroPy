@@ -1279,16 +1279,11 @@ def divide(num,den):
 	if type(den)==np.ndarray:
 		size = den.shape # Number of entries in the input vectors
 		ans = np.zeros(size) # Initialize output
-		
-		try:
-			for i in xrange(size[0]):
-				for j in xrange(size[1]):
-					if den[i,j]!=0:
-						ans[i,j] = num[i,j]/den[i,j]
-		except IndexError:
-			for i in xrange(size[0]):
-				if den[i]!=0:
-					ans[i] = num[i]/den[i]
+		w = np.where((den!=0)*np.isfinite(den))
+		if len(size)==1:
+			ans[w[0]] = (1.0*num[w[0]])/den[w[0]]
+		else:
+			ans[w[0],w[1]] = (1.0*num[w[0],w[1]])/den[w[0],w[1]]
 	else:
 		if den!=0:
 			den = float(den) # Ensure at least one of the inputs is a float to return a float
@@ -2292,7 +2287,7 @@ def surface_density_profile(r, rbins, mass):
     return rav, mhist/area
 
 
-def hydrogen_decomp_exp_disc(mass_gas, j_disc, v_rot, R_vir, mass_star, Z_gas, P_0=5.93e-13, chi_0=0.92, f_He=0.75, f_warm=1/1.3, sig_gas=11., elements=1e3):
+def hydrogen_decomp_exp_disc(mass_gas, j_disc, v_rot, R_vir, mass_star, Z_gas, P_0=5.93e-13, chi_0=0.92, f_He=0.75, f_warm=1/1.3, sig_gas=11., elements=1000):
     # Calculate the HI and H2 content of a disc given its integrated properties, assuming it follows an exponential surface density profile
 
     # masses from solar masses to kg
@@ -2330,7 +2325,7 @@ def hydrogen_decomp_exp_disc(mass_gas, j_disc, v_rot, R_vir, mass_star, Z_gas, P
     return m_HI, m_H2
 
 
-def hydrogen_decomp_exp_disc2(mass_gas, r_eff, mass_star, Z_gas, P_0=5.93e-13, chi_0=0.92, f_He=0.75, f_warm=1/1.3, sig_gas=11., elements=1e3):
+def hydrogen_decomp_exp_disc2(mass_gas, r_eff, mass_star, Z_gas, P_0=5.93e-13, chi_0=0.92, f_He=0.75, f_warm=1/1.3, sig_gas=11., elements=1000):
     # Calculate the HI and H2 content of a disc given its integrated properties, assuming it follows an exponential surface density profile
     
     # masses from solar masses to kg
@@ -2340,11 +2335,11 @@ def hydrogen_decomp_exp_disc2(mass_gas, r_eff, mass_star, Z_gas, P_0=5.93e-13, c
     sig_gas *= 1e3
     
     # distances from kpc to m
-    r_eff = np.array(r_eff*3.0857e19, dtype=np.float64)
+    r_eff = np.array(r_eff, dtype=np.float64)*3.0857e19
     
     G = 6.67408e-11
-    
-    r = (np.ones((len(mass_gas),elements)) * np.linspace(0, 1, elements)).T * 20*r_eff
+
+    r = (np.ones((len(mass_gas),elements)) * np.linspace(0, 1, elements)).T * (20.*r_eff)
     Sigma_gas = np.exp(-r/r_eff) * mass_gas / (2*np.pi*r_eff**2)
     Sigma_star = np.exp(-r/r_eff) * mass_star / (2*np.pi*r_eff**2)
     sig_star = np.sqrt(np.pi*G/7.3 * Sigma_star * r_eff) # velocity dispersion
@@ -2358,7 +2353,7 @@ def hydrogen_decomp_exp_disc2(mass_gas, r_eff, mass_star, Z_gas, P_0=5.93e-13, c
     m_H2[mass_gas==0] = 0
     m_HI /= 1.989e30
     m_H2 /= 1.989e30
-    assert len(m_H2) == len(R_vir)
+    assert len(m_H2) == len(mass_gas)
     return m_HI, m_H2
 
 
