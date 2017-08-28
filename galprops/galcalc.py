@@ -501,6 +501,25 @@ def recentregal(x,y,z,vx,vy,vz,mass):
 	return x,y,z,vx,vy,vz
 
 
+def recentregal_coords(pos, mass, apertures=None):
+    xcom, ycom, zcom = com(pos[:,0],pos[:,1],pos[:,2],mass)
+    pos[:,0] -= xcom
+    pos[:,1] -= ycom
+    pos[:,2] -= zcom
+    
+    if apertures==None: apertures = [2e5, 1e5, 5e4, 3e4, 2.5e4, 2e4]
+    for aperture in apertures:
+        R = np.sqrt(np.sum(pos**2, axis=1))
+        pos_in_aperture = pos[R<=aperture]
+        if len(pos_in_aperture)<20: break
+        xcom, ycom, zcom = com(pos_in_aperture[:,0],pos_in_aperture[:,1],pos_in_aperture[:,2],mass[R<=aperture])
+        pos[:,0] -= xcom
+        pos[:,1] -= ycom
+        pos[:,2] -= zcom
+
+    return pos
+
+
 
 def recentregalall(x,y,z,vx,vy,vz,massl):
 	"""

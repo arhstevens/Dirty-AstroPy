@@ -1194,8 +1194,8 @@ def galdtype_carnage_workshop():
                     ('Type'                         , np.int32),
                     ('GalaxyIndex'                  , np.int64),
                     ('HaloIndex'                    , np.int32),
-                    ('FOFHaloIdx'                   , np.int64),
-                    ('CentralHaloIdx'               , np.int64),
+                    ('SAGEnIFTyID'                  , np.int64),
+                    ('SAGEnIFTyCentralID'           , np.int64),
                     ('TreeIdx'                      , np.int32),
                     ('SnapNum'                      , np.int32),
                     ('CentralGal'                   , np.int32),
@@ -3937,6 +3937,8 @@ def carnage(fname, dir='', addH=False, fields_of_interest=None):
     if addH:
         dict['M_HI'] = np.loadtxt(dir+'Mass_HI.txt')
         dict['M_H2'] = np.loadtxt(dir+'Mass_H2.txt')
+        dict['Mhalo'] = np.loadtxt(dir+'CentralMvir.txt')
+        dict['Mvir'] = np.loadtxt(dir+'Mvir.txt')
     return dict
 
 
