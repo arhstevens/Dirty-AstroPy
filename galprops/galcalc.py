@@ -2297,12 +2297,12 @@ def hist_with_xcoords(xdata, bins, ydata):
 def density_profile(R, Rbins, mass):
     # Build a density profile of particles given their position and mass
     Rav, mhist = hist_with_xcoords(R, Rbins, mass)
-    vol = 4./3. * np.pi * (Rbins[1:]-Rbins[:-1])**3.
+    vol = 4./3. * np.pi * (Rbins[1:]**3.-Rbins[:-1]**3.)
     return Rav, mhist/vol
 
 def surface_density_profile(r, rbins, mass):
     rav, mhist = hist_with_xcoords(r, rbins, mass)
-    area = np.pi * (rbins[1:]-rbins[:-1])**2.
+    area = np.pi * (rbins[1:]**2.-rbins[:-1]**2.)
     return rav, mhist/area
 
 
