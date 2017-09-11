@@ -160,7 +160,7 @@ def circle(r,colour='white',centre=[0,0],lw=3,ls='-',half='f',inclination=0,fill
 
 
 
-def savepng(filename,xpix=2560,ypix=1440,ss=27,xpixplot=1024,ypixplot=None,fsize=28,addpdf=False,transparent=False):
+def savepng(filename,xpix=2560,ypix=1440,ss=27,xpixplot=1024,ypixplot=None,fsize=28,addpdf=False,transparent=False, fig=None):
 	# Save a plotted image a png file in the working directory with optimized resolution
 	
 	###  INPUTS ###
@@ -182,7 +182,7 @@ def savepng(filename,xpix=2560,ypix=1440,ss=27,xpixplot=1024,ypixplot=None,fsize
 	mydpi = np.sqrt(xpix**2 + ypix**2)/ss  # The dpi of your screen
 	xinplot = xpixplot*(9./7.)/mydpi
 	yinplot = ypixplot*(9./7.)/mydpi
-	fig = plt.gcf()
+	if fig is None: fig = plt.gcf()
 	fig.set_size_inches(xinplot,yinplot)
 	fig.set_dpi(mydpi)
 	
@@ -190,8 +190,8 @@ def savepng(filename,xpix=2560,ypix=1440,ss=27,xpixplot=1024,ypixplot=None,fsize
 	filename = str(filename)
 	if filename[-4:] != '.png':
 		filename = filename+'.png'
-	plt.savefig(filename, dpi=mydpi, bbox_inches='tight', transparent=transparent)
-	if addpdf==True: plt.savefig(filename[:-4]+'.pdf', bbox_inches='tight')
+	fig.savefig(filename, dpi=mydpi, bbox_inches='tight', transparent=transparent)
+	if addpdf==True: fig.savefig(filename[:-4]+'.pdf', bbox_inches='tight')
 
 
 def axlogic(x,y,yscale='linear'):

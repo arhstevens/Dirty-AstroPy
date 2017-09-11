@@ -3784,7 +3784,7 @@ def csv_dict_multifile(fpre, fsuf, fnumbers, skiprows, dtypes, keylist=None, del
     if type(skiprows)==int: skiprows = np.array([skiprows]*len(fnumbers))
     print 'Number of properties =', len(keys)
     dict = {}
-    fnum = np.array([])
+    fnum = np.array([],dtype=np.int32)
     for i, key in enumerate(keys):
         if key in keylist:
             j = np.where(np.array(keylist)==key)[0][0]
