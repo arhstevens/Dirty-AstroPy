@@ -1365,7 +1365,7 @@ def sagesnap(fpre, firstfile=0, lastfile=7, dir='./', suff='', disc=False, publi
 	else:
 		Galdesc = galdtype()
 	Glist = []
-	Ngal = np.array([])
+	Ngal = np.array([],dtype=np.int32)
 	for i in range(firstfile,lastfile+1):
 		G1, N1 = sageoutsingle(fpre+'_'+str(i), dir, suff, True, disc, public, old, extra_output=extra_output, multidark=multidark)
 		if SMfilt is not None:
