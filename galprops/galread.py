@@ -904,8 +904,8 @@ def galdtype_adam():
                     ('DiscRadii'                    , (floattype, 31)), # Added at run 145
                     ('ColdGas'                      , floattype),
                     ('StellarMass'                  , floattype),
-                    ('ClassicalBulgeMass'           , floattype),
-                    ('SecularBulgeMass'             , floattype),
+                    ('MergerBulgeMass'              , floattype),
+                    ('InstabilityBulgeMass'          , floattype),
                     ('HotGas'                       , floattype),
                     ('EjectedMass'                  , floattype),
                     ('BlackHoleMass'                , floattype),
@@ -948,7 +948,7 @@ def galdtype_adam():
                     ('SfrDiskZ'                     , floattype),
                     ('SfrBulgeZ'                    , floattype),
                     ('DiskScaleRadius'              , floattype),
-#                    ('BulgeRadius'                  , floattype), # Removed run 455
+                    ('BulgeRadius'                  , floattype), # Removed run 455
                     ('Cooling'                      , floattype),
                     ('Heating'                      , floattype),
                     ('LastMajorMerger'              , floattype),
@@ -1383,7 +1383,7 @@ def sagesnap(fpre, firstfile=0, lastfile=7, dir='./', suff='', disc=False, publi
 def zlistmm():
 	# Call the list of strings which correspond to the redshift values of the output of the mini millennium files (i.e. so one can call to read the files in a list).  This is specific to details of how SAGE was run (i.e. in the desired_outputsnaps file)
 	
-	return ['0.000','0.020','0.041','0.064','0.089','0.116','0.144','0.175','0.208','0.242','0.280','0.320','0.362','0.408','0.457','0.509','0.564','0.624','0.687','0.755','0.828','0.905','0.989','1.078','1.173','1.276','1.386','1.504','1.630','1.766','1.913','2.070','2.239','2.422','2.619','2.831','3.060','3.308','3.576','3.866','4.179','4.520','4.888','5.289','5.724','6.197','6.712','7.272','7.883','8.550','9.278','10.073']
+	return ['0.000','0.020','0.041','0.064','0.089','0.116','0.144','0.175','0.208','0.242','0.280','0.320','0.362','0.408','0.457','0.509','0.564','0.624','0.687','0.755','0.828','0.905','0.989','1.078','1.173','1.276','1.386','1.504','1.630','1.766','1.913','2.070','2.239','2.422','2.619','2.831','3.060','3.308','3.576','3.866','4.179','4.520','4.888','5.289','5.724','6.197','6.712','7.272','7.883','8.550','9.278','10.073', '10.944', '11.897', '12.941', '14.086', '15.343', '16.725', '18.224', '19.916', '30.000', '50.000', '79.998', '127.000']
 
 
 def zlist_gigglezHR():
@@ -3857,7 +3857,14 @@ def Brown_HI_fractions_satcen(h):
     logHIfrac_sSFR_err_sat = logHIfrac_sSFR_err[2,:]
     ### ===================
 
-    return [logM_cen, logHIfrac_cen, logHIfrac_err_cen], [logM_sat, logHIfrac_sat, logHIfrac_err_sat], [logHIfrac_sSFR_cen, logsSFR_cen, logHIfrac_sSFR_err_cen], [logHIfrac_sSFR_sat, logsSFR_sat, logHIfrac_sSFR_err_sat]
+    # Added calculation for all galaxies
+    logM_all = np.log10((10**logM[0,:] * Ngal[0,:] + 10**logM[1,:] * Ngal[1,:] + 10**logM[2,:] * Ngal[2,:]) / (Ngal[0,:]+Ngal[1,:]+Ngal[2,:]))
+    logHIfrac_all = np.log10((10**logHIfrac[0,:] * Ngal[0,:] + 10**logHIfrac[1,:] * Ngal[1,:] + 10**logHIfrac[2,:] * Ngal[2,:]) / (Ngal[0,:]+Ngal[1,:]+Ngal[2,:]))
+    logHIfrac_sSFR_all = np.log10((10**logHIfrac_sSFR[0,:] * Ngal_sSFR[0,:] + 10**logHIfrac_sSFR[1,:] * Ngal_sSFR[1,:] + 10**logHIfrac_sSFR[2,:] * Ngal_sSFR[2,:]) / (Ngal_sSFR[0,:]+Ngal_sSFR[1,:]+Ngal_sSFR[2,:]))
+    logsSFR_all = np.log10((10**logsSFR[0,:] * Ngal_sSFR[0,:] + 10**logsSFR[1,:] * Ngal_sSFR[1,:] + 10**logsSFR[2,:] * Ngal_sSFR[2,:]) / (Ngal_sSFR[0,:]+Ngal_sSFR[1,:]+Ngal_sSFR[2,:]))
+
+
+    return [logM_cen, logHIfrac_cen, logHIfrac_err_cen], [logM_sat, logHIfrac_sat, logHIfrac_err_sat], [logHIfrac_sSFR_cen, logsSFR_cen, logHIfrac_sSFR_err_cen], [logHIfrac_sSFR_sat, logsSFR_sat, logHIfrac_sSFR_err_sat], [logM_all, logHIfrac_all, logsSFR_all, logHIfrac_sSFR_all]
 
 
 def carnage(fname, dir='', addH=False, fields_of_interest=None):
@@ -3942,6 +3949,16 @@ def carnage(fname, dir='', addH=False, fields_of_interest=None):
     return dict
 
 
-
+def read_binary(fname, dtype, return_GroupRange=False):
+    # Read binary file of particle data I built from EAGLE
+    f = open(fname, 'rb')
+    ID_range = np.fromfile(f, 'i4', 2)
+    Npart = np.fromfile(f, 'i4', 1)[0]
+    property = np.fromfile(f, dtype, Npart)
+    f.close()
+    if return_GroupRange:
+        return property, ID_range
+    else:
+        return property
 
 
