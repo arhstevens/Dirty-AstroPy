@@ -2050,6 +2050,10 @@ def compute_rotation_to_z(x,y,z,vx,vy,vz,m):
     
     return axis, angle
 
+def compute_rotation_to_z2(pos,vel,m):
+    return compute_rotation_to_z(pos[:,0], pos[:,1], pos[:,2], vel[:,0], vel[:,1], vel[:,2], m)
+
+
 
 def rotate(x,y,z,axis,angle):
     # Copied from Marie
@@ -2075,6 +2079,10 @@ def rotate(x,y,z,axis,angle):
     
     
     return x_rot,y_rot,z_rot
+
+def rotate2(xyz, axis, angle):
+    x, y, z = rotate(xyz[:,0], xyz[:,1], xyz[:,2], axis, angle)
+    return np.concatenate((np.array([x]).T,np.array([y]).T,np.array([z]).T), axis=1)
 
 
 def hist_Nmin(x, bins, Nmin):
