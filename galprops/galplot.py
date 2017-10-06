@@ -67,7 +67,7 @@ def contour(x,y,Nbins=None,weights=None,range=None,Nlevels=25,c='k',ls='-',lw=2,
 	            else:
 	                break
 	        zzlevel[level] = zval
-	    print 'zzlevel', zzlevel
+#        print 'zzlevel', zzlevel
 	    if type(ls)==str:
 	        plt.contour(xp, yp, zz, zzlevel, colors=c, linestyles=ls, linewidths=lw, zorder=1)
 	    else:

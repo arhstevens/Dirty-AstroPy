@@ -1748,11 +1748,11 @@ def dens2temp(rho):
 	return T, u, rho
 
 
-def u2temp(u):
+def u2temp(u, gamma=5./3, mu=1.0):
 	# Convert gas energy per unit mass to temperature.  Assumes input of J/kg = (m/s)^2
 	M_H = 1.673e-27 # Mass of hydrogen in kg
 	k_B = 1.3806488e-23 # Boltzmann constant (J/K)
-	temp = u*M_H / (1.5*k_B)
+	temp = u * M_H * mu * (gamma-1.) / k_B
 	return temp
 
 
@@ -2734,7 +2734,7 @@ def fH2_Krumholz_ParticleBasis(SFR,m,Zgas,nH,Density_Tot,T,fneutral,redshift):
     return Fh2_SFR
 
 
-def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=1):
+def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=1, mode='T'):
     """
         This is my own version of calculating the atomic- and molecular-hydrogen masses of gas particles from simulations.  This has been adapted from the Python scripts written by Claudia Lagos and Michelle Furlong.  This follows the basis of Appendix A of Lagos et al (2015b) but includes further edits from me to improve detail. Expects each input as an array, except for reshift.
         Input definitions and units are as follows:
@@ -2742,7 +2742,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=1):
         SFR = star formation rate of particles [M_sun/yr]
         Z = ratio of metallic mass to total particle mass
         rho = density of particles [M_sun/pc^3]
-        temp = temperature of particles [K]
+        temp = temperature of particles [K] OR specific thermal energy [(m/s)^2] (see mode)
         fneutral = fraction of particle mass that is not ionized
         method = 0 - Return all below values
                  1 - Gnedin & Kravtsov (2011) eq 6
@@ -2750,7 +2750,12 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=1):
                  3 - Gnedin & Draine (2014) eq 6
                  4 - Krumholz (2013) eq 10
           all of these also use Schaye and Dalla Vecchia (2008) for the Jeans length
+        mode = 'T' - temp is actually temperature
+               'u' - have fed in internal energy per unit mass instead of temperature
     """
+    
+    if mode=='u':
+        u = 1.0*temp
     
     kg_per_Msun = 1.989e30
     m_per_pc = 3.0857e16
@@ -2799,6 +2804,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=1):
             f_mol = X*X*f_H2_old /  (X+Y)
             gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
             mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
+            if mode=='u': temp = u2temp(u, gamma, mu)
             Sigma = np.sqrt(gamma * const_ratio * f_th * rho * temp / mu) # Approximate surface density as true density * Jeans length (see eq. 7 of Schaye and Dalla Vecchia 2008)
             area = mass / Sigma # Effective area covered by particle
             Sigma_SFR = SFR / area
@@ -2826,6 +2832,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=1):
             f_mol = X*X*f_H2_old /  (X+Y)
             gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
             mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
+            if mode=='u': temp = u2temp(u, gamma, mu)
             Sigma = np.sqrt(gamma * const_ratio * f_th * rho * temp / mu)
             Sigma_n = fneutral * X * Sigma # neutral hydrogen density
             area = mass / Sigma
@@ -2854,6 +2861,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=1):
             f_mol = X*X*f_H2_old /  (X+Y)
             gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
             mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
+            if mode=='u': temp = u2temp(u, gamma, mu)
             Sigma = np.sqrt(gamma * const_ratio * f_th * rho * temp / mu)
             S = Sigma / rho * 0.01 # This is the Jeans length per 100pc, taken as the spatial scale
             D_star = 0.17*(2.+S**5.)/(1.+S**5.)
@@ -2886,6 +2894,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=1):
             f_mol = X*X*f_H2_old /  (X+Y)
             gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
             mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
+            if mode=='u': temp = u2temp(u, gamma, mu)
             Sigma = np.sqrt(gamma * const_ratio * f_th * rho * temp / mu)
             Sigma_n = fneutral * X * Sigma # neutral hydrogen density
             area = mass / Sigma
