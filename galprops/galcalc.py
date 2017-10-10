@@ -2751,7 +2751,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=1, mode='T'
         Z = ratio of metallic mass to total particle mass
         rho = density of particles [M_sun/pc^3]
         temp = temperature of particles [K] OR specific thermal energy [(m/s)^2] (see mode)
-        fneutral = fraction of particle mass that is not ionized
+        fneutral = fraction of particle mass that is not ionized.  If given as None, it will automatically be calculated.
         method = 0 - Return all below values
                  1 - Gnedin & Kravtsov (2011) eq 6
                  2 - Gnedin & Kravtsov (2011) eq 10
@@ -2764,6 +2764,12 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=1, mode='T'
     
     if mode=='u':
         u = 1.0*temp
+        temp = u2temp(u, 5./3., 0.59) # initialise
+    
+    if fneutral is None:
+        calc_fneutral = True
+    else:
+        calc_fneutral = False
     
     kg_per_Msun = 1.989e30
     m_per_pc = 3.0857e16
@@ -2783,6 +2789,10 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=1, mode='T'
     denom = m_p * (m_per_pc*100)**3
     n_H = X * rho / denom
     
+    # Calculate (initialise in the case of mode='u') neutral fraction if it wasn't already provided
+    if calc_fneutral:
+        fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp)
+    
     # Initialise lists if all methods wanted
     mHI_list, mH2_list = [], []
 
@@ -2799,20 +2809,23 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=1, mode='T'
 
     f_th = 1.0 # Assuming all gas is thermal
     
-    mu = (X + 4*Y)/((2-fneutral)*(X+Y)) # Mean atom/ion/molecule weight
-    
+    mu = (X + 4*Y)/((2-fneutral)*(X+Y)) # Initialise mean molecular weight
+
     # Dust to gas ratio relative to MW
     D_MW = Z / 0.0127
     
     it_max = 100 # Maximum iterations for calculating f_H2
     f_H2_old = np.zeros(len(mass)) # Initialise before iterating
+    fneutral_old = np.zeros(len(mass))
     
     if method<=1:
         for it in xrange(it_max):
             f_mol = X*X*f_H2_old /  (X+Y)
             gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
             mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
-            if mode=='u': temp = u2temp(u, gamma, mu)
+            if mode=='u':
+                temp = u2temp(u, gamma, mu)
+                if calc_fneutral and not np.allclose(fneutral, fneutral_old, rtol=5e-3): fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp) # too slow to do every time (hopefully this converges faster)
             Sigma = np.sqrt(gamma * const_ratio * f_th * rho * temp / mu) # Approximate surface density as true density * Jeans length (see eq. 7 of Schaye and Dalla Vecchia 2008)
             area = mass / Sigma # Effective area covered by particle
             Sigma_SFR = SFR / area
@@ -2827,7 +2840,8 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=1, mode='T'
             f_H2 = 1./ (1.+ np.exp(-4.*x - 3.*x**3)) # H2/(HI+H2)
             if np.allclose(f_H2, f_H2_old, rtol=5e-3): break
             f_H2_old = 1.*f_H2
-        
+            fneutral_old = 1.*fneutral
+
         mass_H2 = f_H2 * fneutral * X * mass
         mass_HI = (1.-f_H2) * fneutral * X * mass
         
@@ -2840,7 +2854,9 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=1, mode='T'
             f_mol = X*X*f_H2_old /  (X+Y)
             gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
             mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
-            if mode=='u': temp = u2temp(u, gamma, mu)
+            if mode=='u':
+                temp = u2temp(u, gamma, mu)
+                if calc_fneutral and not np.allclose(fneutral, fneutral_old, rtol=5e-3): fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp)
             Sigma = np.sqrt(gamma * const_ratio * f_th * rho * temp / mu)
             Sigma_n = fneutral * X * Sigma # neutral hydrogen density
             area = mass / Sigma
@@ -2856,7 +2872,8 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=1, mode='T'
             f_H2 = (1.+Sigma_c/Sigma_n)**-2. # H2/(HI+H2)
             if np.allclose(f_H2, f_H2_old, rtol=5e-3): break
             f_H2_old = 1.*f_H2
-        
+            fneutral_old = 1.*fneutral
+
         mass_H2 = f_H2 * fneutral * X * mass
         mass_HI = (1.-f_H2) * fneutral * X * mass
 
@@ -2869,7 +2886,9 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=1, mode='T'
             f_mol = X*X*f_H2_old /  (X+Y)
             gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
             mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
-            if mode=='u': temp = u2temp(u, gamma, mu)
+            if mode=='u':
+                temp = u2temp(u, gamma, mu)
+                if calc_fneutral and not np.allclose(fneutral, fneutral_old, rtol=5e-3): fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp)
             Sigma = np.sqrt(gamma * const_ratio * f_th * rho * temp / mu)
             S = Sigma / rho * 0.01 # This is the Jeans length per 100pc, taken as the spatial scale
             D_star = 0.17*(2.+S**5.)/(1.+S**5.)
@@ -2881,6 +2900,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=1, mode='T'
             f_H2 = 1./ (1 + np.exp(-x*(1-0.02*x+0.001*x*x))) # H2/(HI+H2)
             if np.allclose(f_H2, f_H2_old, rtol=5e-3): break
             f_H2_old = 1.*f_H2
+            fneutral_old = 1.*fneutral
 
         mass_H2 = f_H2 * fneutral * X * mass
         mass_HI = (1.-f_H2) * fneutral * X * mass
@@ -2902,7 +2922,9 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=1, mode='T'
             f_mol = X*X*f_H2_old /  (X+Y)
             gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
             mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
-            if mode=='u': temp = u2temp(u, gamma, mu)
+            if mode=='u':
+                temp = u2temp(u, gamma, mu)
+                if calc_fneutral and not np.allclose(fneutral, fneutral_old, rtol=5e-3): fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp)
             Sigma = np.sqrt(gamma * const_ratio * f_th * rho * temp / mu)
             Sigma_n = fneutral * X * Sigma # neutral hydrogen density
             area = mass / Sigma
@@ -2927,7 +2949,8 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=1, mode='T'
             f_H2[s<2] = 1. - 0.75*s[s<2]/(1. + 0.25*s[s<2])
             if np.allclose(f_H2, f_H2_old, rtol=5e-3): break
             f_H2_old = 1.*f_H2
-        
+            fneutral_old = 1.*fneutral
+
         mass_H2 = f_H2 * fneutral * X * mass
         mass_HI = (1.-f_H2) * fneutral * X * mass
             
@@ -2936,8 +2959,13 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=1, mode='T'
         mH2_list += [mass_H2]
 
     if method==0:
-        return mHI_list, mH2_list
+        if calc_fneutral:
+            return mHI_list, mH2_list, fneutral
+        else:
+            return mHI_list, mH2_list
     else:
-        return mass_HI, mass_H2
-
+        if calc_fneutral:
+            return mass_HI, mass_H2, fneutral
+        else:
+            return mass_HI, mass_H2
 
