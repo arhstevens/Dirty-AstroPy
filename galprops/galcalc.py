@@ -466,9 +466,17 @@ def recentre(x,y,z,vx,vy,vz,mass,r=0):
         filt = np.array([True]*len(x))
     else:
         filt = ((x**2+y**2+z**2)<r**2)
-    mdx,mdy,mdz = x*mass,y*mass,z*mass # Mass-distance vectors
-    xc, yc, zc, vxc, vyc, vzc = x-divide(np.mean(mdx[filt]), np.mean(mass[filt])), y-divide(np.mean(mdy[filt]),np.mean(mass[filt])), z-divide(np.mean(mdz[filt]),np.mean(mass[filt])), vx-np.mean(vx[filt]), vy-np.mean(vy[filt]), vz-np.mean(vz[filt])
-	
+
+    xcom, ycom, zcom = com(x[filt], y[filt], z[filt], mass[filt])
+    vxcom, vycom, vzcom = com(vx[filt], vy[filt], vz[filt], mass[filt])
+
+    xc = x-xcom
+    yc = y-ycom
+    zc = z-zcom
+    vxc = vx-vxcom
+    vyc = vy-vycom
+    vzc = vz-vzcom
+
     if str(max(xc))=='nan': # Can get NaNs and not sure how else to stop this.  Just return nothing new if it occurs.
         print 'Ignored results of recentre for r=',r, 'as NaNs returned'
         return x, y, z, vx, vy, vz
@@ -481,9 +489,16 @@ def com(x,y,z,mass):
 	# Find centre of mass
 	M = sum(mass)
 	mx, my, mz = x*mass, y*mass, z*mass
-	xcom, ycom, zcom = sum(mx)/M, sum(my)/M, sum(mz)/M
+	xcom, ycom, zcom = divide(sum(mx),M), divide(sum(my),M), divide(sum(mz),M)
 	return xcom, ycom, zcom
 
+
+def com2(pos,mass):
+    x = pos[:,0]
+    y = pos[:,1]
+    z = pos[:,2]
+    xcom, ycom, zcom = com(x,y,z,mass)
+    return np.array([xcom, ycom, zcom])
 
 
 def recentregal(x,y,z,vx,vy,vz,mass):
@@ -559,7 +574,7 @@ def recentregalall(x,y,z,vx,vy,vz,massl):
 		return x,y,z,vx,vy,vz
 	else:
 		xcat, ycat, zcat = np.array([]), np.array([]), np.array([])
-		vxcat, vycat, vzcat = np.array([]), np.array([]), np.array([])
+		vxcat, vycat, vzcat, mcat = np.array([]), np.array([]), np.array([]), np.array([])
 		li = np.array([],dtype=np.int32)
 		for i in xrange(len(x)):
 			xcat = np.append(xcat, x[i])
@@ -763,8 +778,10 @@ def centreonhalo(haloid,star,gas,dm,bh=None,use_baryons=True):
 			if rot: x_bh, y_bh, z_bh = rotate(x_bh,y_bh,z_bh,axis,angle) # Rotate to match coords
 
 	elif len(x_dm)>0: # If no baryons to centre on, then just use DM data (won't rotate)
-		halo_coords = np.array([np.mean(x_dm[fdm]*mass_dm[fdm])/np.mean(x_dm[fdm]), np.mean(y_dm[fdm]*mass_dm[fdm])/np.mean(y_dm[fdm]), np.mean(y_dm[fdm]*mass_dm[fdm])/np.mean(y_dm[fdm])])
-		halo_vel = np.array([np.mean(x_dm[fdm]), np.mean(y_dm[fdm]), np.mean(z_dm[fdm])])
+		halo_coords = np.array([divide(np.mean(x_dm[fdm]*mass_dm[fdm]),np.mean(x_dm[fdm])),
+                                divide(np.mean(y_dm[fdm]*mass_dm[fdm]),np.mean(y_dm[fdm])),
+                                divide(np.mean(z_dm[fdm]*mass_dm[fdm]),np.mean(z_dm[fdm]))])
+		halo_vel = np.array([np.mean(vx_dm[fdm]), np.mean(vy_dm[fdm]), np.mean(vz_dm[fdm])])
 		
 		x_dm, y_dm, z_dm = x_dm-halo_coords[0], y_dm-halo_coords[1], z_dm-halo_coords[2] # Recentre DM to match coords
 		vx_dm,vy_dm,vz_dm = vx_dm-halo_vel[0], vy_dm-halo_vel[1], vz_dm-halo_vel[2]
@@ -1092,8 +1109,8 @@ def Sersic(x,c,d,n):
 	return c*np.exp(-d*x**(divide(1, n)))
 
 def Sersiclog(x,c,d,n):
-	# For fitting a Sersic profile in log space.  Safety included to prevent log of zero.
-	return np.log10(c*np.exp(-d*x**(divide(1, n))) + 1e-15)
+	# For fitting a Sersic profile in log space.
+	return np.log10(c*np.exp(-d*x**(1./n)) + 1e-15)
 
 
 def galfn(x,a,b,c,d,n):
@@ -2742,7 +2759,7 @@ def fH2_Krumholz_ParticleBasis(SFR,m,Zgas,nH,Density_Tot,T,fneutral,redshift):
     return Fh2_SFR
 
 
-def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=1, mode='T'):
+def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'):
     """
         This is my own version of calculating the atomic- and molecular-hydrogen masses of gas particles from simulations.  This has been adapted from the Python scripts written by Claudia Lagos and Michelle Furlong.  This follows the basis of Appendix A of Lagos et al (2015b) but includes further edits from me to improve detail. Expects each input as an array, except for reshift.
         Input definitions and units are as follows:
