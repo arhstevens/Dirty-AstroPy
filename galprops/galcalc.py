@@ -658,7 +658,7 @@ def recenrotgalall2(pos,vel,m,r=25e3):
     x,y,z,vx,vy,vz = rotategalall(x,y,z,vx,vy,vz,m,r)
     return x,y,z,vx,vy,vz
 
-def recentregalall2(pos,vel,m,r=25e3):
+def recentregalall2(pos,vel,m):
     x,y,z,vx,vy,vz = [],[],[],[],[],[]
     for i in xrange(len(m)):
         x += [pos[i][:,0]]
@@ -2456,7 +2456,9 @@ def rahmati2013_neutral_frac(redshift, nH, T, onlyA1=True,noCol = False,onlyCol 
 #;       Converted to python by Michelle Furlong, Dec 2014.
 #;
 #; --------------------------------------------------------------------------------------------
-    
+    if redshift>5:
+        print 'Using the z=5 relation for rahmati2013_neutral_frac when really z=',redshift
+        redshift = 5.0
     if redshift < 1.0:
         dz = (redshift - 0.0)/(1.0-0.0)
         if onlyA1:
@@ -2524,7 +2526,7 @@ def rahmati2013_neutral_frac(redshift, nH, T, onlyA1=True,noCol = False,onlyCol 
         alpha2_hi    = -0.75
         beta_hi      =  1.93
         f_hi         =  0.02
-    elif (redshift >= 4.0 and redshift < 5.0):
+    elif (redshift >= 4.0 and redshift <= 5.0):
         dz = (redshift - 4.0)/(5.0-4.0)
         lg_n0_lo     = -2.23
         gamma_uvb_lo =  7.91e-13
@@ -2542,7 +2544,7 @@ def rahmati2013_neutral_frac(redshift, nH, T, onlyA1=True,noCol = False,onlyCol 
     else:
         print '[rahmati2013_neutral_frac] ERROR: parameters only valid for z < 5, you asked for z = ', redshift
         exit()
-    
+
     
     lg_n0     = lg_n0_lo     + dz*(lg_n0_hi     - lg_n0_lo)
     n0        = 10.**lg_n0

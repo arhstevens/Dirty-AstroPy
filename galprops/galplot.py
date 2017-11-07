@@ -244,7 +244,7 @@ def plotgal(x,y,z,mass,thetadeg=0,phideg=0,xmax=40000.,Npixels=2048,pt=1,bright=
 	
 	# Build a 2D array for plotting
 	im, xedges, yedges = np.histogram2d(xf, yf, bins=Npixels, weights=mass[filter_rad], range=[[xmin,xmax],[xmin,xmax]])
-	extent = [xedges[0]/1000, xedges[-1]/1000, yedges[0]/1000, yedges[-1]/1000] # Make the scale on the plot in kpc
+	extent = [xedges[0]*1e-3, xedges[-1]*1e-3, yedges[0]*1e-3, yedges[-1]*1e-3] # Make the scale on the plot in kpc
 	Lpix = (xmax-xmin)/float(Npixels) # Length of each pixel
 	
 	if vel==False:
