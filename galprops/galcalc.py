@@ -2812,6 +2812,9 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
     if calc_fneutral:
         fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp)
     
+    fzero = (fneutral <= 0)
+    fneutral[fzero] = 1e-6 # Floor on neutral fraction.  Prevents division by zero below
+    
     # Initialise lists if all methods wanted
     mHI_list, mH2_list = [], []
 
@@ -2857,13 +2860,15 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             Lambda = np.log(1. + g * D_MW**(3./7.) * (G0/15.)**(4./7.))
             x = Lambda**(3./7.) * np.log(D_MW * fneutral*n_H/(Lambda*25.))
             f_H2 = 1./ (1.+ np.exp(-4.*x - 3.*x**3)) # H2/(HI+H2)
-            if np.allclose(f_H2, f_H2_old, rtol=5e-3): break
+            if np.allclose(f_H2[~fzero], f_H2_old[~fzero], rtol=5e-3): break
             f_H2_old = 1.*f_H2
             fneutral_old = 1.*fneutral
 
         mass_H2 = f_H2 * fneutral * X * mass
         mass_HI = (1.-f_H2) * fneutral * X * mass
-        
+        mass_H2[fzero] = 0.
+        mass_HI[fzero] = 0.
+
     if method==0:
         mHI_list += [mass_HI]
         mH2_list += [mass_H2]
@@ -2889,12 +2894,14 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             Lambda = np.log(1. + g * D_MW**(3./7.) * (G0/15.)**(4./7))
             Sigma_c = 20. * Lambda**(4./7.) / (D_MW * np.sqrt(1.+G0*D_MW**2.))
             f_H2 = (1.+Sigma_c/Sigma_n)**-2. # H2/(HI+H2)
-            if np.allclose(f_H2, f_H2_old, rtol=5e-3): break
+            if np.allclose(f_H2[~fzero], f_H2_old[~fzero], rtol=5e-3): break
             f_H2_old = 1.*f_H2
             fneutral_old = 1.*fneutral
 
         mass_H2 = f_H2 * fneutral * X * mass
         mass_HI = (1.-f_H2) * fneutral * X * mass
+        mass_H2[fzero] = 0.
+        mass_HI[fzero] = 0.
 
     if method==0:
         mHI_list += [mass_HI]
@@ -2917,12 +2924,14 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             n_half = 14. * np.sqrt(D_star) * Lambda / (g*S)
             x = (0.8 + np.sqrt(Lambda)/S**(1./3)) * np.log(fneutral*n_H/n_half)
             f_H2 = 1./ (1 + np.exp(-x*(1-0.02*x+0.001*x*x))) # H2/(HI+H2)
-            if np.allclose(f_H2, f_H2_old, rtol=5e-3): break
+            if np.allclose(f_H2[~fzero], f_H2_old[~fzero], rtol=5e-3): break
             f_H2_old = 1.*f_H2
             fneutral_old = 1.*fneutral
 
         mass_H2 = f_H2 * fneutral * X * mass
         mass_HI = (1.-f_H2) * fneutral * X * mass
+        mass_H2[fzero] = 0.
+        mass_HI[fzero] = 0.
 
     if method==0:
         mHI_list += [mass_HI]
@@ -2966,13 +2975,15 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             #
             f_H2 = np.zeros(len(mu))
             f_H2[s<2] = 1. - 0.75*s[s<2]/(1. + 0.25*s[s<2])
-            if np.allclose(f_H2, f_H2_old, rtol=5e-3): break
+            if np.allclose(f_H2[~fzero], f_H2_old[~fzero], rtol=5e-3): break
             f_H2_old = 1.*f_H2
             fneutral_old = 1.*fneutral
 
         mass_H2 = f_H2 * fneutral * X * mass
         mass_HI = (1.-f_H2) * fneutral * X * mass
-            
+        mass_H2[fzero] = 0.
+        mass_HI[fzero] = 0.
+
     if method==0:
         mHI_list += [mass_HI]
         mH2_list += [mass_H2]
