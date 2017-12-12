@@ -1772,6 +1772,13 @@ def u2temp(u, gamma=5./3, mu=1.0):
 	temp = u * M_H * mu * (gamma-1.) / k_B
 	return temp
 
+def temp2u(temp, gamma=5./3, mu=1.0):
+    # Convert gas energy per unit mass to temperature.  Assumes input of J/kg = (m/s)^2
+    M_H = 1.673e-27 # Mass of hydrogen in kg
+    k_B = 1.3806488e-23 # Boltzmann constant (J/K)
+    u = temp * k_B / (M_H * mu * (gamma-1.))
+    return u
+
 
 def partdensstep(x,y,z,mass,r_gal=5e4,r_vir=1e5,Nbins=128):
 	"""
@@ -2761,7 +2768,7 @@ def fH2_Krumholz_ParticleBasis(SFR,m,Zgas,nH,Density_Tot,T,fneutral,redshift):
     return Fh2_SFR
 
 
-def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'):
+def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T', UVB='HM12', U_MW_z0=None):
     """
         This is my own version of calculating the atomic- and molecular-hydrogen masses of gas particles from simulations.  This has been adapted from the Python scripts written by Claudia Lagos and Michelle Furlong.  This follows the basis of Appendix A of Lagos et al (2015b) but includes further edits from me to improve detail. Expects each input as an array, except for reshift.
         Input definitions and units are as follows:
@@ -2770,7 +2777,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
         Z = ratio of metallic mass to total particle mass
         rho = density of particles [M_sun/pc^3]
         temp = temperature of particles [K] OR specific thermal energy [(m/s)^2] (see mode)
-        fneutral = fraction of particle mass that is not ionized.  If given as None, it will automatically be calculated.
+        fneutral = fraction of particle mass that is not ionized.  If given as None, it will automatically be calculated using the Rahmati+13 prescription.
         method = 0 - Return all below values
                  1 - Gnedin & Kravtsov (2011) eq 6
                  2 - Gnedin & Kravtsov (2011) eq 10
@@ -2779,6 +2786,9 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
           all of these also use Schaye and Dalla Vecchia (2008) for the Jeans length
         mode = 'T' - temp is actually temperature
                'u' - have fed in internal energy per unit mass instead of temperature
+        UVB = 'HM12' - Haardt & Madau (2012)
+              'FG09' - Faucher-Giguere et al. (2009)
+        U_MW_z0 = strength of UV background at z=0 in units of the Milky Way's interstellar radiation field.  Has a default value if set to None
     """
     
     if mode=='u':
@@ -2818,13 +2828,22 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
     # Initialise lists if all methods wanted
     mHI_list, mH2_list = [], []
 
-    # Set floor of interstellar radiation field from UV background
-    data = gr.HaardtMadau12()
-    redshiftHM12 = data[0,:]
-    UVbackground = data[1,:]/2.2e-12
+    # Set floor of interstellar radiation field from UV background, in units of Milky Way field
+    if UVB=='HM12':
+        data = gr.HaardtMadau12()
+    elif UVB=='FG09':
+        data = gr.FaucherGiguere09()
+    else:
+        print 'Could not interpret input for UVB.  UVB should be set to either HM12 or FG09.  Defaulting to FG09.'
+        data = gr.FaucherGiguere09()
+    redshift_UVB = data[0,:]
+    if U_MW_z0 is None:
+        UVbackground = data[1,:]/2.2e-12 # Divides through by local MW value (that number is in eV/s).  Original reference is unknown.  This probably should be avoided.
+    else:
+        UVbackground = data[1,:] / data[1,0] * U_MW_z0
     try:
-        arg = np.where(redshiftHM12 >= redshift)[0][0]
-        ISRF_floor = UVbackground[arg-1] + (redshift-redshiftHM12[arg-1])*(UVbackground[arg]-UVbackground[arg-1])/(redshiftHM12[arg]-redshiftHM12[arg-1]) if arg>0 else UVbackground[0]
+        arg = np.where(redshift_UVB >= redshift)[0][0]
+        ISRF_floor = UVbackground[arg-1] + (redshift-redshift_UVB[arg-1])*(UVbackground[arg]-UVbackground[arg-1])/(redshift_UVB[arg]-redshift_UVB[arg-1]) if arg>0 else UVbackground[0]
     except IndexError:
         ISRF_floor = 0.0
 
@@ -2920,6 +2939,10 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             D_star = 0.17*(2.+S**5.)/(1.+S**5.)
             U_star = 9.*D_star/S
             g = np.sqrt(D_MW*D_MW + D_star*D_star)
+            ### Double check these lines!!
+            G0 = SFR / mass * Sigma / 1e-9 # Reduced from several lines in other methods
+            G0[G0<ISRF_floor] = ISRF_floor
+            ###
             Lambda = np.log(1.+ (0.05/g+G0)**(2./3)*g**(1./3)/G0)
             n_half = 14. * np.sqrt(D_star) * Lambda / (g*S)
             x = (0.8 + np.sqrt(Lambda)/S**(1./3)) * np.log(fneutral*n_H/n_half)
@@ -2998,4 +3021,49 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             return mass_HI, mass_H2, fneutral
         else:
             return mass_HI, mass_H2
+
+
+
+def fatm_q(G, sigma=11.0, f_He=0.75, DiscBinEdge=None, h=0.73, single=False):
+    # Calculate fatm and q for Dark Sage galaxies.  Expects more than one galaxy in G by default.  Can be told to assume 1 by setting single=True
+    if DiscBinEdge is None: DiscBinEdge = np.append(0, np.array([1.0*1.4**i for i in range(30)])) / h
+    j_bins = (DiscBinEdge[1:]+DiscBinEdge[:-1])/2.
+    Grav = 6.67408e-11 * 1.989e30 / 3.0857e19 / 1e6
+    f_HeZ = f_He - G.MetalsColdGas/G.ColdGas
+    
+    if not single:
+        f_HeZ[G.ColdGas<=0] = f_He
+        HImass = np.sum(G.DiscHI, axis=1)*1e10/h
+        H2mass = np.sum(G.DiscH2, axis=1)*1e10/h
+        DiscMetallicity = G.DiscGasMetals/G.DiscGas
+        DiscMetallicity[G.DiscGas<=0] = 0.0
+        DiskMass = (G.StellarMass - G.InstabilityBulgeMass - G.MergerBulgeMass)*1e10/h + (HImass+H2mass)/f_HeZ
+        j_disk = np.sum((G.DiscStars+(G.DiscHI+G.DiscH2)/(f_He-DiscMetallicity))*1e10/h*j_bins, axis=1)/DiskMass
+    else:
+        if G.ColdGas<=0: f_HeZ = f_He
+        HImass = np.sum(G.DiscHI)*1e10/h
+        H2mass = np.sum(G.DiscH2)*1e10/h
+        DiscMetallicity = G.DiscGasMetals/G.DiscGas
+        DiscMetallicity[G.DiscGas<=0] = 0.0
+        DiskMass = (G.StellarMass - G.InstabilityBulgeMass - G.MergerBulgeMass)*1e10/h + (HImass+H2mass)/f_HeZ
+        j_disk = np.sum((G.DiscStars+(G.DiscHI+G.DiscH2)/(f_He-DiscMetallicity))*1e10/h*j_bins)/DiskMass
+
+    q = j_disk * sigma / (Grav * DiskMass)
+    f_atm =  HImass/f_HeZ / DiskMass
+    return f_atm, q
+
+
+def neutralFraction_SFcells(u, n_H, rho_th_fac=0.13, T_cold=1000, T_SN=5.73e7, A0=573.0):
+    """
+        Calculate neutral fraction for star-forming cells in Illustris-type simulations.  This takes the neutral fraction as the particle mass fraction in the 'cold' phase, from Springel & Hernquist's (2003) two-phase model.  Code is adapted from that privately sent by Benedikt Diemer.
+        Input definitions:
+        u = Internal specific energy of gas particles [m/s]
+        n_H = Density of gas particles in proton masses / cm^3
+    """
+    f_He = 0.75
+    u_cold = temp2u(T_cold, mu=4./(1.+3*f_He))
+    u_SN = temp2u(T_SN, mu=4./(8.-5*(1-f_He)))
+    A = A0 * (n_H / rho_th_fac)**-0.8
+    u_hot = u_SN / (1.+A) + u_cold
+    return (u_hot - u) / (u_hot - u_cold)
 

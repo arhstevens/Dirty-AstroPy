@@ -3758,6 +3758,11 @@ def HaardtMadau12():
             1.48000000e-12]])
 
 
+def FaucherGiguere09():
+    qdot_HI = np.array([0.158, 0.311, 0.569, 0.929, 1.371, 1.841, 2.260, 2.574, 2.768, 2.852, 2.839, 2.762, 2.642, 2.511, 2.384, 2.272, 2.171, 2.083, 2.002, 1.921, 1.833, 1.745, 1.661, 1.573, 1.487, 1.399, 1.305, 1.216, 1.127])*1e-12
+    return np.array([np.arange(0,7.25,0.25),
+                     qdot_HI])
+
 
 def csv_dict(fname, skiprows, dtypes, keylist=None, delimiter=','):
     with open(fname, 'r') as f:
