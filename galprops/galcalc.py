@@ -2561,25 +2561,25 @@ def rahmati2013_neutral_frac(redshift, nH, T, onlyA1=True,noCol = False,onlyCol 
     beta      = beta_lo      + dz*(beta_hi      - beta_lo)
     f         = f_lo         + dz*(f_hi         - f_lo)
     
-    if onlyA1:
-        print '[rahmati2013_neutral_frac] using Table A1 parameters for all redshifts'
-    else:
-        print '[rahmati2013_neutral_frac] using Table A1 parameters for z > 1 and Table A2 parameters for z < 1'
-    if noCol:
-        print '[rahmati2013_neutral_frac] neglecting collisional ionisation'
-    if onlyCol:
-        print '[rahmati2013_neutral_frac] neglecting photoionisation'
-    print '[rahmati2013_neutral_frac] adopting SSH_Thresh/cm^-3 = ',SSH_Thresh
-    print '[rahmati2013_neutral_frac] using Rahmati et al. 2013 parameters for z = ',redshift
-    print ' lg_n0/cm^-3    = ',lg_n0
-    print ' gamma_uvb/s^-1 = ',gamma_uvb
-    print ' alpha1         = ',alpha1
-    print ' alpha2         = ',alpha2
-    print ' beta           = ',beta
-    print ' f              = ',f
-    
+#    if onlyA1:
+#        print '[rahmati2013_neutral_frac] using Table A1 parameters for all redshifts'
+#    else:
+#        print '[rahmati2013_neutral_frac] using Table A1 parameters for z > 1 and Table A2 parameters for z < 1'
+#    if noCol:
+#        print '[rahmati2013_neutral_frac] neglecting collisional ionisation'
+#    if onlyCol:
+#        print '[rahmati2013_neutral_frac] neglecting photoionisation'
+#    print '[rahmati2013_neutral_frac] adopting SSH_Thresh/cm^-3 = ',SSH_Thresh
+#    print '[rahmati2013_neutral_frac] using Rahmati et al. 2013 parameters for z = ',redshift
+#    print ' lg_n0/cm^-3    = ',lg_n0
+#    print ' gamma_uvb/s^-1 = ',gamma_uvb
+#    print ' alpha1         = ',alpha1
+#    print ' alpha2         = ',alpha2
+#    print ' beta           = ',beta
+#    print ' f              = ',f
+
     # Use fitting function as per Rahmati, Pawlik, Raicevic & Schaye 2013
-    print ' nH range       = ', min(nH), max(nH), np.median(nH)
+#    print ' nH range       = ', min(nH), max(nH), np.median(nH)
     gamma_ratio = (1.-f) * (1. + (nH / n0)**beta)**alpha1 + f*(1. + (nH / n0))**alpha2
     gamma_phot  = gamma_uvb * gamma_ratio
     
@@ -2605,7 +2605,7 @@ def rahmati2013_neutral_frac(redshift, nH, T, onlyA1=True,noCol = False,onlyCol 
     f_neutral[f_neutral <= 0] = 1e-30 #negative values seem to arise from rounding errors - AlphaA and A are both positive, so B-sqrt_term should be positive!
     
     if SSH_Thresh:
-        print '[rahmati2013_neutral_frac] setting the eta = 1 for densities higher than: ', SSH_Thresh
+#        print '[rahmati2013_neutral_frac] setting the eta = 1 for densities higher than: ', SSH_Thresh
         ind = np.where(nH > SSH_Thresh)[0]
         if(len(ind) > 0): f_neutral[ind] = 1.0
 
@@ -2768,7 +2768,7 @@ def fH2_Krumholz_ParticleBasis(SFR,m,Zgas,nH,Density_Tot,T,fneutral,redshift):
     return Fh2_SFR
 
 
-def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T', UVB='HM12', U_MW_z0=None):
+def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T', UVB='HM12', U_MW_z0=None, rho_sd=0.01):
     """
         This is my own version of calculating the atomic- and molecular-hydrogen masses of gas particles from simulations.  This has been adapted from the Python scripts written by Claudia Lagos and Michelle Furlong.  This follows the basis of Appendix A of Lagos et al (2015b) but includes further edits from me to improve detail. Expects each input as an array, except for reshift.
         Input definitions and units are as follows:
@@ -2778,7 +2778,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
         rho = density of particles [M_sun/pc^3]
         temp = temperature of particles [K] OR specific thermal energy [(m/s)^2] (see mode)
         fneutral = fraction of particle mass that is not ionized.  If given as None, it will automatically be calculated using the Rahmati+13 prescription.
-        method = 0 - Return all below values
+        method = 0 - Return results for methods 2, 3, and 4
                  1 - Gnedin & Kravtsov (2011) eq 6
                  2 - Gnedin & Kravtsov (2011) eq 10
                  3 - Gnedin & Draine (2014) eq 6
@@ -2789,6 +2789,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
         UVB = 'HM12' - Haardt & Madau (2012)
               'FG09' - Faucher-Giguere et al. (2009)
         U_MW_z0 = strength of UV background at z=0 in units of the Milky Way's interstellar radiation field.  Has a default value if set to None
+        rho_sd = local density of dark matter and stars. Used in method 4. [Msun/pc^3]
     """
     
     if mode=='u':
@@ -2859,7 +2860,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
     f_H2_old = np.zeros(len(mass)) # Initialise before iterating
     fneutral_old = np.zeros(len(mass))
     
-    if method<=1:
+    if method==1:
         for it in xrange(it_max):
             f_mol = X*X*f_H2_old /  (X+Y)
             gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
@@ -2888,10 +2889,6 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
         mass_H2[fzero] = 0.
         mass_HI[fzero] = 0.
 
-    if method==0:
-        mHI_list += [mass_HI]
-        mH2_list += [mass_H2]
-        
     if method==2 or method==0:
         for it in xrange(it_max):
             f_mol = X*X*f_H2_old /  (X+Y)
@@ -2939,11 +2936,9 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             D_star = 0.17*(2.+S**5.)/(1.+S**5.)
             U_star = 9.*D_star/S
             g = np.sqrt(D_MW*D_MW + D_star*D_star)
-            ### Double check these lines!!
-            G0 = SFR / mass * Sigma / 1e-9 # Reduced from several lines in other methods
+            G0 = SFR / mass * Sigma / 1e-9 # Instellar radiation field in units of MW's local field (assumed as 1e-9 eV/s).  Reduced from several lines in other methods.
             G0[G0<ISRF_floor] = ISRF_floor
-            ###
-            Lambda = np.log(1.+ (0.05/g+G0)**(2./3)*g**(1./3)/G0)
+            Lambda = np.log(1.+ (0.05/g+G0)**(2./3)*g**(1./3)/U_star)
             n_half = 14. * np.sqrt(D_star) * Lambda / (g*S)
             x = (0.8 + np.sqrt(Lambda)/S**(1./3)) * np.log(fneutral*n_H/n_half)
             f_H2 = 1./ (1 + np.exp(-x*(1-0.02*x+0.001*x*x))) # H2/(HI+H2)
@@ -2962,12 +2957,10 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
     
     if method==4 or method==0:
         f_c = 5.0 # clumping factor
-        rho_sd = 1.0 # typical total density
         alpha = 5.0 # relative pressure of turbulence, magnetic fields vs thermal
         zeta_d = 0.33
         f_w = 0.5
         c_w = 8e3 / m_per_pc * s_per_yr # sound speed of warm medium -- could calculate this better
-        rho_sd = 0.01 # estimated local density of stars+DM -- could calculate this better
         T_CNMmax = 273. # maximum temperature of cold neutral medium
         for it in xrange(it_max):
             f_mol = X*X*f_H2_old /  (X+Y)
@@ -2978,9 +2971,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
                 if calc_fneutral and not np.allclose(fneutral, fneutral_old, rtol=5e-3): fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp)
             Sigma = np.sqrt(gamma * const_ratio * f_th * rho * temp / mu)
             Sigma_n = fneutral * X * Sigma # neutral hydrogen density
-            area = mass / Sigma
-            Sigma_SFR = SFR / area
-            G0 = Sigma_SFR / 1e-9
+            G0 = SFR / mass * Sigma / 1e-9 # Instellar radiation field in units of MW's local field (assumed as 1e-9 eV/s).  Reduced from several lines in other methods.
             G0[G0<ISRF_floor] = ISRF_floor
             #
             n_CNM2p = 23.*G0 * 4.1 / (1. + 3.1*D_MW**0.365)
