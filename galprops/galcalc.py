@@ -2768,7 +2768,7 @@ def fH2_Krumholz_ParticleBasis(SFR,m,Zgas,nH,Density_Tot,T,fneutral,redshift):
     return Fh2_SFR
 
 
-def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T', UVB='HM12', U_MW_z0=None, rho_sd=0.01):
+def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T', UVB='FG09-Dec11', U_MW_z0=None, rho_sd=0.01, col=3):
     """
         This is my own version of calculating the atomic- and molecular-hydrogen masses of gas particles from simulations.  This has been adapted from the Python scripts written by Claudia Lagos and Michelle Furlong.  This follows the basis of Appendix A of Lagos et al (2015b) but includes further edits from me to improve detail. Expects each input as an array, except for reshift.
         Input definitions and units are as follows:
@@ -2788,8 +2788,10 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
                'u' - have fed in internal energy per unit mass instead of temperature
         UVB = 'HM12' - Haardt & Madau (2012)
               'FG09' - Faucher-Giguere et al. (2009)
+              'FG09-Dec11' - Updated FG09 table.  Uses pre-built values normalised by the Draine (1978) field, tabulated by Benedikt Diemer
         U_MW_z0 = strength of UV background at z=0 in units of the Milky Way's interstellar radiation field.  Has a default value if set to None
         rho_sd = local density of dark matter and stars. Used in method 4. [Msun/pc^3]
+        col = only used for UVB='FG09-Dec11', decides on column to use in table
     """
     
     if mode=='u':
@@ -2830,23 +2832,26 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
     mHI_list, mH2_list = [], []
 
     # Set floor of interstellar radiation field from UV background, in units of Milky Way field
-    if UVB=='HM12':
-        data = gr.HaardtMadau12()
-    elif UVB=='FG09':
-        data = gr.FaucherGiguere09()
+    if UVB not in ['HM12', 'FG09', 'FG09-Dec11']:
+        print 'Could not interpret input for UVB.  UVB should be set to either HM12, FG09, or FG09-Dec11.  Defaulting to FG09-Dec11.'
+        UVB = 'FG09-Dec11'
+    
+    if UVB=='FG09-Dec11':
+        if col not in [1,2,3]: col = 3
+        data = gr.U_MW_FG09_Dec11()
+        redshift_UVB = data[:,0]
+        UVbackground = data[:,col]
     else:
-        print 'Could not interpret input for UVB.  UVB should be set to either HM12 or FG09.  Defaulting to FG09.'
-        data = gr.FaucherGiguere09()
-    redshift_UVB = data[0,:]
-    if U_MW_z0 is None:
-        UVbackground = data[1,:]/2.2e-12 # Divides through by local MW value (that number is in eV/s).  Original reference is unknown.  This probably should be avoided.
-    else:
-        UVbackground = data[1,:] / data[1,0] * U_MW_z0
-    try:
-        arg = np.where(redshift_UVB >= redshift)[0][0]
-        ISRF_floor = UVbackground[arg-1] + (redshift-redshift_UVB[arg-1])*(UVbackground[arg]-UVbackground[arg-1])/(redshift_UVB[arg]-redshift_UVB[arg-1]) if arg>0 else UVbackground[0]
-    except IndexError:
-        ISRF_floor = 0.0
+        if UVB=='HM12':
+            data = gr.HaardtMadau12()
+        elif UVB=='FG09':
+            data = gr.FaucherGiguere09()
+        redshift_UVB = data[0,:]
+        if U_MW_z0 is None:
+            UVbackground = data[1,:]/2.2e-12 # Divides through by local MW value (that number is in eV/s).  Original reference is unknown.  This probably should be avoided.
+        else:
+            UVbackground = data[1,:] / data[1,0] * U_MW_z0
+    ISRF_floor = 10**np.interp(redshift, redshift_UVB, np.log10(UVbackground))
 
 
     f_th = 1.0 # Assuming all gas is thermal
