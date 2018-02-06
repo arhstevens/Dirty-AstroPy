@@ -2418,7 +2418,7 @@ def hydrogen_decomp_exp_disc2(mass_gas, r_eff, mass_star, Z_gas, P_0=5.93e-13, c
 
 
 
-def rahmati2013_neutral_frac(redshift, nH, T, onlyA1=True,noCol = False,onlyCol = False,SSH_Thresh = 1,extrapolate=False,local=False):
+def rahmati2013_neutral_frac(redshift, nH, T, onlyA1=True,noCol = False,onlyCol = False,SSH_Thresh = 1,extrapolate=False,local=False, UVB='FG09-Dec11'):
     
 #; --------------------------------------------------------------------------------------------
 #;+
@@ -2461,89 +2461,89 @@ def rahmati2013_neutral_frac(redshift, nH, T, onlyA1=True,noCol = False,onlyCol 
 #;       Written by Rob Crain, Leiden, March 2014, with input from Ali
 #;       Rahmati. Based on Rahmati et al. (2013).
 #;       Converted to python by Michelle Furlong, Dec 2014.
-#;
+#;      Further edits by Adam Stevens, Jan 2018
 #; --------------------------------------------------------------------------------------------
     if redshift>5:
         print 'Using the z=5 relation for rahmati2013_neutral_frac when really z=',redshift
         redshift = 5.0
     if redshift < 1.0:
-        dz = (redshift - 0.0)/(1.0-0.0)
+        dlogz = (np.log10(1+redshift) - 0.0)/np.log10(2.)
         if onlyA1:
             lg_n0_lo     = -2.94
-            gamma_uvb_lo =  8.34e-14
+            gamma_uvb_lo =  8.34e-14 if UVB=='HM12' else 3.99e-14
             alpha1_lo    = -3.98
             alpha2_lo    = -1.09
             beta_lo      =  1.29
             f_lo         =  0.01
         else:
             lg_n0_lo     = -2.56
-            gamma_uvb_lo =  8.34e-14
+            gamma_uvb_lo =  8.34e-14 if UVB=='HM12' else 3.99e-14
             alpha1_lo    = -1.86
             alpha2_lo    = -0.51
             beta_lo      =  2.83
             f_lo         =  0.01
         lg_n0_hi     = -2.29
-        gamma_uvb_hi =  7.39e-13
+        gamma_uvb_hi =  7.39e-13 if UVB=='HM12' else 3.03e-13
         alpha1_hi    = -2.94
         alpha2_hi    = -0.90
         beta_hi      =  1.21
         f_hi         =  0.03
     elif (redshift >= 1.0 and redshift < 2.0):
-        dz = (redshift - 1.0)/(2.0-1.0)
+        dlogz = (np.log10(1+redshift) - np.log10(2.))/(np.log10(3.)-np.log10(2.))
         lg_n0_lo     = -2.29
-        gamma_uvb_lo =  7.39e-13
+        gamma_uvb_lo =  7.39e-13 if UVB=='HM12' else 3.03e-13
         alpha1_lo    = -2.94
         alpha2_lo    = -0.90
         beta_lo      =  1.21
         f_lo         =  0.03
         
         lg_n0_hi     = -2.06
-        gamma_uvb_hi =  1.50e-12
+        gamma_uvb_hi =  1.50e-12 if UVB=='HM12' else 6.00e-13
         alpha1_hi    = -2.22
         alpha2_hi    = -1.09
         beta_hi      =  1.75
         f_hi         =  0.03
     elif (redshift >= 2.0 and redshift < 3.0):
-        dz = (redshift - 2.0)/(3.0-2.0)
+        dlogz = (np.log10(1+redshift) - np.log10(3.))/(np.log10(4.)-np.log10(3.))
         lg_n0_lo     = -2.06
-        gamma_uvb_lo =  1.50e-12
+        gamma_uvb_lo =  1.50e-12 if UVB=='HM12' else 6.00e-13
         alpha1_lo    = -2.22
         alpha2_lo    = -1.09
         beta_lo      =  1.75
         f_lo         =  0.03
         
         lg_n0_hi     = -2.13
-        gamma_uvb_hi =  1.16e-12
+        gamma_uvb_hi =  1.16e-12 if UVB=='HM12' else 5.53e-13
         alpha1_hi    = -1.99
         alpha2_hi    = -0.88
         beta_hi      =  1.72
         f_hi         =  0.04
     elif (redshift >= 3.0 and redshift < 4.0):
-        dz = (redshift - 3.0)/(4.0-3.0)
+        dlogz = (np.log10(1+redshift) - np.log10(4.))/(np.log10(5.)-np.log10(4.))
         lg_n0_lo     = -2.13
-        gamma_uvb_lo =  1.16e-12
+        gamma_uvb_lo =  1.16e-12 if UVB=='HM12' else 5.53e-13
         alpha1_lo    = -1.99
         alpha2_lo    = -0.88
         beta_lo      =  1.72
         f_lo         =  0.04
         
         lg_n0_hi     = -2.23
-        gamma_uvb_hi =  7.91e-13
+        gamma_uvb_hi =  7.91e-13 if UVB=='HM12' else 4.31e-13
         alpha1_hi    = -2.05
         alpha2_hi    = -0.75
         beta_hi      =  1.93
         f_hi         =  0.02
     elif (redshift >= 4.0 and redshift <= 5.0):
-        dz = (redshift - 4.0)/(5.0-4.0)
+        dlogz = (np.log10(1+redshift) - np.log10(5.))/(np.log10(6.)-np.log10(5.))
         lg_n0_lo     = -2.23
-        gamma_uvb_lo =  7.91e-13
+        gamma_uvb_lo =  7.91e-13 if UVB=='HM12' else 4.31e-13
         alpha1_lo    = -2.05
         alpha2_lo    = -0.75
         beta_lo      =  1.93
         f_lo         =  0.02
         
         lg_n0_hi     = -2.35
-        gamma_uvb_hi =  5.43e-13
+        gamma_uvb_hi =  5.43e-13 if UVB=='HM12' else 3.52e-13
         alpha1_hi    = -2.63
         alpha2_hi    = -0.57
         beta_hi      =  1.77
@@ -2552,14 +2552,15 @@ def rahmati2013_neutral_frac(redshift, nH, T, onlyA1=True,noCol = False,onlyCol 
         print '[rahmati2013_neutral_frac] ERROR: parameters only valid for z < 5, you asked for z = ', redshift
         exit()
 
-    
-    lg_n0     = lg_n0_lo     + dz*(lg_n0_hi     - lg_n0_lo)
+    # [Adam] All of this code could be massively reduced by just putting the hi/low values into a table and using np.interp....
+    lg_n0     = lg_n0_lo     + dlogz*(lg_n0_hi     - lg_n0_lo)
     n0        = 10.**lg_n0
-    gamma_uvb = gamma_uvb_lo + dz*(gamma_uvb_hi - gamma_uvb_lo)
-    alpha1    = alpha1_lo    + dz*(alpha1_hi    - alpha1_lo)
-    alpha2    = alpha2_lo    + dz*(alpha2_hi    - alpha2_lo)
-    beta      = beta_lo      + dz*(beta_hi      - beta_lo)
-    f         = f_lo         + dz*(f_hi         - f_lo)
+    lg_gamma_uvb_lo, lg_gamma_uvb_hi = np.log10(gamma_uvb_lo), np.log10(gamma_uvb_lo)
+    gamma_uvb = 10**(lg_gamma_uvb_lo + dlogz*(lg_gamma_uvb_hi - lg_gamma_uvb_lo))
+    alpha1    = alpha1_lo    + dlogz*(alpha1_hi    - alpha1_lo)
+    alpha2    = alpha2_lo    + dlogz*(alpha2_hi    - alpha2_lo)
+    beta      = beta_lo      + dlogz*(beta_hi      - beta_lo)
+    f         = f_lo         + dlogz*(f_hi         - f_lo)
     
 #    if onlyA1:
 #        print '[rahmati2013_neutral_frac] using Table A1 parameters for all redshifts'
@@ -2770,7 +2771,7 @@ def fH2_Krumholz_ParticleBasis(SFR,m,Zgas,nH,Density_Tot,T,fneutral,redshift):
 
 def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T', UVB='FG09-Dec11', U_MW_z0=None, rho_sd=0.01, col=3):
     """
-        This is my own version of calculating the atomic- and molecular-hydrogen masses of gas particles from simulations.  This has been adapted from the Python scripts written by Claudia Lagos and Michelle Furlong.  This follows the basis of Appendix A of Lagos et al (2015b) but includes further edits from me to improve detail. Expects each input as an array, except for reshift.
+        This is my own version of calculating the atomic- and molecular-hydrogen masses of gas particles from simulations.  This has been adapted from the Python scripts written by Claudia Lagos and Michelle Furlong.  This follows the basis of Appendix A of Lagos et al (2015b) but includes further edits from me to improve detail. Expects each non-default input as an array, except for reshift.
         Input definitions and units are as follows:
         mass = total mass of particles [M_sun]
         SFR = star formation rate of particles [M_sun/yr]
@@ -2789,7 +2790,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
         UVB = 'HM12' - Haardt & Madau (2012)
               'FG09' - Faucher-Giguere et al. (2009)
               'FG09-Dec11' - Updated FG09 table.  Uses pre-built values normalised by the Draine (1978) field, tabulated by Benedikt Diemer
-        U_MW_z0 = strength of UV background at z=0 in units of the Milky Way's interstellar radiation field.  Has a default value if set to None
+        U_MW_z0 = strength of UV background at z=0 in units of the Milky Way's interstellar radiation field.  Has a default value if set to None.
         rho_sd = local density of dark matter and stars. Used in method 4. [Msun/pc^3]
         col = only used for UVB='FG09-Dec11', decides on column to use in table
     """
@@ -2823,7 +2824,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
     
     # Calculate (initialise in the case of mode='u') neutral fraction if it wasn't already provided
     if calc_fneutral:
-        fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp)
+        fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp, UVB=UVB)
     
     fzero = (fneutral <= 0)
     fneutral[fzero] = 1e-6 # Floor on neutral fraction.  Prevents division by zero below
@@ -2872,7 +2873,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
             if mode=='u':
                 temp = u2temp(u, gamma, mu)
-                if calc_fneutral and not np.allclose(fneutral, fneutral_old, rtol=5e-3): fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp) # too slow to do every time (hopefully this converges faster)
+                if calc_fneutral and not np.allclose(fneutral, fneutral_old, rtol=5e-3): fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp, UVB=UVB) # too slow to do every time (hopefully this converges faster)
             Sigma = np.sqrt(gamma * const_ratio * f_th * rho * temp / mu) # Approximate surface density as true density * Jeans length (see eq. 7 of Schaye and Dalla Vecchia 2008)
             area = mass / Sigma # Effective area covered by particle
             Sigma_SFR = SFR / area
@@ -2901,7 +2902,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
             if mode=='u':
                 temp = u2temp(u, gamma, mu)
-                if calc_fneutral and not np.allclose(fneutral, fneutral_old, rtol=5e-3): fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp)
+                if calc_fneutral and not np.allclose(fneutral, fneutral_old, rtol=5e-3): fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp, UVB=UVB)
             Sigma = np.sqrt(gamma * const_ratio * f_th * rho * temp / mu)
             Sigma_n = fneutral * X * Sigma # neutral hydrogen density
             area = mass / Sigma
@@ -2935,13 +2936,13 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
             if mode=='u':
                 temp = u2temp(u, gamma, mu)
-                if calc_fneutral and not np.allclose(fneutral, fneutral_old, rtol=5e-3): fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp)
+                if calc_fneutral and not np.allclose(fneutral, fneutral_old, rtol=5e-3): fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp, UVB=UVB)
             Sigma = np.sqrt(gamma * const_ratio * f_th * rho * temp / mu)
             S = Sigma / rho * 0.01 # This is the Jeans length per 100pc, taken as the spatial scale
             D_star = 0.17*(2.+S**5.)/(1.+S**5.)
             U_star = 9.*D_star/S
             g = np.sqrt(D_MW*D_MW + D_star*D_star)
-            G0 = SFR / mass * Sigma / 1e-9 # Instellar radiation field in units of MW's local field (assumed as 1e-9 eV/s).  Reduced from several lines in other methods.
+            G0 = SFR / mass * Sigma / 1e-9 # Instellar radiation field in units of MW's local field (assumed to be proportional to local SFR density, taken as 1e-9 Msun/pc^2/yr).  Reduced from several lines in other methods.
             G0[G0<ISRF_floor] = ISRF_floor
             Lambda = np.log(1.+ (0.05/g+G0)**(2./3)*g**(1./3)/U_star)
             n_half = 14. * np.sqrt(D_star) * Lambda / (g*S)
@@ -2973,10 +2974,10 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
             if mode=='u':
                 temp = u2temp(u, gamma, mu)
-                if calc_fneutral and not np.allclose(fneutral, fneutral_old, rtol=5e-3): fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp)
+                if calc_fneutral and not np.allclose(fneutral, fneutral_old, rtol=5e-3): fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp, UVB=UVB)
             Sigma = np.sqrt(gamma * const_ratio * f_th * rho * temp / mu)
             Sigma_n = fneutral * X * Sigma # neutral hydrogen density
-            G0 = SFR / mass * Sigma / 1e-9 # Instellar radiation field in units of MW's local field (assumed as 1e-9 eV/s).  Reduced from several lines in other methods.
+            G0 = SFR / mass * Sigma / 1e-9
             G0[G0<ISRF_floor] = ISRF_floor
             #
             n_CNM2p = 23.*G0 * 4.1 / (1. + 3.1*D_MW**0.365)

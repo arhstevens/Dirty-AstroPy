@@ -895,7 +895,7 @@ def galdtype_adam():
                     ('Vel'                          , (floattype, 3)),
                     ('Spin'                         , (floattype, 3)),
                     ('Len'                          , np.int32),
-                    ('LenMax'                       , np.int32), # Added at run 409
+#                    ('LenMax'                       , np.int32), # Added at run 409
                     ('Mvir'                         , floattype),
                     ('Rvir'                         , floattype),
                     ('Vvir'                         , floattype),
@@ -914,7 +914,7 @@ def galdtype_adam():
                     ('DiscStars'                    , (floattype, 30)),
                     ('SpinStars'                    , (floattype, 3)),
                     ('SpinGas'                      , (floattype, 3)),
-#                    ('SpinSecularBulge'             , (floattype, 3)), #=# This and next added at run 154. This one (only) removed at 432
+                    ('SpinSecularBulge'             , (floattype, 3)), #=# This and next added at run 154. This one (only) removed at 432
                     ('SpinClassicalBulge'           , (floattype, 3)), #=#
                     ('StarsInSitu'                  , floattype), # This and next 2 introduced at run 66, removed 432, re-added run 436
                     ('StarsInstability'             , floattype), #
@@ -925,15 +925,15 @@ def galdtype_adam():
 #                    ('AccretedGasMass'              , floattype), ###### Added run 324, removed run 432
 #                    ('EjectedSNGasMass'             , floattype),######
 #                    ('EjectedQuasarGasMass'         , floattype),######
-#                    ('TotInstabEvents'              , np.int32), ### This and next few introduced at run 144, removed 432
-#                    ('TotInstabEventsGas'           , np.int32), ###
-#                    ('TotInstabEventsStar'          , np.int32), ###
-#                    ('TotInstabAnnuliGas'           , np.int32), ###
-#                    ('TotInstabAnnuliStar'          , np.int32), ###
-#                    ('FirstUnstableAvGas'           , floattype), ###
-#                    ('FirstUnstableAvStar'          , floattype), ###
-#                    ('TotSinkGas'                   , (floattype, 30)), ###
-#                    ('TotSinkStar'                  , (floattype, 30)), ###
+                    ('TotInstabEvents'              , np.int32), ### This and next few introduced at run 144, removed 432
+                    ('TotInstabEventsGas'           , np.int32), ###
+                    ('TotInstabEventsStar'          , np.int32), ###
+                    ('TotInstabAnnuliGas'           , np.int32), ###
+                    ('TotInstabAnnuliStar'          , np.int32), ###
+                    ('FirstUnstableAvGas'           , floattype), ###
+                    ('FirstUnstableAvStar'          , floattype), ###
+                    ('TotSinkGas'                   , (floattype, 30)), ###
+                    ('TotSinkStar'                  , (floattype, 30)), ###
                     ('MetalsColdGas'                , floattype),
                     ('MetalsStellarMass'            , floattype),
                     ('ClassicalMetalsBulgeMass'     , floattype),
@@ -952,7 +952,7 @@ def galdtype_adam():
                     ('Cooling'                      , floattype),
                     ('Heating'                      , floattype),
                     ('LastMajorMerger'              , floattype),
-                    ('LastMinorMerger'              , floattype), # Added run 433
+#                    ('LastMinorMerger'              , floattype), # Added run 433
                     ('OutflowRate'                  , floattype),
                     ('infallMvir'                   , floattype),
                     ('infallVvir'                   , floattype),
@@ -3549,11 +3549,11 @@ def obsgasmass():
 
 
 
-def GASSdata():
+def GASSdata(dir='/Users/adam/Dropbox/Swinburne Shared/6-MonthProject/', h=0.6774):
 	# Read in all the data on the GASS galaxies from the works of Catinella (2010,2012b) and Saintonge (2011a)
 
 	### READ IN THE DATA I'M INTERESTED IN ###
-	with open('Saintonge2011aTab1Data.txt','r') as f:
+	with open(dir+'Saintonge2011aTab1Data.txt','r') as f:
 		data = f.read()
 		S11_1 = data.split() # Saintonge 2011 data 1
 
@@ -3563,7 +3563,7 @@ def GASSdata():
 	mu_11_1 = 10**(np.array(S11_1[4::9],dtype=float) - 6) # Average stellar surface density within the half-light radius in the z-band (solar masses per square parsec)
 
 
-	with open('Saintonge2011aTab2Data.txt','r') as f:
+	with open(dir+'Saintonge2011aTab2Data.txt','r') as f:
 		data = f.read()
 		S11_2 = data.split() # Saintonge 2011 data 2
 
@@ -3571,7 +3571,7 @@ def GASSdata():
 	MH2_11_2 = 10**np.array(S11_2[6::9],dtype=float)
 
 
-	with open('Catinella2010Tab1Data.txt','r') as f:
+	with open(dir+'Catinella2010Tab1Data.txt','r') as f:
 		data = f.read()
 		C10_1 = data.split()
 
@@ -3581,7 +3581,7 @@ def GASSdata():
 	mu_10_1 = 10**(np.array(C10_1[7::13],dtype=float) - 6)
 
 
-	with open('Catinella2010Tab2Data.txt','r') as f:
+	with open(dir+'Catinella2010Tab2Data.txt','r') as f:
 		data = f.read()
 		C10_2 = data.split()
 
@@ -3589,7 +3589,7 @@ def GASSdata():
 	MHI_10_2 = 10**np.array(C10_2[15::18],dtype=float)
 
 
-	with open('Catinella2012bTab1Data.txt','r') as f:
+	with open(dir+'Catinella2012bTab1Data.txt','r') as f:
 		data = f.read()
 		C12_1 = data.split() # Catinella 2012 data
 
@@ -3599,7 +3599,7 @@ def GASSdata():
 	mu_12_1 = 10**(np.array(C12_1[8::16],dtype=float) - 6)
 
 
-	with open('Catinella2012bTab2Data.txt','r') as f:
+	with open(dir+'Catinella2012bTab2Data.txt','r') as f:
 		data = f.read()
 		C12_2 = data.split() # Catinella 2012 data
 
@@ -3631,7 +3631,7 @@ def GASSdata():
 	z[f121], Mstar[f121], mu[f121] = z_12_1, Mstar_12_1, mu_12_1
 	MHI[f122] = MHI[f122]
 
-	return id, z, Mstar, MH2, MHI, mu
+	return id, z, Mstar*0.7/h, MH2*0.7/h, MHI*0.7/h, mu
 
 
 def fr13data(h=0.678):
@@ -4000,3 +4000,90 @@ def U_MW_FG09_Dec11():
                     [5.80, 1.83e-01, 1.79e-01, 1.90e-01],
                     [6.00, 1.89e-01, 1.84e-01, 1.91e-01]])
 
+
+def GASS_COLDGASS_data(dir='/Users/adam/Dropbox/Swinburne Shared/6-MonthProject/', h=0.6774):
+    # Read in all relevant data from files
+    S11_id = np.loadtxt(dir+'Saintonge2011aTab1Data.txt', usecols=0, dtype=np.int32)
+    S11_Mstar = 10**np.loadtxt(dir+'Saintonge2011aTab1Data.txt', usecols=3, dtype=np.float32)
+    S11_MH2 = 10**np.loadtxt(dir+'Saintonge2011aTab2Data.txt', usecols=6, dtype=np.float32)
+    S11_detflag = 10**np.loadtxt(dir+'Saintonge2011aTab2Data.txt', usecols=8, dtype=np.int32)
+    #
+    C10_id = np.loadtxt(dir+'Catinella2010Tab1Data.txt', usecols=0, dtype=np.int32)
+    C10_Mstar = 10**np.loadtxt(dir+'Catinella2010Tab1Data.txt', usecols=3, dtype=np.float32)
+    C10_det_id = np.loadtxt(dir+'Catinella2010Tab2Data.txt', usecols=0, dtype=np.int32)
+    C10_det_MHI = 10**np.loadtxt(dir+'Catinella2010Tab2Data.txt', usecols=15, dtype=np.float32)
+    C10_nondet_id = np.loadtxt(dir+'Catinella2010Tab3Data.txt', usecols=1, dtype=np.int32)
+    C10_nondet_MHI = 10**np.loadtxt(dir+'Catinella2010Tab3Data.txt', usecols=5, dtype=np.float32)
+    #
+    C12_id = np.loadtxt(dir+'Catinella2012bTab1Data.txt', usecols=0, dtype=np.int32)
+    C12_Mstar = 10**np.loadtxt(dir+'Catinella2012bTab1Data.txt', usecols=4, dtype=np.float32)
+    C12_det_id = np.loadtxt(dir+'Catinella2012bTab2Data.txt', usecols=0, dtype=np.int32)
+    C12_det_MHI = 10**np.loadtxt(dir+'Catinella2012bTab2Data.txt', usecols=15, dtype=np.float32)
+    C12_nondet_id = np.loadtxt(dir+'Catinella2012bTab3Data.txt', usecols=1, dtype=np.int32)
+    C12_nondet_MHI = 10**np.loadtxt(dir+'Catinella2012bTab3Data.txt', usecols=5, dtype=np.float32)
+
+    # Check the data are as I expect
+    assert len(C10_id)==len(C10_det_id)+len(C10_nondet_id)
+    assert np.all(~np.in1d(C10_det_id,C10_nondet_id))
+    assert len(C12_id)==len(C12_det_id)+len(C12_nondet_id)
+    assert np.all(~np.in1d(C12_det_id,C12_nondet_id))
+
+    # Sort and reorganise data
+    asort = np.argsort(S11_id)
+    S11_id = S11_id[asort]
+    S11_Mstar = S11_Mstar[asort]
+    S11_MH2 = S11_MH2[asort]
+    S11_detflag = S11_detflag[asort]
+    #
+    asort = np.argsort(C10_id)
+    C10_id = C10_id[asort]
+    C10_Mstar = C10_Mstar[asort]
+    #
+    asort = np.argsort(C10_det_id)
+    C10_det_id = C10_det_id[asort]
+    C10_det_MHI = C10_det_MHI[asort]
+    #
+    asort = np.argsort(C10_nondet_id)
+    C10_nondet_id = C10_nondet_id[asort]
+    C10_nondet_MHI = C10_nondet_MHI[asort]
+    #
+    asort = np.argsort(C12_id)
+    C12_id = C12_id[asort]
+    C12_Mstar = C12_Mstar[asort]
+    #
+    asort = np.argsort(C12_det_id)
+    C12_det_id = C12_det_id[asort]
+    C12_det_MHI = C12_det_MHI[asort]
+    #
+    asort = np.argsort(C12_nondet_id)
+    C12_nondet_id = C12_nondet_id[asort]
+    C12_nondet_MHI = C12_nondet_MHI[asort]
+
+    # Get information for galaxies that are common for both GASS and COLD GASS
+    ids = np.intersect1d(S11_id, np.append(C10_id,C12_id))
+    Ngal = len(ids)
+    MHI = np.zeros(Ngal, dtype=np.float32)
+    Mstar_C, Mstar_S = np.zeros(Ngal, dtype=np.float32), np.zeros(Ngal, dtype=np.float32)
+    HI_det = np.zeros(Ngal, dtype=bool)
+    #
+    MHI[np.in1d(ids,C10_det_id)] = 1.0*C10_det_MHI[np.in1d(C10_det_id,ids)]
+    HI_det[np.in1d(ids,C10_det_id)] = True
+    MHI[np.in1d(ids,C10_nondet_id)] = 1.0*C10_nondet_MHI[np.in1d(C10_nondet_id,ids)]
+    #
+    MHI[np.in1d(ids,C12_det_id)] = 1.0*C12_det_MHI[np.in1d(C12_det_id,ids)]
+    HI_det[np.in1d(ids,C12_det_id)] = True
+    MHI[np.in1d(ids,C12_nondet_id)] = 1.0*C12_nondet_MHI[np.in1d(C12_nondet_id,ids)]
+    #
+    MH2 = 1.0*S11_MH2[np.in1d(S11_id,ids)]
+    H2_det = np.array(2-S11_detflag[np.in1d(S11_id,ids)], dtype=bool)
+    #
+    Mstar_C[np.in1d(ids,C10_id)] = 1.0*C10_Mstar[np.in1d(C10_id,ids)]
+    Mstar_C[np.in1d(ids,C12_id)] = 1.0*C12_Mstar[np.in1d(C12_id,ids)]
+    Mstar_S = 1.0*S11_Mstar[np.in1d(S11_id,ids)]
+#    print Mstar_C
+#    print Mstar_S
+    assert np.allclose(Mstar_C, Mstar_S)
+
+    return id, Mstar_S, MHI, MH2, HI_det, H2_det
+
+    
