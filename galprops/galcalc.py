@@ -682,8 +682,8 @@ def rotategalall2(pos,vel,m,r=25e3):
         vy += [vel[i][:,1]]
         vz += [vel[i][:,2]]
     
-    x,y,z,vx,vy,vz,angle = rotategalall(x,y,z,vx,vy,vz,m,r,True)
-    return x,y,z,vx,vy,vz,angle
+    x,y,z,vx,vy,vz,axis,angle = rotategalall(x,y,z,vx,vy,vz,m,r,True)
+    return x,y,z,vx,vy,vz,axis,angle
 
 
 def centreonhalo(haloid,star,gas,dm,bh=None,use_baryons=True):
@@ -1773,7 +1773,7 @@ def u2temp(u, gamma=5./3, mu=1.0):
 	return temp
 
 def temp2u(temp, gamma=5./3, mu=1.0):
-    # Convert gas energy per unit mass to temperature.  Assumes input of J/kg = (m/s)^2
+    # Convert temperature to gas energy per unit mass.  Output in J/kg = (m/s)^2
     M_H = 1.673e-27 # Mass of hydrogen in kg
     k_B = 1.3806488e-23 # Boltzmann constant (J/K)
     u = temp * k_B / (M_H * mu * (gamma-1.))
@@ -3054,7 +3054,7 @@ def neutralFraction_SFcells(u, n_H, rho_th_fac=0.13, T_cold=1000, T_SN=5.73e7, A
     """
         Calculate neutral fraction for star-forming cells in Illustris-type simulations.  This takes the neutral fraction as the particle mass fraction in the 'cold' phase, from Springel & Hernquist's (2003) two-phase model.  Code is adapted from that privately sent by Benedikt Diemer.
         Input definitions:
-        u = Internal specific energy of gas particles [m/s]
+        u = Internal specific energy of gas particles [m/s]^2
         n_H = Density of gas particles in proton masses / cm^3
     """
     f_He = 0.75
