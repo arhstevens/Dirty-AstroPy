@@ -895,7 +895,7 @@ def galdtype_adam():
                     ('Vel'                          , (floattype, 3)),
                     ('Spin'                         , (floattype, 3)),
                     ('Len'                          , np.int32),
-#                    ('LenMax'                       , np.int32), # Added at run 409
+                    ('LenMax'                       , np.int32), # Added at run 409
                     ('Mvir'                         , floattype),
                     ('Rvir'                         , floattype),
                     ('Vvir'                         , floattype),
@@ -914,7 +914,7 @@ def galdtype_adam():
                     ('DiscStars'                    , (floattype, 30)),
                     ('SpinStars'                    , (floattype, 3)),
                     ('SpinGas'                      , (floattype, 3)),
-                    ('SpinSecularBulge'             , (floattype, 3)), #=# This and next added at run 154. This one (only) removed at 432
+#                    ('SpinSecularBulge'             , (floattype, 3)), #=# This and next added at run 154. This one (only) removed at 432
                     ('SpinClassicalBulge'           , (floattype, 3)), #=#
                     ('StarsInSitu'                  , floattype), # This and next 2 introduced at run 66, removed 432, re-added run 436
                     ('StarsInstability'             , floattype), #
@@ -925,15 +925,15 @@ def galdtype_adam():
 #                    ('AccretedGasMass'              , floattype), ###### Added run 324, removed run 432
 #                    ('EjectedSNGasMass'             , floattype),######
 #                    ('EjectedQuasarGasMass'         , floattype),######
-                    ('TotInstabEvents'              , np.int32), ### This and next few introduced at run 144, removed 432
-                    ('TotInstabEventsGas'           , np.int32), ###
-                    ('TotInstabEventsStar'          , np.int32), ###
-                    ('TotInstabAnnuliGas'           , np.int32), ###
-                    ('TotInstabAnnuliStar'          , np.int32), ###
-                    ('FirstUnstableAvGas'           , floattype), ###
-                    ('FirstUnstableAvStar'          , floattype), ###
-                    ('TotSinkGas'                   , (floattype, 30)), ###
-                    ('TotSinkStar'                  , (floattype, 30)), ###
+#                    ('TotInstabEvents'              , np.int32), ### This and next few introduced at run 144, removed 432
+#                    ('TotInstabEventsGas'           , np.int32), ###
+#                    ('TotInstabEventsStar'          , np.int32), ###
+#                    ('TotInstabAnnuliGas'           , np.int32), ###
+#                    ('TotInstabAnnuliStar'          , np.int32), ###
+#                    ('FirstUnstableAvGas'           , floattype), ###
+#                    ('FirstUnstableAvStar'          , floattype), ###
+#                    ('TotSinkGas'                   , (floattype, 30)), ###
+#                    ('TotSinkStar'                  , (floattype, 30)), ###
                     ('MetalsColdGas'                , floattype),
                     ('MetalsStellarMass'            , floattype),
                     ('ClassicalMetalsBulgeMass'     , floattype),
@@ -952,7 +952,7 @@ def galdtype_adam():
                     ('Cooling'                      , floattype),
                     ('Heating'                      , floattype),
                     ('LastMajorMerger'              , floattype),
-#                    ('LastMinorMerger'              , floattype), # Added run 433
+                    ('LastMinorMerger'              , floattype), # Added run 433
                     ('OutflowRate'                  , floattype),
                     ('infallMvir'                   , floattype),
                     ('infallVvir'                   , floattype),
@@ -1394,6 +1394,10 @@ def zlist_gigglezMR():
 
 def zlist_MDPL():
     return ['0.000', '0.022', '0.045', '0.069', '0.093', '0.117', '0.142', '0.168', '0.194', '0.221', '0.248', '0.276', '0.304', '0.364', '0.394', '0.425', '0.457', '0.490', '0.523', '0.557', '0.592', '0.628', '0.664', '0.702', '0.740', '0.779', '0.819', '0.859', '0.901', '0.944', '0.987', '1.032', '1.077', '1.124', '1.172', '1.220', '1.270', '1.321', '1.372', '1.425', '1.480', '1.535', '1.593', '1.650', '1.710', '1.771', '1.833', '1.896', '1.961', '2.028', '2.095', '2.165', '2.235', '2.308', '2.382', '2.458', '2.535', '2.614', '2.695', '2.778', '2.862', '2.949', '3.037', '3.127', '3.221', '3.314', '3.411', '3.511', '3.610', '3.715', '3.819', '3.929', '4.038', '4.152', '4.266', '4.385', '4.507', '4.627', '4.754', '4.882', '5.017', '5.150', '5.289', '5.431', '5.575', '5.720', '5.873', '6.022', '6.184', '6.342', '6.508', '6.675', '6.849', '7.026', '7.203', '7.389', '7.576', '7.764', '7.961', '8.166', '8.372', '8.579', '8.794', '9.010', '9.235', '9.471', '9.707', '9.941', '10.186', '10.442', '10.696', '10.962', '11.225', '11.500', '11.771', '12.055', '12.351', '12.661', '12.966', '13.265', '13.599', '13.925', '14.244', '14.601', '14.949']
+
+def zarr_IllustrisTNG():
+    a = np.array([0.0476, 0.0625, 0.0769, 0.0833, 0.0909, 0.0964, 0.1, 0.1058, 0.1111, 0.1161, 0.121, 0.125, 0.1334, 0.1429, 0.1464, 0.1533, 0.1606, 0.1667, 0.1763, 0.1847, 0.1935, 0.2, 0.2124, 0.2226, 0.2332, 0.25, 0.2561, 0.2677, 0.279, 0.2902, 0.3012, 0.3121, 0.3228, 0.3333, 0.3439, 0.3543, 0.3645, 0.3747, 0.3848, 0.3948, 0.4, 0.4147, 0.4246, 0.4344, 0.4441, 0.4538, 0.4635, 0.4731, 0.4827, 0.4923, 0.5, 0.5115, 0.521, 0.5306, 0.5401, 0.5496, 0.5591, 0.5687, 0.5782, 0.5882, 0.5973, 0.6069, 0.6164, 0.626, 0.6357, 0.6453, 0.655, 0.6667, 0.6744, 0.6841, 0.6939, 0.7037, 0.7143, 0.7225, 0.7334, 0.7434, 0.7534, 0.7635, 0.7692, 0.7838, 0.794, 0.8043, 0.8146, 0.825, 0.8333, 0.8459, 0.8564, 0.8671, 0.8778, 0.8885, 0.8993, 0.9091, 0.9212, 0.9322, 0.9433, 0.9545, 0.9657, 0.9771, 0.9885, 1.0])
+    return 1./a - 1.
 
 
 # Reading of TAO data

@@ -2769,7 +2769,7 @@ def fH2_Krumholz_ParticleBasis(SFR,m,Zgas,nH,Density_Tot,T,fneutral,redshift):
     return Fh2_SFR
 
 
-def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T', UVB='FG09-Dec11', U_MW_z0=None, rho_sd=0.01, col=3):
+def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T', UVB='FG09-Dec11', U_MW_z0=None, rho_sd=0.01, col=3, gamma_fixed=None, mu_fixed=None, S_Jeans=True, T_CNMmax=243., Pth_Lagos=False):
     """
         This is my own version of calculating the atomic- and molecular-hydrogen masses of gas particles from simulations.  This has been adapted from the Python scripts written by Claudia Lagos and Michelle Furlong.  This follows the basis of Appendix A of Lagos et al (2015b) but includes further edits from me to improve detail. Expects each non-default input as an array, except for reshift.
         Input definitions and units are as follows:
@@ -2784,6 +2784,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
                  2 - Gnedin & Kravtsov (2011) eq 10
                  3 - Gnedin & Draine (2014) eq 6
                  4 - Krumholz (2013) eq 10
+                 5 - Gnedin & Draine (2014) eq 8
           all of these also use Schaye and Dalla Vecchia (2008) for the Jeans length
         mode = 'T' - temp is actually temperature
                'u' - have fed in internal energy per unit mass instead of temperature
@@ -2793,16 +2794,13 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
         U_MW_z0 = strength of UV background at z=0 in units of the Milky Way's interstellar radiation field.  Has a default value if set to None.
         rho_sd = local density of dark matter and stars. Used in method 4. [Msun/pc^3]
         col = only used for UVB='FG09-Dec11', decides on column to use in table
+        gamma_fixed = set gamma to be a fixed value if not None, even if that breaks self-consistency (there for testing)
+        mu_fixed = as above but for mu
+        S_Jeans = use Jeans scale for S variable in GD14, else use the cube root of cell volume
+        T_CNMmax = Maximum temperature of cold neutral medium for K13
+        Pth_Lagos = calculate P_th for K13 as in eq.A15 of Lagos+15b rather than eq.6 of K13.
     """
     
-    if mode=='u':
-        u = 1.0*temp
-        temp = u2temp(u, 5./3., 0.59) # initialise
-    
-    if fneutral is None:
-        calc_fneutral = True
-    else:
-        calc_fneutral = False
     
     kg_per_Msun = 1.989e30
     m_per_pc = 3.0857e16
@@ -2822,13 +2820,33 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
     denom = m_p * (m_per_pc*100)**3
     n_H = X * rho / denom
     
-    # Calculate (initialise in the case of mode='u') neutral fraction if it wasn't already provided
-    if calc_fneutral:
-        fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp, UVB=UVB)
-    
     fzero = (fneutral <= 0)
     fneutral[fzero] = 1e-6 # Floor on neutral fraction.  Prevents division by zero below
     
+    if gamma_fixed is not None:
+        gamma = 1.0*gamma_fixed
+    else:
+        gamma = 5./3. # initialise
+
+    if mode=='u':
+        u = 1.0*temp
+        temp = u2temp(u, gamma, 0.59) # initialise
+
+    if fneutral is None:
+        calc_fneutral = True
+    else:
+        calc_fneutral = False
+
+    # Calculate (initialise in the case of mode='u') neutral fraction if it wasn't already provided
+    if calc_fneutral:
+        fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp, UVB=UVB)
+
+    if mu_fixed is not None:
+        mu = 1.0*mu_fixed
+    else:
+        mu = (X + 4*Y)/((2-fneutral)*(X+Y)) # Initialise mean molecular weight
+
+
     # Initialise lists if all methods wanted
     mHI_list, mH2_list = [], []
 
@@ -2857,8 +2875,6 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
 
     f_th = 1.0 # Assuming all gas is thermal
     
-    mu = (X + 4*Y)/((2-fneutral)*(X+Y)) # Initialise mean molecular weight
-
     # Dust to gas ratio relative to MW
     D_MW = Z / 0.0127
     
@@ -2866,11 +2882,11 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
     f_H2_old = np.zeros(len(mass)) # Initialise before iterating
     fneutral_old = np.zeros(len(mass))
     
-    if method==1:
+    if method==1: # GK11, eq6
         for it in xrange(it_max):
-            f_mol = X*X*f_H2_old /  (X+Y)
-            gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
-            mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
+            f_mol = X*fneutral*f_H2_old /  (X+Y)
+            if gamma_fixed is None: gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
+            if mu_fixed is None: mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
             if mode=='u':
                 temp = u2temp(u, gamma, mu)
                 if calc_fneutral and not np.allclose(fneutral, fneutral_old, rtol=5e-3): fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp, UVB=UVB) # too slow to do every time (hopefully this converges faster)
@@ -2895,11 +2911,11 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
         mass_H2[fzero] = 0.
         mass_HI[fzero] = 0.
 
-    if method==2 or method==0:
+    if method==2 or method==0: # GK11, eq11
         for it in xrange(it_max):
-            f_mol = X*X*f_H2_old /  (X+Y)
-            gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
-            mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
+            f_mol = X*fneutral*f_H2_old /  (X+Y)
+            if gamma_fixed is None: gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
+            if mu_fixed is None: mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
             if mode=='u':
                 temp = u2temp(u, gamma, mu)
                 if calc_fneutral and not np.allclose(fneutral, fneutral_old, rtol=5e-3): fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp, UVB=UVB)
@@ -2913,7 +2929,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             alpha = 2.5*G0 / (1.+(0.5*G0)**2.)
             s = 0.04 / (D_star + D_MW)
             g = (1. + alpha*s + s*s) / (1.+s)
-            Lambda = np.log(1. + g * D_MW**(3./7.) * (G0/15.)**(4./7))
+            Lambda = np.log(1. + g * D_MW**(3./7.) * (G0/15.)**(4./7.))
             Sigma_c = 20. * Lambda**(4./7.) / (D_MW * np.sqrt(1.+G0*D_MW**2.))
             f_H2 = (1.+Sigma_c/Sigma_n)**-2. # H2/(HI+H2)
             if np.allclose(f_H2[~fzero], f_H2_old[~fzero], rtol=5e-3): break
@@ -2929,16 +2945,16 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
         mHI_list += [mass_HI]
         mH2_list += [mass_H2]
 
-    if method==3 or method==0:
+    if method==3 or method==0: # GD14, eq6
         for it in xrange(it_max):
-            f_mol = X*X*f_H2_old /  (X+Y)
-            gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
-            mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
+            f_mol = X*fneutral*f_H2_old /  (X+Y)
+            if gamma_fixed is None: gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
+            if mu_fixed is None: mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
             if mode=='u':
                 temp = u2temp(u, gamma, mu)
                 if calc_fneutral and not np.allclose(fneutral, fneutral_old, rtol=5e-3): fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp, UVB=UVB)
             Sigma = np.sqrt(gamma * const_ratio * f_th * rho * temp / mu)
-            S = Sigma / rho * 0.01 # This is the Jeans length per 100pc, taken as the spatial scale
+            S = Sigma / rho * 0.01 if S_Jeans else (mass/rho)**(1./3) * 0.01 # Spatial scale: either the Jeans length or approx cell length (per 100 pc)
             D_star = 0.17*(2.+S**5.)/(1.+S**5.)
             U_star = 9.*D_star/S
             g = np.sqrt(D_MW*D_MW + D_star*D_star)
@@ -2961,17 +2977,16 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
         mHI_list += [mass_HI]
         mH2_list += [mass_H2]
     
-    if method==4 or method==0:
+    if method==4 or method==0: # K13, eq10
         f_c = 5.0 # clumping factor
         alpha = 5.0 # relative pressure of turbulence, magnetic fields vs thermal
         zeta_d = 0.33
         f_w = 0.5
         c_w = 8e3 / m_per_pc * s_per_yr # sound speed of warm medium -- could calculate this better
-        T_CNMmax = 273. # maximum temperature of cold neutral medium
         for it in xrange(it_max):
-            f_mol = X*X*f_H2_old /  (X+Y)
-            gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
-            mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
+            f_mol = X*fneutral*f_H2_old /  (X+Y)
+            if gamma_fixed is None: gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
+            if mu_fixed is None: mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
             if mode=='u':
                 temp = u2temp(u, gamma, mu)
                 if calc_fneutral and not np.allclose(fneutral, fneutral_old, rtol=5e-3): fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp, UVB=UVB)
@@ -2984,8 +2999,12 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             #
             R_H2 = f_H2_old / (1. - f_H2_old)
             Sigma_HI = (1 - f_H2_old) * Sigma_n
-            frac = 32. * zeta_d * alpha * f_w * c_w*c_w * rho_sd / (np.pi*G*Sigma_HI**2.)
-            P_th = np.pi*G*Sigma_HI**2./(4.*alpha) * (1. + 2*R_H2 + np.sqrt((1.+ 2*R_H2)**2 + frac))
+            if not Pth_Lagos:
+                frac = 32. * zeta_d * alpha * f_w * c_w*c_w * rho_sd / (np.pi*G*Sigma_HI**2.)
+                P_th = np.pi*G*Sigma_HI**2./(4.*alpha) * (1. + 2*R_H2 + np.sqrt((1.+ 2*R_H2)**2 + frac))  
+            else:
+                frac = 32. * zeta_d * alpha * f_w * c_w*c_w * rho_sd / (np.pi*G*Sigma_n**2.)
+                P_th = np.pi*G*Sigma_n**2./(4.*alpha) * (1. + np.sqrt(1 + frac))
             n_CNMhydro = P_th / (1.1 * k_B * T_CNMmax) / (m_per_pc*100.)**3.
             #
             n_CNM = np.max(np.array([n_CNM2p,n_CNMhydro]),axis=0)
@@ -2999,6 +3018,38 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             f_H2_old = 1.*f_H2
             fneutral_old = 1.*fneutral
 
+        mass_H2 = f_H2 * fneutral * X * mass
+        mass_HI = (1.-f_H2) * fneutral * X * mass
+        mass_H2[fzero] = 0.
+        mass_HI[fzero] = 0.
+
+    if method==0:
+        mHI_list += [mass_HI]
+        mH2_list += [mass_H2]
+
+    if method==5 or method==0: # GD14, eq8
+        for it in xrange(it_max):
+            f_mol = X*fneutral*f_H2_old /  (X+Y)
+            if gamma_fixed is None: gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
+            if mu_fixed is None: mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
+            if mode=='u':
+                temp = u2temp(u, gamma, mu)
+                if calc_fneutral and not np.allclose(fneutral, fneutral_old, rtol=5e-3): fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp, UVB=UVB)
+            Sigma = np.sqrt(gamma * const_ratio * f_th * rho * temp / mu)
+            S = Sigma / rho * 0.01 if S_Jeans else (mass/rho)**(1./3) * 0.01 # Spatial scale: either the Jeans length or approx cell length (per 100 pc)
+            D_star = 0.17*(2.+S**5.)/(1.+S**5.)
+            U_star = 9.*D_star/S
+            g = np.sqrt(D_MW*D_MW + D_star*D_star)
+            G0 = SFR / mass * Sigma / 1e-9 # Instellar radiation field in units of MW's local field (assumed to be proportional to local SFR density, taken as 1e-9 Msun/pc^2/yr).  Reduced from several lines in other methods.
+            G0[G0<ISRF_floor] = ISRF_floor
+            alpha = 0.5 + 1./(1. + np.sqrt(G0*D_MW*D_MW/600.))
+            Sigma_R1 = 50./g * np.sqrt(0.001+0.1*G0) / (1. + 1.69*np.sqrt(0.001+0.1*G0)) # Note the erratum on the paper for this equation!
+            R = (Sigma * fneutral * X / Sigma_R1)**alpha
+            f_H2 = R / (R + 1.)
+            if np.allclose(f_H2[~fzero], f_H2_old[~fzero], rtol=5e-3): break
+            f_H2_old = 1.*f_H2
+            fneutral_old = 1.*fneutral
+        
         mass_H2 = f_H2 * fneutral * X * mass
         mass_HI = (1.-f_H2) * fneutral * X * mass
         mass_H2[fzero] = 0.
@@ -3057,7 +3108,7 @@ def neutralFraction_SFcells(u, n_H, rho_th_fac=0.13, T_cold=1000, T_SN=5.73e7, A
         u = Internal specific energy of gas particles [m/s]^2
         n_H = Density of gas particles in proton masses / cm^3
     """
-    f_He = 0.75
+    f_He = 0.75 # Perhaps f_H would be a better name, as it's the fraction of hydrogen left after removing helium from the total cell mass.  Have used f_He in other parts of code though.
     u_cold = temp2u(T_cold, mu=4./(1.+3*f_He))
     u_SN = temp2u(T_SN, mu=4./(8.-5*(1-f_He)))
     A = A0 * (n_H / rho_th_fac)**-0.8
