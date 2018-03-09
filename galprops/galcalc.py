@@ -2769,9 +2769,9 @@ def fH2_Krumholz_ParticleBasis(SFR,m,Zgas,nH,Density_Tot,T,fneutral,redshift):
     return Fh2_SFR
 
 
-def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T', UVB='FG09-Dec11', U_MW_z0=None, rho_sd=0.01, col=3, gamma_fixed=None, mu_fixed=None, S_Jeans=True, T_CNMmax=243., Pth_Lagos=False):
+def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T', UVB='FG09-Dec11', U_MW_z0=None, rho_sd=0.01, col=3, gamma_fixed=None, mu_fixed=None, S_Jeans=True, T_CNMmax=243., Pth_Lagos=False, Jeans_cold=False, Sigma_SFR0=1e-9):
     """
-        This is my own version of calculating the atomic- and molecular-hydrogen masses of gas particles from simulations.  This has been adapted from the Python scripts written by Claudia Lagos and Michelle Furlong.  This follows the basis of Appendix A of Lagos et al (2015b) but includes further edits from me to improve detail. Expects each non-default input as an array, except for reshift.
+        This is my own version of calculating the atomic- and molecular-hydrogen masses of gas particles/cells from simulations.  This has been adapted from the Python scripts written by Claudia Lagos and Michelle Furlong.  This follows the basis of Appendix A of Lagos et al (2015b) but includes further edits from me to improve detail, several of which are directly from the source papers. Expects each non-default input as an array, except for reshift.
         Input definitions and units are as follows:
         mass = total mass of particles [M_sun]
         SFR = star formation rate of particles [M_sun/yr]
@@ -2796,9 +2796,11 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
         col = only used for UVB='FG09-Dec11', decides on column to use in table
         gamma_fixed = set gamma to be a fixed value if not None, even if that breaks self-consistency (there for testing)
         mu_fixed = as above but for mu
-        S_Jeans = use Jeans scale for S variable in GD14, else use the cube root of cell volume
+        S_Jeans = use Jeans scale for S variable in GD14, else use the cube root of cell volume (former makes more sense for SPH)
         T_CNMmax = Maximum temperature of cold neutral medium for K13
         Pth_Lagos = calculate P_th for K13 as in eq.A15 of Lagos+15b rather than eq.6 of K13.
+        Jeans_cold = use cold clouds of SF gas cells only for calculating Jeans length
+        Sigma_SFR0 = local star formation rate surface density of the solar neighbourhood [Msun/yr/pc^2]
     """
     
     
@@ -2893,7 +2895,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             Sigma = np.sqrt(gamma * const_ratio * f_th * rho * temp / mu) # Approximate surface density as true density * Jeans length (see eq. 7 of Schaye and Dalla Vecchia 2008)
             area = mass / Sigma # Effective area covered by particle
             Sigma_SFR = SFR / area
-            G0 = Sigma_SFR / 1e-9 # Calculte interstellar radiation field, assuming it's proportional to SFR density, normalised by local Sigma_SFR of solar neighbourhood.
+            G0 = Sigma_SFR / Sigma_SFR0 # Calculte interstellar radiation field, assuming it's proportional to SFR density, normalised by local Sigma_SFR of solar neighbourhood.
             G0[G0<ISRF_floor] = ISRF_floor # Also denoted as U_MW in some papers
             D_star = 1.5e-3 * np.log(1. + (3.*G0)**1.7)
             alpha = 2.5*G0 / (1.+(0.5*G0)**2.)
@@ -2923,7 +2925,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             Sigma_n = fneutral * X * Sigma # neutral hydrogen density
             area = mass / Sigma
             Sigma_SFR = SFR / area
-            G0 = Sigma_SFR / 1e-9
+            G0 = Sigma_SFR / Sigma_SFR0
             G0[G0<ISRF_floor] = ISRF_floor
             D_star = 1.5e-3 * np.log(1. + (3.*G0)**1.7)
             alpha = 2.5*G0 / (1.+(0.5*G0)**2.)
@@ -2958,7 +2960,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             D_star = 0.17*(2.+S**5.)/(1.+S**5.)
             U_star = 9.*D_star/S
             g = np.sqrt(D_MW*D_MW + D_star*D_star)
-            G0 = SFR / mass * Sigma / 1e-9 # Instellar radiation field in units of MW's local field (assumed to be proportional to local SFR density, taken as 1e-9 Msun/pc^2/yr).  Reduced from several lines in other methods.
+            G0 = SFR / mass * Sigma / Sigma_SFR0 # Instellar radiation field in units of MW's local field (assumed to be proportional to local SFR density).  Reduced from several lines in other methods.
             G0[G0<ISRF_floor] = ISRF_floor
             Lambda = np.log(1.+ (0.05/g+G0)**(2./3)*g**(1./3)/U_star)
             n_half = 14. * np.sqrt(D_star) * Lambda / (g*S)
@@ -2992,7 +2994,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
                 if calc_fneutral and not np.allclose(fneutral, fneutral_old, rtol=5e-3): fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp, UVB=UVB)
             Sigma = np.sqrt(gamma * const_ratio * f_th * rho * temp / mu)
             Sigma_n = fneutral * X * Sigma # neutral hydrogen density
-            G0 = SFR / mass * Sigma / 1e-9
+            G0 = SFR / mass * Sigma / Sigma_SFR0
             G0[G0<ISRF_floor] = ISRF_floor
             #
             n_CNM2p = 23.*G0 * 4.1 / (1. + 3.1*D_MW**0.365)
@@ -3040,7 +3042,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             D_star = 0.17*(2.+S**5.)/(1.+S**5.)
             U_star = 9.*D_star/S
             g = np.sqrt(D_MW*D_MW + D_star*D_star)
-            G0 = SFR / mass * Sigma / 1e-9 # Instellar radiation field in units of MW's local field (assumed to be proportional to local SFR density, taken as 1e-9 Msun/pc^2/yr).  Reduced from several lines in other methods.
+            G0 = SFR / mass * Sigma / Sigma_SFR0 # Instellar radiation field in units of MW's local field (assumed to be proportional to local SFR density).  Reduced from several lines in other methods.
             G0[G0<ISRF_floor] = ISRF_floor
             alpha = 0.5 + 1./(1. + np.sqrt(G0*D_MW*D_MW/600.))
             Sigma_R1 = 50./g * np.sqrt(0.001+0.1*G0) / (1. + 1.69*np.sqrt(0.001+0.1*G0)) # Note the erratum on the paper for this equation!

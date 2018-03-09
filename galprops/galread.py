@@ -3973,6 +3973,7 @@ def read_binary(fname, dtype, return_GroupRange=False):
 
 def U_MW_FG09_Dec11():
     # Kindly supplied by Benedikt Diemer
+    # Columns 1-3 are computed from the flux at 1000A, the integrated flux in the Lyman-Werner band, and the integrated flux in the photoheating band 8-13.6 eV, respectively.
     return np.array([[0.00, 1.37e-03, 1.38e-03, 1.75e-03],
                     [0.20, 2.35e-03, 2.38e-03, 3.05e-03],
                     [0.40, 3.77e-03, 3.81e-03, 4.89e-03],
