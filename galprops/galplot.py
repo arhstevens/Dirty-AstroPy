@@ -482,67 +482,67 @@ def massfunction(mass, Lbox, colour='k', label=r'Input', extra=0, fsize=28, pt=1
 	# Make a mass function plot.  Input vector of halo masses in solar masses and length of box in Mpc.
 	# Setting h=1 means masses are being put in with a factor of h^2 already considered.  Else use physical units.
     #masslog = np.log10(gc.cleansample(mass))
-	masslog = np.log10(mass[(mass>0)*(np.isfinite(mass))])
-	if range==None:
-		lbound, ubound = max(8,np.min(masslog)), min(12.5,np.max(masslog))
-	else:
-		lbound, ubound = range[0], range[1]
-	if binwidth is not None: Nbins = int((ubound - lbound) / binwidth)
-	if pt==0 or pt==1 or pt==4:
-		N, edges = np.histogram(masslog, bins=Nbins, range=[lbound,ubound]) # number of galaxies in each bin.  Doing a specific range for stars and gas.
-		xhist, edges = np.histogram(masslog, bins=Nbins, range=[lbound,ubound], weights=10**masslog)
-	elif pt==3:
-		N, edges = np.histogram(masslog, bins=Nbins, range=[6+2*np.log10(0.7/h),9+np.log10(5)+2*np.log10(0.7/h)])
-		xhist, edges = np.histogram(masslog, bins=Nbins, range=[6+2*np.log10(0.7/h),9+np.log10(5)+2*np.log10(0.7/h)], weights=10**masslog)
-	binwidth = edges[1]-edges[0]
-	x = edges[:-1] + binwidth/2
-	x[N>0] = np.log10(xhist[N>0] / N[N>0])
-	y = N/(binwidth*Lbox**3)
-	if ax is None:
-		if step==True:
-			plt.step(x, y, where='mid', color=colour, linewidth=lw, label=label)
-		else:
-			if type(ls)==str:
-				plt.plot(x, y, colour+ls, linewidth=lw, label=label)
-			elif type(ls)==list:
-				plt.plot(x, y, colour+'-', linewidth=lw, label=label, dashes=ls)
-		plt.yscale('log', nonposy='clip')
-	else:
-		if step==True:
-			ax.step(x, y, where='mid', color=colour, linewidth=lw, label=label)
-		else:
-			if type(ls)==str:
-				ax.plot(x, y, colour+ls, linewidth=lw, label=label)
-			elif type(ls)==list:
-				ax.plot(x, y, colour+'-', linewidth=lw, label=label, dashes=ls)
-		ax.set_yscale('log', nonposy='clip')
+    masslog = np.log10(mass[(mass>0)*(np.isfinite(mass))])
+    if range==None:
+        lbound, ubound = max(8,np.min(masslog)), min(12.5,np.max(masslog))
+    else:
+        lbound, ubound = range[0], range[1]
+    if binwidth is not None: Nbins = int((ubound - lbound) / binwidth)
+    if pt==0 or pt==1 or pt==4:
+        N, edges = np.histogram(masslog, bins=Nbins, range=[lbound,ubound]) # number of galaxies in each bin.  Doing a specific range for stars and gas.
+        xhist, edges = np.histogram(masslog, bins=Nbins, range=[lbound,ubound], weights=10**masslog)
+    elif pt==3:
+        N, edges = np.histogram(masslog, bins=Nbins, range=[6+2*np.log10(0.7/h),9+np.log10(5)+2*np.log10(0.7/h)])
+        xhist, edges = np.histogram(masslog, bins=Nbins, range=[6+2*np.log10(0.7/h),9+np.log10(5)+2*np.log10(0.7/h)], weights=10**masslog)
+    binwidth = edges[1]-edges[0]
+    x = edges[:-1] + binwidth/2
+    x[N>0] = np.log10(xhist[N>0] / N[N>0])
+    y = N/(binwidth*Lbox**3)
+    if ax is None:
+        if step==True:
+            plt.step(x, y, where='mid', color=colour, linewidth=lw, label=label)
+        else:
+            if type(ls)==str:
+                plt.plot(x, y, colour+ls, linewidth=lw, label=label)
+            elif type(ls)==list:
+                plt.plot(x, y, colour+'-', linewidth=lw, label=label, dashes=ls)
+        plt.yscale('log', nonposy='clip')
+    else:
+        if step==True:
+            ax.step(x, y, where='mid', color=colour, linewidth=lw, label=label)
+        else:
+            if type(ls)==str:
+                ax.plot(x, y, colour+ls, linewidth=lw, label=label)
+            elif type(ls)==list:
+                ax.plot(x, y, colour+'-', linewidth=lw, label=label, dashes=ls)
+        ax.set_yscale('log', nonposy='clip')
 
-	if Print is not None: print Print, '\n', x, '\n', y, '\n'
+    if Print is not None: print Print, '\n', x, '\n', y, '\n'
 
-	if extra>0:
-		axlogic(x,y,yscale='log') # Set axis
-		if pt==0:
-			xlab = r'$\log_{10}(M_{\mathrm{gas}}\ [\mathrm{M}_{\bigodot}])$' if h!=1 else r'$\log_{10}(M_{\mathrm{gas}} h^2\ [\mathrm{M}_{\bigodot}])$'
-		elif pt==1:
-			xlab = r'$\log_{10}(M_{\mathrm{stars}}\ [\mathrm{M}_{\odot}])$' if h!=1 else r'$\log_{10}(M_{\mathrm{stars}} h^2\ [\mathrm{M}_{\odot}])$'
-		elif pt==2:
-			xlab = r'$\log_{10}(M_{\mathrm{DM}}\ [\mathrm{M}_{\odot}])$' if h!=1 else r'$\log_{10}(M_{\mathrm{DM}} h^2\ [\mathrm{M}_{\odot}])$'
-		elif pt==3:
-			xlab = r'$\log_{10}(M_{\mathrm{BH}}\ [\mathrm{M}_{\odot}])$' if h!=1 else r'$\log_{10}(M_{\mathrm{BH}} h^2\ [\mathrm{M}_{\odot}])$'
-		elif pt==4:
-			xlab = r'$\log_{10}(M_{\mathrm{baryons}}\ [\mathrm{M}_{\odot}])$' if h!=1 else r'$\log_{10}(M_{\mathrm{baryons}} h^2\ [\mathrm{M}_{\odot}])$'
-		plt.xlabel(xlab, fontsize=fsize)
-		ylab = r'$\Phi\ [\mathrm{Mpc}^{-3}\ \mathrm{dex}^{-1}]$' if h!=1 else r'$\Phi h^{-3}\ [\mathrm{Mpc}^{-3}\ \mathrm{dex}^{-1}]$'
-		plt.ylabel(ylab, fontsize=fsize)
-		#plt.ylabel(r'$\mathrm{Number\ Density}\ [\mathrm{Mpc}^{-3}\ \mathrm{dex}^{-1}]$', fontsize=fsize)
-		
-		if extra>1:
-			
-			if pt==1:
-				
-				# Data for Baldry et al 2008 (copied from SAGE's allresults.py script)
-				
-				B = np.array([
+    if extra>0:
+        axlogic(x,y,yscale='log') # Set axis
+        if pt==0:
+            xlab = r'$\log_{10}(M_{\mathrm{gas}}\ [\mathrm{M}_{\bigodot}])$' if h!=1 else r'$\log_{10}(M_{\mathrm{gas}} h^2\ [\mathrm{M}_{\bigodot}])$'
+        elif pt==1:
+            xlab = r'$\log_{10}(M_{\mathrm{stars}}\ [\mathrm{M}_{\odot}])$' if h!=1 else r'$\log_{10}(M_{\mathrm{stars}} h^2\ [\mathrm{M}_{\odot}])$'
+        elif pt==2:
+            xlab = r'$\log_{10}(M_{\mathrm{DM}}\ [\mathrm{M}_{\odot}])$' if h!=1 else r'$\log_{10}(M_{\mathrm{DM}} h^2\ [\mathrm{M}_{\odot}])$'
+        elif pt==3:
+            xlab = r'$\log_{10}(M_{\mathrm{BH}}\ [\mathrm{M}_{\odot}])$' if h!=1 else r'$\log_{10}(M_{\mathrm{BH}} h^2\ [\mathrm{M}_{\odot}])$'
+        elif pt==4:
+            xlab = r'$\log_{10}(M_{\mathrm{baryons}}\ [\mathrm{M}_{\odot}])$' if h!=1 else r'$\log_{10}(M_{\mathrm{baryons}} h^2\ [\mathrm{M}_{\odot}])$'
+        plt.xlabel(xlab, fontsize=fsize)
+        ylab = r'$\Phi\ [\mathrm{Mpc}^{-3}\ \mathrm{dex}^{-1}]$' if h!=1 else r'$\Phi h^{-3}\ [\mathrm{Mpc}^{-3}\ \mathrm{dex}^{-1}]$'
+        plt.ylabel(ylab, fontsize=fsize)
+        #plt.ylabel(r'$\mathrm{Number\ Density}\ [\mathrm{Mpc}^{-3}\ \mathrm{dex}^{-1}]$', fontsize=fsize)
+        
+        if extra>1:
+            
+            if pt==1:
+                
+                # Data for Baldry et al 2008 (copied from SAGE's allresults.py script)
+                
+                B = np.array([
 			        [7.05, 1.3531e-01, 6.0741e-02],
 			        [7.15, 1.3474e-01, 6.0109e-02],
 			        [7.25, 2.0971e-01, 7.7965e-02],
@@ -594,40 +594,40 @@ def massfunction(mass, Lbox, colour='k', label=r'Input', extra=0, fsize=28, pt=1
 			        [11.85, 8.4589e-06, 8.4589e-06],
 			        [11.95, 7.4764e-06, 7.4764e-06]
 			        ], dtype=np.float32)
-				
-				#  Looking at the actual Baldry paper, the x-axis is physical units assuming h=0.7, while the y-data is phi*h**-3 (i.e. need to multiply by h**3 to agree with their Fig. 6)
-				if ax is None:
-					plt.fill_between(B[:,0]-np.log10(h**2)-0.26, (B[:,1]+B[:,2])*h**3, (B[:,1]-B[:,2])*h**3, facecolor='purple', alpha=0.2) if not hfac1 else plt.fill_between(B[:,0]-np.log10(h)-0.26, (B[:,1]+B[:,2]), (B[:,1]-B[:,2]), facecolor='purple', alpha=0.2)
-					plt.plot([1,1], [1,2], color='purple', linewidth=8, alpha=0.3, label=r'Baldry et al.~(2008)') # Just for the legend
-				else:
-					ax.fill_between(B[:,0]-np.log10(h**2)-0.26, (B[:,1]+B[:,2])*h**3, (B[:,1]-B[:,2])*h**3, facecolor='purple', alpha=0.2) if not hfac1 else plt.fill_between(B[:,0]-np.log10(h)-0.26, (B[:,1]+B[:,2]), (B[:,1]-B[:,2]), facecolor='purple', alpha=0.2)
-					ax.plot([1,1], [1,2], color='purple', linewidth=8, alpha=0.3, label=r'Baldry et al.~(2008)') # Just for the legend
+                
+                #  Looking at the actual Baldry paper, the x-axis is physical units assuming h=0.7, while the y-data is phi*h**-3 (i.e. need to multiply by h**3 to agree with their Fig. 6)
+                if ax is None:
+                    plt.fill_between(B[:,0]-np.log10(h**2)-0.26, (B[:,1]+B[:,2])*h**3, (B[:,1]-B[:,2])*h**3, facecolor='purple', alpha=0.2) if not hfac1 else plt.fill_between(B[:,0]-np.log10(h)-0.26, (B[:,1]+B[:,2]), (B[:,1]-B[:,2]), facecolor='purple', alpha=0.2)
+                    plt.plot([1,1], [1,2], color='purple', linewidth=8, alpha=0.3, label=r'Baldry et al.~(2008)') # Just for the legend
+                else:
+                    ax.fill_between(B[:,0]-np.log10(h**2)-0.26, (B[:,1]+B[:,2])*h**3, (B[:,1]-B[:,2])*h**3, facecolor='purple', alpha=0.2) if not hfac1 else plt.fill_between(B[:,0]-np.log10(h)-0.26, (B[:,1]+B[:,2]), (B[:,1]-B[:,2]), facecolor='purple', alpha=0.2)
+                    ax.plot([1,1], [1,2], color='purple', linewidth=8, alpha=0.3, label=r'Baldry et al.~(2008)') # Just for the legend
 
-				"""
-				Phi_low, Phi_high, logM = gc.doubleschechter2(10.648, 4.26, -0.46, 0.58, -1.58, 0.013, 0.09, 0.05, 0.07, 0.02, h=h)
-				#print Phi_low
-				plt.fill_between(logM+0.26, Phi_high, Phi_low, color='r', alpha=0.3)
-				plt.plot([1,1], [1,2], color='r', linewidth=4, alpha=0.3, label=r'Baldry et al. (2008)') # Just for the legend
-				"""
-			elif pt==4:
-				Phi_low, Phi_high, logM = gc.schechter2(0.0108*h**3, 5.3e10 *h**(-2), -1.21, 0.0006*h**3, 3e9 *h**(-2), 0.05)
-				plt.fill_between(logM, Phi_high, Phi_low, color='b', alpha=0.3)
-				Phi, logM = gc.doubleschechter(10.675,4.9,-0.42,0.61,-1.87,h=h) # From Baldry et al (2008)
-				plt.plot(logM+0.26, Phi, 'r-', lw=2, label=r'Baldry et al.~(2008)')
-				plt.plot([0,1],[1,1], 'b-', lw=4, alpha=0.5, label=r'Bell et al.~(2003)')
-			elif pt==3:
-				# Add observations from Shankar 2004				
-				Phi_low, Phi_high, logM = gc.bhmf2(7.7e-3, 6.4e7, -1.11, 0.49, 3e-4, 1.1e7, 0.02, 0.02)
-				plt.fill_between(logM+2*np.log10(0.7/h), Phi_high*(h/0.7)**3, Phi_low*(h/0.7)**3, color='b', alpha=0.3)
-				plt.plot([0,1],[1,1], 'b-', linewidth=4, alpha=0.5, label=r'Shankar et al.~(2004)')
-				plt.xlim(6+2*np.log10(0.7/h),9+np.log10(5)+2*np.log10(0.7/h))
-		if leg:
-			if loc is not None:
-				plt.legend(fontsize=fsize-6, loc=loc, frameon=False)
-			elif pt==1:
-				plt.legend(fontsize=fsize-6, loc='lower left', frameon=False)#, title=r'$h='+str(h)+'$, $\kappa_R = 0.10$, $\kappa_Q = 0.002$')
-			else:
-				plt.legend(fontsize=fsize-6, loc='best', frameon=False)
+                """
+                Phi_low, Phi_high, logM = gc.doubleschechter2(10.648, 4.26, -0.46, 0.58, -1.58, 0.013, 0.09, 0.05, 0.07, 0.02, h=h)
+                #print Phi_low
+                plt.fill_between(logM+0.26, Phi_high, Phi_low, color='r', alpha=0.3)
+                plt.plot([1,1], [1,2], color='r', linewidth=4, alpha=0.3, label=r'Baldry et al. (2008)') # Just for the legend
+                """
+            elif pt==4:
+                Phi_low, Phi_high, logM = gc.schechter2(0.0108*h**3, 5.3e10 *h**(-2), -1.21, 0.0006*h**3, 3e9 *h**(-2), 0.05)
+                plt.fill_between(logM, Phi_high, Phi_low, color='b', alpha=0.3)
+                Phi, logM = gc.doubleschechter(10.675,4.9,-0.42,0.61,-1.87,h=h) # From Baldry et al (2008)
+                plt.plot(logM+0.26, Phi, 'r-', lw=2, label=r'Baldry et al.~(2008)')
+                plt.plot([0,1],[1,1], 'b-', lw=4, alpha=0.5, label=r'Bell et al.~(2003)')
+            elif pt==3:
+                # Add observations from Shankar 2004				
+                Phi_low, Phi_high, logM = gc.bhmf2(7.7e-3, 6.4e7, -1.11, 0.49, 3e-4, 1.1e7, 0.02, 0.02)
+                plt.fill_between(logM+2*np.log10(0.7/h), Phi_high*(h/0.7)**3, Phi_low*(h/0.7)**3, color='b', alpha=0.3)
+                plt.plot([0,1],[1,1], 'b-', linewidth=4, alpha=0.5, label=r'Shankar et al.~(2004)')
+                plt.xlim(6+2*np.log10(0.7/h),9+np.log10(5)+2*np.log10(0.7/h))
+        if leg:
+            if loc is not None:
+                plt.legend(fontsize=fsize-6, loc=loc, frameon=False)
+            elif pt==1:
+                plt.legend(fontsize=fsize-6, loc='lower left', frameon=False)#, title=r'$h='+str(h)+'$, $\kappa_R = 0.10$, $\kappa_Q = 0.002$')
+            else:
+                plt.legend(fontsize=fsize-6, loc='best', frameon=False)
 
 
 def massfunction_HI_H2_obs(h=0.678, HI=True, H2=True, K=True, OR=False, ax=None, Z=True, M=False):
@@ -1079,10 +1079,7 @@ def massmet(M_star, lOH, extra=False, c='k', ls='-', lw=2, h=0.7, label=r'Input'
 		y_obs = -1.492 + 1.847*x_obs - 0.08026*x_obs**2
 		x_obs += 2*np.log10(0.7/h)
 		plt.fill_between(x_obs, y_obs+0.1, y_obs-0.1, color='b', alpha=0.3)"""
-		x_obs = np.array([8.52, 8.57, 8.67, 8.76, 8.86, 8.96, 9.06, 9.16, 9.26, 9.36, 9.46, 9.57, 9.66, 9.76, 9.86, 9.96, 10.06, 10.16, 10.26, 10.36, 10.46, 10.56, 10.66, 10.76, 10.86, 10.95, 11.05, 11.15, 11.25, 11.30])
-		y_low = np.array([8.25, 8.25, 8.28, 8.32, 8.37, 8.46, 8.56, 8.59, 8.60, 8.63, 8.66, 8.69, 8.72, 8.76, 8.80, 8.83, 8.85, 8.88, 8.92, 8.94, 8.96, 8.98, 9.00, 9.01, 9.02, 9.03, 9.03, 9.04, 9.03, 9.03])
-		y_high= np.array([8.64, 8.64, 8.65, 8.70, 8.73, 8.75, 8.82, 8.82, 8.86, 8.88, 8.92, 8.94, 8.96, 8.99, 9.01, 9.05, 9.06, 9.09, 9.10, 9.11, 9.12, 9.14, 9.15, 9.15, 9.16, 9.17, 9.17, 9.18, 9.18, 9.18])
-		x_obs += np.log10(1.5/1.8) + 2*np.log10(0.7/h) # Accounts for difference in Kroupa & Chabrier IMFs and the difference in h
+		x_obs, y_low, y_high = gr.Tremonti04(h)
 		plt.fill_between(x_obs, y_high, y_low, color='purple', alpha=0.2)
 		plt.plot([-1,-1],[-1,-2], color='purple', ls='-', lw=8, alpha=0.3, label=r'Tremonti et al.~(2004)')
 		plt.legend(fontsize=fsize-6, loc='lower right', frameon=True)

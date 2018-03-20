@@ -1159,6 +1159,21 @@ def PolyLog(s,z,eps=1e-7):
     print k
     return pl_new
 
+def piecewise_linear_parabola(x, xbreak, l0, l1, p0, p1):
+    y = l0*x + l1
+    p2 = l0*xbreak + l1 - p0*xbreak**2 - p1*xbreak
+    fbreak = (x>xbreak)
+    y[fbreak] = p0*x[fbreak]**2 + p1*x[fbreak] + p2
+    return y
+
+def piecewise_parabola_linear(x, xbreak, l0, l1, p0, p1):
+    y = l0*x + l1
+    p2 = l0*xbreak + l1 - p0*xbreak**2 - p1*xbreak
+    fbreak = (x<xbreak)
+    y[fbreak] = p0*x[fbreak]**2 + p1*x[fbreak] + p2
+    return y
+
+
 
 def tophatoptfilt(L,wl):
 	# Apply a top-hat filter over the optical range to obtain a mock-observed luminosity from a spectrum.
@@ -2818,8 +2833,8 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
     
     Z[Z<1e-5] = 1e-5 # Floor on metallicity (BBN means there must be a tiny bit)
     if X is None:
-        X = 0.76 - 2*Z
-        X[SFR>0] = 0.76 - 1.6*Z[SFR>0]
+        p = [2.23728598e-02, -1.29025428e+00,  7.48468982e-01, 2.39587614e+01, -2.36233250e+00]
+        X = piecewise_parabola_linear(Z, *p)
     Y = 1. - X - Z
     
     # Protons per cm^3 in all forms of hydrogen
@@ -2884,7 +2899,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
     # Dust to gas ratio relative to MW
     D_MW = Z / 0.0127
     
-    it_max = 200 # Maximum iterations for calculating f_H2
+    it_max = 300 # Maximum iterations for calculating f_H2 (arbitrary)
     f_H2_old = np.zeros(len(mass)) # Initialise before iterating
     fneutral_old = np.zeros(len(mass))
     
