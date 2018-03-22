@@ -948,7 +948,7 @@ def galdtype_adam():
                     ('SfrDiskZ'                     , floattype),
                     ('SfrBulgeZ'                    , floattype),
                     ('DiskScaleRadius'              , floattype),
-                    ('BulgeRadius'                  , floattype), # Removed run 455
+#                    ('BulgeRadius'                  , floattype), # Removed run 455 (accidentally there for 457-464 because I hadn't re-made code -.-)
                     ('Cooling'                      , floattype),
                     ('Heating'                      , floattype),
                     ('LastMajorMerger'              , floattype),

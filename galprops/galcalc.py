@@ -2833,7 +2833,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
     
     Z[Z<1e-5] = 1e-5 # Floor on metallicity (BBN means there must be a tiny bit)
     if X is None:
-        p = [2.23728598e-02, -1.29025428e+00,  7.48468982e-01, 2.39587614e+01, -2.36233250e+00]
+        p = [0.0225, -1.3595, 0.75325, 24.211, -2.29525]
         X = piecewise_parabola_linear(Z, *p)
     Y = 1. - X - Z
     
