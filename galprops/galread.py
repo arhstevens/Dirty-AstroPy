@@ -1,4 +1,4 @@
-# Adam Stevens, 2013-2016
+# Adam Stevens, 2013-2018
 # Functions for reading in data files from simulations and models
 
 import numpy as np
@@ -3872,8 +3872,13 @@ def Brown_HI_fractions_satcen(h):
     logHIfrac_sSFR_all = np.log10((10**logHIfrac_sSFR[0,:] * Ngal_sSFR[0,:] + 10**logHIfrac_sSFR[1,:] * Ngal_sSFR[1,:] + 10**logHIfrac_sSFR[2,:] * Ngal_sSFR[2,:]) / (Ngal_sSFR[0,:]+Ngal_sSFR[1,:]+Ngal_sSFR[2,:]))
     logsSFR_all = np.log10((10**logsSFR[0,:] * Ngal_sSFR[0,:] + 10**logsSFR[1,:] * Ngal_sSFR[1,:] + 10**logsSFR[2,:] * Ngal_sSFR[2,:]) / (Ngal_sSFR[0,:]+Ngal_sSFR[1,:]+Ngal_sSFR[2,:]))
 
+    logHIfrac_all_err = np.array([np.log10(1.511+0.011)-np.log10(1.511),
+                                  np.log10(0.643+0.011)-np.log10(0.643),
+                                  np.log10(0.232+0.005)-np.log10(0.232),
+                                  np.log10(0.096+0.002)-np.log10(0.096),
+                                  np.log10(0.039+0.001)-np.log10(0.039)]) # taken straight from Table 1 of Brown+15
 
-    return [logM_cen, logHIfrac_cen, logHIfrac_err_cen], [logM_sat, logHIfrac_sat, logHIfrac_err_sat], [logHIfrac_sSFR_cen, logsSFR_cen, logHIfrac_sSFR_err_cen], [logHIfrac_sSFR_sat, logsSFR_sat, logHIfrac_sSFR_err_sat], [logM_all, logHIfrac_all, logsSFR_all, logHIfrac_sSFR_all]
+    return [logM_cen, logHIfrac_cen, logHIfrac_err_cen], [logM_sat, logHIfrac_sat, logHIfrac_err_sat], [logHIfrac_sSFR_cen, logsSFR_cen, logHIfrac_sSFR_err_cen], [logHIfrac_sSFR_sat, logsSFR_sat, logHIfrac_sSFR_err_sat], [logM_all, logHIfrac_all, logHIfrac_all_err], [logsSFR_all, logHIfrac_sSFR_all]
 
 
 def carnage(fname, dir='', addH=False, fields_of_interest=None):
@@ -4099,3 +4104,62 @@ def Tremonti04(h):
     y_high= np.array([8.64, 8.64, 8.65, 8.70, 8.73, 8.75, 8.82, 8.82, 8.86, 8.88, 8.92, 8.94, 8.96, 8.99, 9.01, 9.05, 9.06, 9.09, 9.10, 9.11, 9.12, 9.14, 9.15, 9.15, 9.16, 9.17, 9.17, 9.18, 9.18, 9.18])
     x_obs += np.log10(1.5/1.8) + 2*np.log10(0.7/h) # Accounts for difference in Kroupa & Chabrier IMFs and the difference in h
     return x_obs, y_low, y_high
+
+def Baldry08(h=None):
+    B = np.array([   [7.05, 1.3531e-01, 6.0741e-02],
+                     [7.15, 1.3474e-01, 6.0109e-02],
+                     [7.25, 2.0971e-01, 7.7965e-02],
+                     [7.35, 1.7161e-01, 3.1841e-02],
+                     [7.45, 2.1648e-01, 5.7832e-02],
+                     [7.55, 2.1645e-01, 3.9988e-02],
+                     [7.65, 2.0837e-01, 4.8713e-02],
+                     [7.75, 2.0402e-01, 7.0061e-02],
+                     [7.85, 1.5536e-01, 3.9182e-02],
+                     [7.95, 1.5232e-01, 2.6824e-02],
+                     [8.05, 1.5067e-01, 4.8824e-02],
+                     [8.15, 1.3032e-01, 2.1892e-02],
+                     [8.25, 1.2545e-01, 3.5526e-02],
+                     [8.35, 9.8472e-02, 2.7181e-02],
+                     [8.45, 8.7194e-02, 2.8345e-02],
+                     [8.55, 7.0758e-02, 2.0808e-02],
+                     [8.65, 5.8190e-02, 1.3359e-02],
+                     [8.75, 5.6057e-02, 1.3512e-02],
+                     [8.85, 5.1380e-02, 1.2815e-02],
+                     [8.95, 4.4206e-02, 9.6866e-03],
+                     [9.05, 4.1149e-02, 1.0169e-02],
+                     [9.15, 3.4959e-02, 6.7898e-03],
+                     [9.25, 3.3111e-02, 8.3704e-03],
+                     [9.35, 3.0138e-02, 4.7741e-03],
+                     [9.45, 2.6692e-02, 5.5029e-03],
+                     [9.55, 2.4656e-02, 4.4359e-03],
+                     [9.65, 2.2885e-02, 3.7915e-03],
+                     [9.75, 2.1849e-02, 3.9812e-03],
+                     [9.85, 2.0383e-02, 3.2930e-03],
+                     [9.95, 1.9929e-02, 2.9370e-03],
+                     [10.05, 1.8865e-02, 2.4624e-03],
+                     [10.15, 1.8136e-02, 2.5208e-03],
+                     [10.25, 1.7657e-02, 2.4217e-03],
+                     [10.35, 1.6616e-02, 2.2784e-03],
+                     [10.45, 1.6114e-02, 2.1783e-03],
+                     [10.55, 1.4366e-02, 1.8819e-03],
+                     [10.65, 1.2588e-02, 1.8249e-03],
+                     [10.75, 1.1372e-02, 1.4436e-03],
+                     [10.85, 9.1213e-03, 1.5816e-03],
+                     [10.95, 6.1125e-03, 9.6735e-04],
+                     [11.05, 4.3923e-03, 9.6254e-04],
+                     [11.15, 2.5463e-03, 5.0038e-04],
+                     [11.25, 1.4298e-03, 4.2816e-04],
+                     [11.35, 6.4867e-04, 1.6439e-04],
+                     [11.45, 2.8294e-04, 9.9799e-05],
+                     [11.55, 1.0617e-04, 4.9085e-05],
+                     [11.65, 3.2702e-05, 2.4546e-05],
+                     [11.75, 1.2571e-05, 1.2571e-05],
+                     [11.85, 8.4589e-06, 8.4589e-06],
+                     [11.95, 7.4764e-06, 7.4764e-06]
+                     ], dtype=np.float32)
+    if h is not None:
+        B[:,0] -= (np.log10(h**2)+0.26) # adjust to Charbier too
+        B[:,1] *= h**3
+        B[:,2] *= h**3
+
+    return B

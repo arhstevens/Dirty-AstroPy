@@ -1,4 +1,4 @@
-# Adam Stevens, 2013-2016
+# Adam Stevens, 2013-2018
 # Functions for calculating properties of galaxies in a general, pipelined manner.
 
 import numpy as np
@@ -1956,6 +1956,10 @@ def chisqr(ydata, yfit):
 	chiav = np.sqrt(np.mean(dif2)) # Average deviation from the fit.  Basically, this is the rms.
 	return chi2, chiav
 
+def reduced_chisqr(y_data, y_expect, uncert, Nparam=0):
+    chi2 = np.sum((y_data-y_expect)**2 / uncert**2)
+    return chi2 / (len(y_data) - Nparam)
+
 
 def BaryMP(x,y,eps=0.01,grad=1):
 	"""
@@ -3140,3 +3144,13 @@ def neutralFraction_SFcells(u, n_H, rho_th_fac=0.13, T_cold=1000, T_SN=5.73e7, A
     u_hot = u_SN / (1.+A) + u_cold
     return (u_hot - u) / (u_hot - u_cold)
 
+def interp_polytonic(x, xp, yp):
+    """
+        Similar to np.interp, except one doesn't require yp to be a monotonic function of xp.  Will find the largest value of yp that could correspond to x.  This can be used for finding the HI radii of galaxies, for example.  Currently just works for a single value x.  Intend to update once demand is present.
+    """
+    w = np.where(xp>x)[0][0]
+    if w==len(xp):
+        return yp[-1]
+    else:
+        dw = xp[w+1] - xp[w]
+        return yp[w]*(xp[w+1]-x)/dw + yp[w+1]*(x-xp[w])/dw
