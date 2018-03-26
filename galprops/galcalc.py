@@ -3148,7 +3148,10 @@ def interp_polytonic(x, xp, yp):
     """
         Similar to np.interp, except one doesn't require yp to be a monotonic function of xp.  Will find the largest value of yp that could correspond to x.  This can be used for finding the HI radii of galaxies, for example.  Currently just works for a single value x.  Intend to update once demand is present.
     """
-    w = np.where(xp>x)[0][0]
+    try:
+        w = np.where(xp>x)[0][0]
+    except IndexError:
+        return 0. # Zero retunred if x > all xp, given one can't really extrapolate something polytonic
     if w==len(xp):
         return yp[-1]
     else:
