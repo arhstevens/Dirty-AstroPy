@@ -2839,8 +2839,9 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
 
     Z[Z<1e-5] = 1e-5 # Floor on metallicity (BBN means there must be a tiny bit)
     if X is None:
-        p = [0.0225, -1.3595, 0.75325, 24.211, -2.29525]
+        p = [0.0166, -1.3452, 0.75167, 31.193, -2.38233]
         X = piecewise_parabola_linear(Z, *p)
+        X[X>0.76] = 0.76 # safety
     Y = 1. - X - Z
     
     # Protons per cm^3 in all forms of hydrogen
@@ -2906,7 +2907,10 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
         for p in xrange(len(G0_nsf)):
             Sigma = np.sqrt(gamma * const_ratio * f_th * rho * temp / mu)
             G0_sf = (SFR / mass * Sigma)[sf] / Sigma_SFR0
-            G0_nsf[p] = np.max(G0_sf * (mass[sf]/rho[sf])**(2./3) / np.sum((UV_pos[sf]-UV_pos[~sf][p,:])**2, axis=1))
+            dist2 = np.sum((UV_pos[sf]-UV_pos[~sf][p,:])**2, axis=1)
+            rank = (100.*np.argsort(np.argsort(dist2))) / len(dist2)
+            md = (rank > 25) * (rank < 75) # mid-distance
+            G0_nsf[p] = 1.5*np.max(G0_sf[md] * (mass[sf][md]/rho[sf][md])**(2./3) / dist2[md])
     
     # Dust to gas ratio relative to MW
     D_MW = Z / 0.0127
@@ -2928,7 +2932,9 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             area = mass / Sigma # Effective area covered by particle
             Sigma_SFR = SFR / area
             G0 = Sigma_SFR / Sigma_SFR0 if UV_MW is None else 1.0*UV_MW # Calculte interstellar radiation field, assuming it's proportional to SFR density, normalised by local Sigma_SFR of solar neighbourhood.
-            if UV_pos is not None and UV_MW is None: G0[~sf] = 1.0*G0_nsf
+            if UV_pos is not None and UV_MW is None: 
+                G0[~sf] = 1.0*G0_nsf
+                G0[(~sf) * (G0 > np.min(G0[sf]))] = np.min(G0[sf]) # nSF cells shouldn't exceed any SF cells in their UV
             G0[G0<ISRF_floor] = ISRF_floor # Also denoted as U_MW in some papers
             D_star = 1.5e-3 * np.log(1. + (3.*G0)**1.7)
             alpha = 2.5*G0 / (1.+(0.5*G0)**2.)
@@ -2960,7 +2966,9 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             area = mass / Sigma
             Sigma_SFR = SFR / area
             G0 = Sigma_SFR / Sigma_SFR0 if UV_MW is None else 1.0*UV_MW
-            if UV_pos is not None and UV_MW is None: G0[~sf] = 1.0*G0_nsf
+            if UV_pos is not None and UV_MW is None: 
+                G0[~sf] = 1.0*G0_nsf
+                G0[(~sf) * (G0 > np.min(G0[sf]))] = np.min(G0[sf])
             G0[G0<ISRF_floor] = ISRF_floor
             D_star = 1.5e-3 * np.log(1. + (3.*G0)**1.7)
             alpha = 2.5*G0 / (1.+(0.5*G0)**2.)
@@ -2997,7 +3005,9 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             U_star = 9.*D_star/S
             g = np.sqrt(D_MW*D_MW + D_star*D_star)
             G0 = SFR / mass * Sigma / Sigma_SFR0 if UV_MW is None else 1.0*UV_MW # Instellar radiation field in units of MW's local field (assumed to be proportional to local SFR density).  Reduced from several lines in other methods.
-            if UV_pos is not None and UV_MW is None: G0[~sf] = 1.0*G0_nsf
+            if UV_pos is not None and UV_MW is None: 
+                G0[~sf] = 1.0*G0_nsf
+                G0[(~sf) * (G0 > np.min(G0[sf]))] = np.min(G0[sf])
             G0[G0<ISRF_floor] = ISRF_floor
             Lambda = np.log(1.+ (0.05/g+G0)**(2./3)*g**(1./3)/U_star)
             n_half = 14. * np.sqrt(D_star) * Lambda / (g*S)
@@ -3029,7 +3039,9 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
                 U_star = 9.*D_star/S
                 g = np.sqrt(D_MW*D_MW + D_star*D_star)
                 G0 = SFR / mass * Sigma / Sigma_SFR0 if UV_MW is None else 1.0*UV_MW # Instellar radiation field in units of MW's local field (assumed to be proportional to local SFR density).  Reduced from several lines in other methods.
-                if UV_pos is not None and UV_MW is None: G0[~sf] = 1.0*G0_nsf
+                if UV_pos is not None and UV_MW is None: 
+                    G0[~sf] = 1.0*G0_nsf
+                    G0[(~sf) * (G0 > np.min(G0[sf]))] = np.min(G0[sf])
                 G0[G0<ISRF_floor] = ISRF_floor
                 alpha = 0.5 + 1./(1. + np.sqrt(G0*D_MW*D_MW/600.))
                 Sigma_R1 = 50./g * np.sqrt(0.001+0.1*G0) / (1. + 1.69*np.sqrt(0.001+0.1*G0)) # Note the erratum on the paper for this equation!
@@ -3066,7 +3078,9 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             Sigma = np.sqrt(gamma * const_ratio * f_th * rho * temp / mu)
             Sigma_n = fneutral * X * Sigma # neutral hydrogen density
             G0 = SFR / mass * Sigma / Sigma_SFR0 if UV_MW is None else 1.0*UV_MW
-            if UV_pos is not None and UV_MW is None: G0[~sf] = 1.0*G0_nsf
+            if UV_pos is not None and UV_MW is None: 
+                G0[~sf] = 1.0*G0_nsf
+                G0[(~sf) * (G0 > np.min(G0[sf]))] = np.min(G0[sf])
             G0[G0<ISRF_floor] = ISRF_floor
             #
             n_CNM2p = 23.*G0 * 4.1 / (1. + 3.1*D_MW**0.365)
@@ -3143,19 +3157,35 @@ def fatm_q(G, sigma=11.0, f_He=0.75, DiscBinEdge=None, h=0.73, single=False):
     return f_atm, q
 
 
-def neutralFraction_SFcells(u, n_H, rho_th_fac=0.13, T_cold=1000, T_SN=5.73e7, A0=573.0):
+def neutralFraction_SFcells(u, n_H, n_H_th=0.13, T_cold=1000, T_SN=5.73e7, A0=573.0, f_H=0.76):
     """
         Calculate neutral fraction for star-forming cells in Illustris-type simulations.  This takes the neutral fraction as the particle mass fraction in the 'cold' phase, from Springel & Hernquist's (2003) two-phase model.  Code is adapted from that privately sent by Benedikt Diemer.
         Input definitions:
         u = Internal specific energy of gas particles [m/s]^2
         n_H = Density of gas particles in proton masses / cm^3
     """
-    f_He = 0.75 # Perhaps f_H would be a better name, as it's the fraction of hydrogen left after removing helium from the total cell mass.  Have used f_He in other parts of code though.
-    u_cold = temp2u(T_cold, mu=4./(1.+3*f_He))
-    u_SN = temp2u(T_SN, mu=4./(8.-5*(1-f_He)))
-    A = A0 * (n_H / rho_th_fac)**-0.8
+    u_cold = temp2u(T_cold, mu=4./(1.+3*f_H))
+    u_SN = temp2u(T_SN, mu=4./(8.-5*(1-f_H)))
+    u_4 = temp2u(1e4, mu=4./(8.-5*(1-f_H)))
+    A = A0 * (n_H / n_H_th)**-0.8
     u_hot = u_SN / (1.+A) + u_cold
     return (u_hot - u) / (u_hot - u_cold)
+
+def neutralFraction_SFcells_SH03(u, n_H, beta=0.1, T_c=1000, T_SN=1e8, A0=1e3, f_H=0.76, tstar0=2.1):
+    # As above, but properly going through the Springel & Hernquist (2003) methodology.
+    Lambda_tab = np.loadtxt('/Users/adam/Illustris/Lambda.txt')
+    u_c = temp2u(T_c, mu=4./(1.+3*f_H))
+    u_SN = temp2u(T_SN, mu=4./(8.-5*(1-f_H)))
+    u_4 = temp2u(1e4, mu=4./(8.-5*(1-f_H)))
+    x_th = 1. + (A0+1.)*(u_c-u_4)/u_SN
+    T_cool = u2temp(u_SN/A0, mu=4./(8.-5*(1-f_H)))
+    Lambda = -np.interp(T_cool, Lambda_tab[:,0], Lambda_tab[:,1]) * (f_H**2)  # The f_H^2 factor takes care of the convention in Katz+96, which is where the Lambda table comes from.  Proton mass also converts this 
+    tstar0 *= (1e9 * 60*60*24*365.25) # input units are Gyr.  Convert to s.
+    n_H_th = x_th/(1.-x_th)**2. * (beta*u_SN - (1-beta)*u_c)/(tstar0*Lambda/1.6726219e-24) * 1e4 # factor 1e4 for energy conversion to cgs.  Proton mass used here to go from cgs density to [m_p cm^-3]
+    print 'SH03 critical density', n_H_th, 'm_proton / cm^3'
+    A = A0 * (n_H / n_H_th)**-0.8
+    u_h = u_SN / (1.+A) + u_c
+    return (u_h - u) / (u_h - u_c)
 
 def neutralFraction_from_electronFraction(u, EA, SFR):
     """
