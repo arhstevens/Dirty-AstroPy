@@ -2788,16 +2788,16 @@ def fH2_Krumholz_ParticleBasis(SFR,m,Zgas,nH,Density_Tot,T,fneutral,redshift):
     return Fh2_SFR
 
 
-def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T', UVB='FG09-Dec11', U_MW_z0=None, rho_sd=0.01, col=3, gamma_fixed=None, mu_fixed=None, S_Jeans=True, T_CNMmax=243., Pth_Lagos=False, Jeans_cold=False, Sigma_SFR0=1e-9, UV_MW=None, X=None, UV_pos=None):
+def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T', UVB='FG09-Dec11', U_MW_z0=None, rho_sd=0.01, col=3, gamma_fixed=None, mu_fixed=None, S_Jeans=True, T_CNMmax=243., Pth_Lagos=False, Jeans_cold=False, Sigma_SFR0=1e-9, UV_MW=None, X=None, UV_pos=None, fudge=1.5):
     """
-        This is my own version of calculating the atomic- and molecular-hydrogen masses of gas particles/cells from simulations.  This has been adapted from the Python scripts written by Claudia Lagos and Michelle Furlong.  This follows the basis of Appendix A of Lagos et al (2015b) but includes further edits from me to improve detail, several of which are directly from the source papers. Expects each non-default input as an array, except for reshift.
-        Input definitions and units are as follows:
-        mass = total mass of particles [M_sun]
-        SFR = star formation rate of particles [M_sun/yr]
-        Z = ratio of metallic mass to total particle mass
-        rho = density of particles [M_sun/pc^3]
+        This is my own version of calculating the atomic- and molecular-hydrogen masses of gas particles/cells from simulations.  This was originally adapted from the Python scripts written by Claudia Lagos and Michelle Furlong, and followed the basis of Appendix A of Lagos et al (2015b).  This has been vastly modified and is still being developed further.  This has been developed in tandem with Benedikt Diemer's code for Illustris-TNG, and has been tested to produce the same results. 
+        Expects each non-default input as an array, except for reshift.  Input definitions and units are as follows:
+        mass = total mass of gas particles/cells [M_sun]
+        SFR = star formation rate of particles/cells [M_sun/yr]
+        Z = ratio of metallic mass to total particle/cell mass
+        rho = density of particles/cells [M_sun/pc^3]
         temp = temperature of particles [K] OR specific thermal energy [(m/s)^2] (see mode)
-        fneutral = fraction of particle mass that is not ionized.  If given as None, it will automatically be calculated using the Rahmati+13 prescription.
+        fneutral = fraction of particle/cell mass that is not ionized.  If given as None, it will automatically be calculated using the Rahmati+13 prescription.
         method = 0 - Return results for methods 2, 3, and 4
                  1 - Gnedin & Kravtsov (2011) eq 6
                  2 - Gnedin & Kravtsov (2011) eq 10
@@ -2815,14 +2815,15 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
         col = only used for UVB='FG09-Dec11', decides on column to use in table
         gamma_fixed = set gamma to be a fixed value if not None, even if that breaks self-consistency (there for testing)
         mu_fixed = as above but for mu
-        S_Jeans = use Jeans scale for S variable in GD14, else use the cube root of cell volume (former makes more sense for SPH)
+        S_Jeans = use Jeans scale for S variable in GD14, else use the cube root of cell volume (former makes more sense for SPH, but not cells)
         T_CNMmax = Maximum temperature of cold neutral medium for K13
-        Pth_Lagos = calculate P_th for K13 as in eq.A15 of Lagos+15b rather than eq.6 of K13.
-        Jeans_cold = use cold clouds of SF gas cells only for calculating Jeans length [NEED TO IMPLEMENT]
+        Pth_Lagos = calculate P_th for K13 as in eq.A15 of Lagos+15b rather than eq.6 of K13.  Not advised for science.  Here for comparison purposes.
+        Jeans_cold = use cold clouds of SF gas cells only for calculating Jeans length [NOT YET IMPLEMENTED]
         Sigma_SFR0 = local star formation rate surface density of the solar neighbourhood [Msun/yr/pc^2]
         UV_MW = pre-computed UV fluxes (normed by Milky Way) for each cell
         X = pre-computed hydrogen fractions for cells (or a chosen constant)
-        UV_pos = positions of particles, used to approximate the UV field of non-SF particles based on nearby SF particles.  Using this will definitely slow the code.  Is redundant when UV_MW is provided. [pc]
+        UV_pos = positions of particles/cells, used to approximate the UV field of non-SF particles/cells based on nearby SF particles/cells.  Using this will definitely slow the code but should return more realistic HI/H2 fractions for non-star-forming cells/particles.  Is redundant when UV_MW is provided. [pc]
+        fudge = literal fudge factor in the approximate calculation for UV in non-SF particles/cells
     """
     
     
@@ -2838,7 +2839,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
     f_th = 1.0 # Assuming all gas is thermal
 
     Z[Z<1e-5] = 1e-5 # Floor on metallicity (BBN means there must be a tiny bit)
-    if X is None:
+    if X is None: # Approximate hydrogen fraction from pre-determined fitting function (very simplistic)
         p = [0.0166, -1.3452, 0.75167, 31.193, -2.38233]
         X = piecewise_parabola_linear(Z, *p)
         X[X>0.76] = 0.76 # safety
@@ -2910,7 +2911,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             dist2 = np.sum((UV_pos[sf]-UV_pos[~sf][p,:])**2, axis=1)
             rank = (100.*np.argsort(np.argsort(dist2))) / len(dist2)
             md = (rank > 25) * (rank < 75) # mid-distance
-            G0_nsf[p] = 1.5*np.max(G0_sf[md] * (mass[sf][md]/rho[sf][md])**(2./3) / dist2[md])
+            G0_nsf[p] = fudge * np.max(G0_sf[md] * (mass[sf][md]/rho[sf][md])**(2./3) / dist2[md])
     
     # Dust to gas ratio relative to MW
     D_MW = Z / 0.0127
