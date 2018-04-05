@@ -2905,14 +2905,15 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
     # Approximate UV field for non-SF particles
     if UV_pos is not None and UV_MW is None:
         sf = (SFR>0)
-        G0_nsf = np.zeros(len(sf[~sf]))*ISRF_floor
-        for p in xrange(len(G0_nsf)):
-            Sigma = np.sqrt(gamma * const_ratio * f_th * rho * temp / mu)
-            G0_sf = (SFR / mass * Sigma)[sf] / Sigma_SFR0
-            dist2 = np.sum((UV_pos[sf]-UV_pos[~sf][p,:])**2, axis=1)
-            rank = (100.*np.argsort(np.argsort(dist2))) / len(dist2)
-            md = (rank > 25) * (rank < 75) # mid-distance
-            G0_nsf[p] = fudge * np.max(G0_sf[md] * (mass[sf][md]/rho[sf][md])**(2./3) / dist2[md])
+        G0_nsf = np.ones(len(sf[~sf]))*ISRF_floor
+        if len(sf[sf])>0 and len(G0_nsf)>0:
+            for p in xrange(len(G0_nsf)):
+                Sigma = np.sqrt(gamma * const_ratio * f_th * rho * temp / mu)
+                G0_sf = (SFR / mass * Sigma)[sf] / Sigma_SFR0
+                dist2 = np.sum((UV_pos[sf]-UV_pos[~sf][p,:])**2, axis=1)
+                rank = (100.*np.argsort(np.argsort(dist2))) / len(dist2)
+                md = (rank >= 25) * (rank <= 75) if len(rank)>5 else np.ones(len(rank), dtype=bool) # mid-distance
+                G0_nsf[p] = fudge * np.max(G0_sf[md] * (mass[sf][md]/rho[sf][md])**(2./3) / dist2[md])
     
     # Dust to gas ratio relative to MW
     D_MW = Z / 0.0127
@@ -2936,7 +2937,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             G0 = Sigma_SFR / Sigma_SFR0 if UV_MW is None else 1.0*UV_MW # Calculte interstellar radiation field, assuming it's proportional to SFR density, normalised by local Sigma_SFR of solar neighbourhood.
             if UV_pos is not None and UV_MW is None: 
                 G0[~sf] = 1.0*G0_nsf
-                G0[(~sf) * (G0 > np.min(G0[sf]))] = np.min(G0[sf]) # nSF cells shouldn't exceed any SF cells in their UV
+                if len(sf[sf])>0: G0[(~sf) * (G0 > np.min(G0[sf]))] = np.min(G0[sf]) # nSF cells shouldn't exceed any SF cells in their UV
             G0[G0<ISRF_floor] = ISRF_floor # Also denoted as U_MW in some papers
             D_star = 1.5e-3 * np.log(1. + (3.*G0)**1.7)
             alpha = 2.5*G0 / (1.+(0.5*G0)**2.)
@@ -2970,7 +2971,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             G0 = Sigma_SFR / Sigma_SFR0 if UV_MW is None else 1.0*UV_MW
             if UV_pos is not None and UV_MW is None: 
                 G0[~sf] = 1.0*G0_nsf
-                G0[(~sf) * (G0 > np.min(G0[sf]))] = np.min(G0[sf])
+                if len(sf[sf])>0: G0[(~sf) * (G0 > np.min(G0[sf]))] = np.min(G0[sf])
             G0[G0<ISRF_floor] = ISRF_floor
             D_star = 1.5e-3 * np.log(1. + (3.*G0)**1.7)
             alpha = 2.5*G0 / (1.+(0.5*G0)**2.)
@@ -3009,7 +3010,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             G0 = SFR / mass * Sigma / Sigma_SFR0 if UV_MW is None else 1.0*UV_MW # Instellar radiation field in units of MW's local field (assumed to be proportional to local SFR density).  Reduced from several lines in other methods.
             if UV_pos is not None and UV_MW is None: 
                 G0[~sf] = 1.0*G0_nsf
-                G0[(~sf) * (G0 > np.min(G0[sf]))] = np.min(G0[sf])
+                if len(sf[sf])>0: G0[(~sf) * (G0 > np.min(G0[sf]))] = np.min(G0[sf])
             G0[G0<ISRF_floor] = ISRF_floor
             Lambda = np.log(1.+ (0.05/g+G0)**(2./3)*g**(1./3)/U_star)
             n_half = 14. * np.sqrt(D_star) * Lambda / (g*S)
@@ -3043,7 +3044,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
                 G0 = SFR / mass * Sigma / Sigma_SFR0 if UV_MW is None else 1.0*UV_MW # Instellar radiation field in units of MW's local field (assumed to be proportional to local SFR density).  Reduced from several lines in other methods.
                 if UV_pos is not None and UV_MW is None: 
                     G0[~sf] = 1.0*G0_nsf
-                    G0[(~sf) * (G0 > np.min(G0[sf]))] = np.min(G0[sf])
+                    if len(sf[sf])>0: G0[(~sf) * (G0 > np.min(G0[sf]))] = np.min(G0[sf])
                 G0[G0<ISRF_floor] = ISRF_floor
                 alpha = 0.5 + 1./(1. + np.sqrt(G0*D_MW*D_MW/600.))
                 Sigma_R1 = 50./g * np.sqrt(0.001+0.1*G0) / (1. + 1.69*np.sqrt(0.001+0.1*G0)) # Note the erratum on the paper for this equation!
@@ -3082,7 +3083,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             G0 = SFR / mass * Sigma / Sigma_SFR0 if UV_MW is None else 1.0*UV_MW
             if UV_pos is not None and UV_MW is None: 
                 G0[~sf] = 1.0*G0_nsf
-                G0[(~sf) * (G0 > np.min(G0[sf]))] = np.min(G0[sf])
+                if len(sf[sf])>0: G0[(~sf) * (G0 > np.min(G0[sf]))] = np.min(G0[sf])
             G0[G0<ISRF_floor] = ISRF_floor
             #
             n_CNM2p = 23.*G0 * 4.1 / (1. + 3.1*D_MW**0.365)
@@ -3207,13 +3208,12 @@ def neutralFraction_from_electronFraction(u, EA, SFR):
 
 def interp_polytonic(x, xp, yp):
     """
-        Similar to np.interp, except one doesn't require yp to be a monotonic function of xp.  Will find the largest value of yp that could correspond to x.  This can be used for finding the HI radii of galaxies, for example.  Currently just works for a single value x.  Intend to update once demand is present.
+        Similar to np.interp, except one doesn't require yp to be a monotonic function of xp.  Will find the largest value of yp that could correspond to x.  This can be used for finding the HI radii of galaxies, for example.  Currently just works for a single value x.  Intend to update once demand is present.  Assumes yp is in increasing order.
     """
-    try:
-        w = np.where(xp>x)[0]
-    except IndexError:
+    w = np.where(xp>x)[0]
+    if len(w)==0:
         return 0. # Zero retunred if x > all xp, given one can't really extrapolate something polytonic
-    if w==len(xp):
+    if np.max(yp)==np.max(yp[w]):
         return np.max(yp)
     else:
         ymax = np.max(yp[w])
