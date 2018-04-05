@@ -2788,7 +2788,7 @@ def fH2_Krumholz_ParticleBasis(SFR,m,Zgas,nH,Density_Tot,T,fneutral,redshift):
     return Fh2_SFR
 
 
-def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T', UVB='FG09-Dec11', U_MW_z0=None, rho_sd=0.01, col=3, gamma_fixed=None, mu_fixed=None, S_Jeans=True, T_CNMmax=243., Pth_Lagos=False, Jeans_cold=False, Sigma_SFR0=1e-9, UV_MW=None, X=None, UV_pos=None, fudge=1.5):
+def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T', UVB='FG09-Dec11', U_MW_z0=None, rho_sd=0.01, col=2, gamma_fixed=None, mu_fixed=None, S_Jeans=True, T_CNMmax=243., Pth_Lagos=False, Jeans_cold=False, Sigma_SFR0=1e-9, UV_MW=None, X=None, UV_pos=None, fudge=1.5, f_ISM=None):
     """
         This is my own version of calculating the atomic- and molecular-hydrogen masses of gas particles/cells from simulations.  This was originally adapted from the Python scripts written by Claudia Lagos and Michelle Furlong, and followed the basis of Appendix A of Lagos et al (2015b).  This has been vastly modified and is still being developed further.  This has been developed in tandem with Benedikt Diemer's code for Illustris-TNG, and has been tested to produce the same results. 
         Expects each non-default input as an array, except for reshift.  Input definitions and units are as follows:
@@ -2824,6 +2824,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
         X = pre-computed hydrogen fractions for cells (or a chosen constant)
         UV_pos = positions of particles/cells, used to approximate the UV field of non-SF particles/cells based on nearby SF particles/cells.  Using this will definitely slow the code but should return more realistic HI/H2 fractions for non-star-forming cells/particles.  Is redundant when UV_MW is provided. [pc]
         fudge = literal fudge factor in the approximate calculation for UV in non-SF particles/cells
+        f_ISM = boolean array for particles/cells stating whether they should be considered 'ISM' for the sake of the K13 prescription.  Those that are not will not have the nCNMhydro floor applied.
     """
     
     
@@ -3097,6 +3098,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             n_CNMhydro = P_th / (1.1 * k_B * T_CNMmax) / (m_per_pc*100.)**3.
             #
             n_CNM = np.max(np.array([n_CNM2p,n_CNMhydro]),axis=0)
+            if f_ISM is not None: n_CNM[~f_ISM] = n_CNM2p[~f_ISM] # floor doesn't apply to diffuse halo gas
             chi = 7.2*G0 / (0.1*n_CNM)
             tau_c = 0.066 * f_c * D_MW * Sigma_n
             s = np.log(1.+ 0.6*chi + 0.01*chi*chi) / (0.6*tau_c)
@@ -3208,11 +3210,13 @@ def interp_polytonic(x, xp, yp):
         Similar to np.interp, except one doesn't require yp to be a monotonic function of xp.  Will find the largest value of yp that could correspond to x.  This can be used for finding the HI radii of galaxies, for example.  Currently just works for a single value x.  Intend to update once demand is present.
     """
     try:
-        w = np.where(xp>x)[0][0]
+        w = np.where(xp>x)[0]
     except IndexError:
         return 0. # Zero retunred if x > all xp, given one can't really extrapolate something polytonic
     if w==len(xp):
-        return yp[-1]
+        return np.max(yp)
     else:
-        dw = xp[w+1] - xp[w]
-        return yp[w]*(xp[w+1]-x)/dw + yp[w+1]*(x-xp[w])/dw
+        ymax = np.max(yp[w])
+        i = np.where(yp==ymax)[0][0]
+        dx = xp[i+1] - xp[i]
+        return yp[i]*(xp[i+1]-x)/dx + yp[i+1]*(x-xp[i])/dx
