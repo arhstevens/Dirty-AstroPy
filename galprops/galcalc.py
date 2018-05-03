@@ -2789,7 +2789,7 @@ def fH2_Krumholz_ParticleBasis(SFR,m,Zgas,nH,Density_Tot,T,fneutral,redshift):
     return Fh2_SFR
 
 
-def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T', UVB='FG09-Dec11', U_MW_z0=None, rho_sd=0.01, col=2, gamma_fixed=None, mu_fixed=None, S_Jeans=True, T_CNMmax=243., Pth_Lagos=False, Jeans_cold=False, Sigma_SFR0=1e-9, UV_MW=None, X=None, UV_pos=None, f_esc=1.5, f_ISM=None):
+def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T', UVB='FG09-Dec11', U_MW_z0=None, rho_sd=0.01, col=2, gamma_fixed=None, mu_fixed=None, S_Jeans=True, T_CNMmax=243., Pth_Lagos=False, Jeans_cold=False, Sigma_SFR0=1e-9, UV_MW=None, X=None, UV_pos=None, f_esc=0.15, f_ISM=None):
     """
         This is my own version of calculating the atomic- and molecular-hydrogen masses of gas particles/cells from simulations.  This was originally adapted from the Python scripts written by Claudia Lagos and Michelle Furlong, and followed the basis of Appendix A of Lagos et al (2015b).  This has been vastly modified and is still being developed further.  This has been developed in tandem with Benedikt Diemer's code for Illustris-TNG, and has been tested to produce the same results. 
         Expects each non-default input as an array, except for reshift.  Input definitions and units are as follows:
@@ -2825,7 +2825,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
         X = pre-computed hydrogen fractions for cells (or a chosen constant)
         UV_pos = positions of particles/cells, used to approximate the UV field of non-SF particles/cells based on nearby SF particles/cells.  Using this will definitely slow the code but should return more realistic HI/H2 fractions for non-star-forming cells/particles.  Is redundant when UV_MW is provided. [pc]
         f_esc = fudge factor for escape fraction in the approximate calculation for UV
-        f_ISM = boolean array for particles/cells stating whether they should be considered 'ISM' for the sake of the K13 prescription.  Those that are not will not have the nCNMhydro floor applied.
+        f_ISM = boolean array for particles/cells stating whether they should be considered 'ISM' for the sake of the K13 prescription.  Those that are not will not have the nCNMhydro floor applied.  This will also inform the mean Sigma_SFR for the UV calculation.
     """
     
     
@@ -2879,7 +2879,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
 
 
     # Initialise lists if all methods wanted
-    mHI_list, mH2_list, G0_list = [], [], []
+    mHI_list, mH2_list = [], []
 
     # Set floor of interstellar radiation field from UV background, in units of Milky Way field
     if UVB not in ['HM12', 'FG09', 'FG09-Dec11']:
@@ -2903,13 +2903,14 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             UVbackground = data[1,:] / data[1,0] * U_MW_z0
     ISRF_floor = 10**np.interp(redshift, redshift_UVB, np.log10(UVbackground)) * np.ones(len(mass))
 
-    # Approximate UV field for non-SF particles
-    if UV_pos is not None and UV_MW is None:
-        sf = (SFR>0)
-        CoSF = np.sum(mass[sf] * UV_pos[sf].T, axis=1) / np.sum(mass[sf]) # centre of star formation
-        Rsqr = np.sum((UV_pos - CoSF)**2, axis=1)
-        Sigma_SFR_cen = np.sum(SFR) / np.max(Rsqr[sf]) / np.pi
-        ISRF_floor = np.maximum(ISRF_floor, f_esc*Sigma_SFR_cen/Sigma_SFR0/Rsqr* np.max(Rsqr[sf]))
+    # Approximate UV field based on average SF density
+    sf = (SFR>0) if f_ISM is None else (SFR>0) * f_ISM
+    if UV_pos is not None and UV_MW is None and len(sf[sf])>0:
+            CoSF = np.sum(mass[sf] * UV_pos[sf].T, axis=1) / np.sum(mass[sf]) # centre of star formation
+            Rsqr = np.sum((UV_pos - CoSF)**2, axis=1)
+            Rsqr_area = np.max((Rsqr + 0.5*(mass/rho)**(2./3.))[sf])
+            Sigma_SFR_cen = np.sum(SFR) / Rsqr_area / np.pi
+            ISRF_floor = np.maximum(ISRF_floor, f_esc*Sigma_SFR_cen/Sigma_SFR0/Rsqr* Rsqr_area)
         
     # Dust to gas ratio relative to MW
     D_MW = Z / 0.0127
@@ -2980,7 +2981,6 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
     if method==0:
         mHI_list += [mass_HI]
         mH2_list += [mass_H2]
-        G0_list += [G0]
 
     if method==3: # GD14, eq6 (entry 1 for method==0)
         for it in xrange(it_max):
@@ -3043,7 +3043,6 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
     if method==0:
         mHI_list += [mass_HI]
         mH2_list += [mass_H2]
-        G0_list += [G0]
 
     
     if method==4 or method==0: # K13, eq10 (entry 2 for method==0)
@@ -3096,18 +3095,17 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
     if method==0:
         mHI_list += [mass_HI]
         mH2_list += [mass_H2]
-        G0_list += [G0]
 
     if method==0:
         if calc_fneutral:
             return mHI_list, mH2_list, fneutral
         else:
-            return mHI_list, mH2_list, G0_list
+            return mHI_list, mH2_list
     else:
         if calc_fneutral:
             return mass_HI, mass_H2, fneutral
         else:
-            return mass_HI, mass_H2, G0
+            return mass_HI, mass_H2
 
 
 
