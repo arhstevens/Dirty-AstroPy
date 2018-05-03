@@ -948,6 +948,8 @@ def galdtype_adam():
                     ('SfrDiskZ'                     , floattype),
                     ('SfrBulgeZ'                    , floattype),
                     ('DiskScaleRadius'              , floattype),
+                    ('CoolScaleRadius'              , floattype), # Added run 516
+                    ('StellarDiscScaleRadius'       , floattype), # Added run 476
 #                    ('BulgeRadius'                  , floattype), # Removed run 455 (accidentally there for 457-464 because I hadn't re-made code -.-)
                     ('Cooling'                      , floattype),
                     ('Heating'                      , floattype),
@@ -3639,6 +3641,7 @@ def GASSdata(dir='/Users/adam/Dropbox/Swinburne Shared/6-MonthProject/', h=0.677
 
 
 def fr13data(h=0.678):
+    # Data from Fall & Romanowsky (2013)
 	FR13x = np.array([  9.233,   8.949,   8.906,   9.743,   9.573,   9.899,  10.   ,
                       10.038,  10.197,  10.266,  10.34 ,  10.326,  10.25 ,  10.387,
                       10.484,  10.59 ,  10.569,  10.577,  10.565,  10.453,  10.32 ,
@@ -3660,6 +3663,7 @@ def fr13data(h=0.678):
 	return FR13x, FR13y
 
 def md14data(h=0.678):
+    # Data from Madau & Dickinson (2014)
     data = np.array([[0.01, 0.1, -1.82, 0.09, 0.02],
                      [0.2, 0.4, -1.50, 0.05, 0.05],
                      [0.4, 0.6, -1.39, 0.15, 0.08],
@@ -4163,3 +4167,24 @@ def Baldry08(h=None):
         B[:,2] *= h**3
 
     return B
+
+def Keres03(h):
+    Keres_high = np.array([-1.051, -1.821, -1.028, -1.341, -1.343, -1.614, -1.854, -2.791,  -3.54 , -5.021]) + 3*np.log10(h)
+    Keres_mid = np.array([-1.271, -1.999, -1.244, -1.477, -1.464, -1.713, -1.929, -2.878,   -3.721, -5.22 ]) + 3*np.log10(h)
+    Keres_low = np.array([-1.706, -2.302, -1.71 , -1.676, -1.638, -1.82 , -2.033, -2.977,   -4.097, -5.584]) + 3*np.log10(h)
+    Keres_M = np.array([  6.953,   7.353,   7.759,   8.154,   8.553,   8.96 ,   9.365,  9.753,  10.155,  10.558]) - 2*np.log10(h)
+    return Keres_M, Keres_low, Keres_mid, Keres_high
+
+
+def OG14(h, disconly=False):
+    BTT = np.array([0.04, 0.05, 0.02, 0.1, 0.0, 0.02, 0.03, 0.14, 0.16, 0.22, 0.32, 0.17 ,0.09, 0.1, 0.16, 0.01])
+    logM_star = np.array([10.1, 9.9, 9.7, 10.8, 9.0, 10.3, 10.1, 10.4, 10.7, 10.6, 10.3, 10.8, 10.6, 10.5, 10.9, 9.5]) + 2*np.log10(0.7/h) + np.log10(0.61/0.66) # adjusts from Kroupa to Chabrier IMF
+    logM_HIH2 = np.array([9.8, 9.8, 9.5, 10.1, 8.4, 9.7, 10.1, 9.4, 10.1, 9.4, 9.0, 10.2, 9.8, 10.0, 10.2, 9.2]) + 2*np.log10(0.7/h)
+    logj_star = np.array([2.98, 2.94, 2.62, 3.4, 2.03, 3.03, 2.97, 2.91, 3.06, 2.84, 2.34, 3.18, 3.18, 3.02, 3.35, 2.43]) + np.log10(0.7/h)
+    logj_HIH2 = np.array([3.23, 3.09, 3.04, 3.91, 2.11, 3.25, 3.45, 3.1, 3.38, 2.82, 2.63, 3.59, 3.25, 3.17, 3.52, 2.61]) + np.log10(0.7/h)
+
+    if disconly:
+        logM_star += np.log10(1-BTT)
+        logj_star -= np.log10(1-BTT)
+
+    return BTT, logM_star, logM_HIH2, logj_star, logj_HIH2
