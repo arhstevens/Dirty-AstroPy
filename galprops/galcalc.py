@@ -3152,9 +3152,9 @@ def neutralFraction_SFcells(u, n_H, n_H_th=0.13, T_cold=1000, T_SN=5.73e7, A0=57
     u_hot = u_SN / (1.+A) + u_cold
     return (u_hot - u) / (u_hot - u_cold)
 
-def neutralFraction_SFcells_SH03(u, n_H, beta=0.1, T_c=1000, T_SN=1e8, A0=1e3, f_H=0.76, tstar0=2.1):
+def neutralFraction_SFcells_SH03(u, n_H, beta=0.1, T_c=1000, T_SN=1e8, A0=1e3, f_H=0.76, tstar0=2.1, Lambda_tab=None):
     # As above, but properly going through the Springel & Hernquist (2003) methodology.
-    Lambda_tab = np.loadtxt('/Users/adam/Illustris/Lambda.txt')
+    if Lambda_tab is None: Lambda_tab = np.loadtxt('/Users/adam/Illustris/Lambda.txt')
     u_c = temp2u(T_c, mu=4./(1.+3*f_H))
     u_SN = temp2u(T_SN, mu=4./(8.-5*(1-f_H)))
     u_4 = temp2u(1e4, mu=4./(8.-5*(1-f_H)))
