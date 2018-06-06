@@ -486,11 +486,11 @@ def recentre(x,y,z,vx,vy,vz,mass,r=0):
 
 
 def com(x,y,z,mass):
-	# Find centre of mass
-	M = sum(mass)
-	mx, my, mz = x*mass, y*mass, z*mass
+    # Find centre of mass
+    M = sum(mass)
+    mx, my, mz = x*mass, y*mass, z*mass
     xcom, ycom, zcom = sum(mx)/M, sum(my)/M, sum(mz)/M #divide(sum(mx),M), divide(sum(my),M), divide(sum(mz),M)
-	return xcom, ycom, zcom
+    return xcom, ycom, zcom
 
 
 def com2(pos,mass):
