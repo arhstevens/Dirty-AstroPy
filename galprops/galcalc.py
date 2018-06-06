@@ -489,7 +489,7 @@ def com(x,y,z,mass):
 	# Find centre of mass
 	M = sum(mass)
 	mx, my, mz = x*mass, y*mass, z*mass
-	xcom, ycom, zcom = divide(sum(mx),M), divide(sum(my),M), divide(sum(mz),M)
+    xcom, ycom, zcom = sum(mx)/M, sum(my)/M, sum(mz)/M #divide(sum(mx),M), divide(sum(my),M), divide(sum(mz),M)
 	return xcom, ycom, zcom
 
 
@@ -2906,11 +2906,13 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
     # Approximate UV field based on average SF density
     sf = (SFR>0) if f_ISM is None else (SFR>0) * f_ISM
     if UV_pos is not None and UV_MW is None and len(sf[sf])>0:
-            CoSF = np.sum(mass[sf] * UV_pos[sf].T, axis=1) / np.sum(mass[sf]) # centre of star formation
-            Rsqr = np.sum((UV_pos - CoSF)**2, axis=1)
-            Rsqr_area = np.max((Rsqr + 0.5*(mass/rho)**(2./3.))[sf])
-            Sigma_SFR_cen = np.sum(SFR) / Rsqr_area / np.pi
-            ISRF_floor = np.maximum(ISRF_floor, f_esc*Sigma_SFR_cen/Sigma_SFR0/Rsqr* Rsqr_area)
+        CoSF = np.sum(mass[sf] * UV_pos[sf].T, axis=1) / np.sum(mass[sf]) # centre of star formation
+        Rsqr = np.sum((UV_pos - CoSF)**2, axis=1)
+        Rsqr_area = np.max((Rsqr + 0.5*(mass/rho)**(2./3.))[sf])
+        Sigma_SFR_cen = np.sum(SFR) / Rsqr_area / np.pi
+        ISRF_floor = np.maximum(ISRF_floor, f_esc*Sigma_SFR_cen/Sigma_SFR0/Rsqr* Rsqr_area)
+
+
         
     # Dust to gas ratio relative to MW
     D_MW = Z / 0.0127

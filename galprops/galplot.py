@@ -483,14 +483,25 @@ def massfunction(mass, Lbox, colour='k', label=r'Input', extra=0, fsize=28, pt=1
 	# Make a mass function plot.  Input vector of halo masses in solar masses and length of box in Mpc.
 	# Setting h=1 means masses are being put in with a factor of h^2 already considered.  Else use physical units.
     #masslog = np.log10(gc.cleansample(mass))
-    masslog = np.log10(mass[(mass>0)*(np.isfinite(mass))])
+    masslog = np.log10(mass)
+    masslog = masslog[np.isfinite(masslog)]
     if range==None:
         lbound, ubound = max(8,np.min(masslog)), min(12.5,np.max(masslog))
     else:
         lbound, ubound = range[0], range[1]
+    if lbound>ubound:
+        print 'WTF, lbound, ubound =', lbound, ubound
+        exit()
     if binwidth is not None: Nbins = int((ubound - lbound) / binwidth)
     if pt==0 or pt==1 or pt==4:
-        N, edges = np.histogram(masslog, bins=Nbins, range=[lbound,ubound]) # number of galaxies in each bin.  Doing a specific range for stars and gas.
+        try:
+            N, edges = np.histogram(masslog, bins=Nbins, range=[lbound,ubound]) # number of galaxies in each bin.  Doing a specific range for stars and gas.
+        except ValueError:
+            print 'Triggered ValueError'
+            print 'masslog', masslog
+            print 'Nbins', Nbins
+            print '[lbound,ubound]', [lbound,ubound]
+        N, edges = np.histogram(masslog, bins=Nbins, range=[lbound,ubound])
         xhist, edges = np.histogram(masslog, bins=Nbins, range=[lbound,ubound], weights=10**masslog)
     elif pt==3:
         N, edges = np.histogram(masslog, bins=Nbins, range=[6+2*np.log10(0.7/h),9+np.log10(5)+2*np.log10(0.7/h)])
@@ -579,7 +590,7 @@ def massfunction(mass, Lbox, colour='k', label=r'Input', extra=0, fsize=28, pt=1
                 plt.legend(fontsize=fsize-6, loc='best', frameon=False)
 
 
-def massfunction_HI_H2_obs(h=0.678, HI=True, H2=True, K=True, OR=False, ax=None, Z=True, M=False):
+def massfunction_HI_H2_obs(h=0.678, HI=True, H2=True, K=True, OR=False, ax=None, Z=True, M=False, B=False):
     Zwaan = np.array([[6.933,   -0.333],
                     [7.057,   -0.490],
                     [7.209,   -0.698],
@@ -646,6 +657,25 @@ def massfunction_HI_H2_obs(h=0.678, HI=True, H2=True, K=True, OR=False, ax=None,
 
     HI_x = Zwaan[:,0] - 2*np.log10(h)
     HI_y = 10**Zwaan[:,1] * h**3
+    
+    Boselli_const_XCO = np.array([[7.39189, -3.06989, -3.32527, -2.86828],
+                                   [7.78378, -2.45161, -2.54570, -2.37097],
+                                   [8.18919, -1.91398, -1.96774, -1.84677],
+                                   [8.62162, -2.12903, -2.20968, -2.03495],
+                                   [9.01351, -2.41129, -2.51882, -2.31720],
+                                   [9.41892, -2.62634, -2.80108, -2.53226],
+                                   [9.81081, -2.73387, -2.85484, -2.54570],
+                                   [10.2297, -3.64785, -5.97312, -3.36559]])
+                                   
+    Boselli_var_XCO = np.array([[7.59030, -3.19086, -3.58065, -2.98925],
+                               [7.98113, -2.55914, -2.72043, -2.45161],
+                               [8.37197, -2.22312, -2.30376, -2.14247],
+                               [8.78976, -1.94086, -1.99462, -1.90054],
+                               [9.18059, -1.98118, -2.06183, -1.90054],
+                               [9.59838, -2.72043, -2.92204, -2.62634], 
+                               [9.98922, -3.67473, -5.98656, -3.31183]])
+
+
 
     if ax is None:
         #if HI: plt.plot(HI_x, HI_y, 'g-', lw=8, alpha=0.4, label=r'H\,\textsc{i} (Zwaan et al.~2005)')
@@ -668,15 +698,22 @@ def massfunction_HI_H2_obs(h=0.678, HI=True, H2=True, K=True, OR=False, ax=None,
         plt.axis([8,11.5,1e-6,1e-1])
     else:
         if HI and Z: ax.plot(HI_x, HI_y, 'g-', lw=8, alpha=0.4, label=r'Zwaan et al.~(2005)')
+        if HI and M: ax.fill_between(Martin_x, 10**Martin_high, 10**Martin_low, color='c', alpha=0.4)
+        if HI and M: ax.plot([0,1], [1,1], 'c-', lw=8, alpha=0.4, label=r'Martin et al.~(2010)')
+
+        if H2 and K: ax.fill_between(Keres_M, 10**Keres_high, 10**Keres_low, color='teal', alpha=0.4)
+        if H2 and K: ax.plot([0,1], [1,1], '-', color='teal', lw=8, alpha=0.4, label=r'Keres et al.~(2003)')
         
-        if H2 and K: ax.fill_between(Keres_M, 10**Keres_high, 10**Keres_low, color='c', alpha=0.4)
-        if H2 and K: ax.plot([0,1], [1,1], 'c-', lw=8, alpha=0.4, label=r'Keres et al.~(2003)')
+        if H2 and OR: ax.fill_between(ObrRaw_M, 10**ObrRaw_high, 10**ObrRaw_low, color='magenta', alpha=0.4)
+        if H2 and OR: ax.plot([0,1], [1,1], '-', color='magenta', lw=8, alpha=0.4, label=r'Obreschkow \& Rawlings (2009)')
         
-        if H2 and OR: ax.fill_between(ObrRaw_M, 10**ObrRaw_high, 10**ObrRaw_low, color='purple', alpha=0.4)
-        if H2 and OR: ax.plot([0,1], [1,1], '-', color='purple', lw=8, alpha=0.4, label=r'H$_2$ (Obreschkow \& Rawlings 2009)')
-        
-        ax.xlabel(r'$\log_{10}(M_{\mathrm{H}\,\huge\textsc{i}}\ \mathrm{or}\ M_{\mathrm{H}_2}\ [\mathrm{M}_{\bigodot}])$')
-        ax.ylabel(r'$\Phi\ [\mathrm{Mpc}^{-3}\ \mathrm{dex}^{-1}]$')
+        if H2 and B: ax.fill_between(Boselli_const_XCO[:,0]+2*np.log10(0.7/h), 10**Boselli_const_XCO[:,2]*(h/0.7)**3/0.4, 10**Boselli_const_XCO[:,3]*(h/0.7)**3/0.4, color='orange', alpha=0.4)
+        if H2 and B: ax.plot([0,1], [1,1], '-', color='orange', lw=8, alpha=0.4, label=r'Boselli et al.~(2014), const.~$X_{\rm CO}$')
+        if H2 and B: ax.fill_between(Boselli_var_XCO[:,0]+2*np.log10(0.7/h), 10**Boselli_var_XCO[:,2]*(h/0.7)**3/0.4, 10**Boselli_var_XCO[:,3]*(h/0.7)**3/0.4, color='violet', alpha=0.4)
+        if H2 and B: ax.plot([0,1], [1,1], '-', color='violet', lw=8, alpha=0.4, label=r'Boselli et al.~(2014), var.~$X_{\rm CO}$')
+
+        ax.set_xlabel(r'$\log_{10}(M_{\mathrm{H}\,\huge\textsc{i}}\ \mathrm{or}\ M_{\mathrm{H}_2}\ [\mathrm{M}_{\bigodot}])$')
+        ax.set_ylabel(r'$\Phi\ [\mathrm{Mpc}^{-3}\ \mathrm{dex}^{-1}]$')
         ax.axis([8,11.5,1e-6,1e-1])
 
 def btf(M_bary, V_rot, extra=False, c='k', ls='-', lw=2, h=0.7, label=r'Input', fsize=28, pcs=None):
@@ -862,17 +899,17 @@ def bhbulge(M_BH, M_bulge, extra=0, c='k', ls='-', lw=2, h=0.7, label=r'Input', 
 	plt.axis([np.min(x), np.max(x)+0.1, np.min(y)-0.1, np.max(y)+0.1])
 	
 def BH_bulge_obs(h=0.678):
-	M_BH_obs = (0.7/h)**2*1e8*np.array([39, 11, 0.45, 25, 24, 0.044, 1.4, 0.73, 9.0, 58, 0.10, 8.3, 0.39, 0.42, 0.084, 0.66, 0.73, 15, 4.7, 0.083, 0.14, 0.15, 0.4, 0.12, 1.7, 0.024, 8.8, 0.14, 2.0, 0.073, 0.77, 4.0, 0.17, 0.34, 2.4, 0.058, 3.1, 1.3, 2.0, 97, 8.1, 1.8, 0.65, 0.39, 5.0, 3.3, 4.5, 0.075, 0.68, 1.2, 0.13, 4.7, 0.59, 6.4, 0.79, 3.9, 47, 1.8, 0.06, 0.016, 210, 0.014, 7.4, 1.6, 6.8, 2.6, 11, 37, 5.9, 0.31, 0.10, 3.7, 0.55, 13, 0.11])
-	M_BH_hi = (0.7/h)**2*1e8*np.array([4, 2, 0.17, 7, 10, 0.044, 0.9, 0.0, 0.9, 3.5, 0.10, 2.7, 0.26, 0.04, 0.003, 0.03, 0.69, 2, 0.6, 0.004, 0.02, 0.09, 0.04, 0.005, 0.2, 0.024, 10, 0.1, 0.5, 0.015, 0.04, 1.0, 0.01, 0.02, 0.3, 0.008, 1.4, 0.5, 1.1, 30, 2.0, 0.6, 0.07, 0.01, 1.0, 0.9, 2.3, 0.002, 0.13, 0.4, 0.08, 0.5, 0.03, 0.4, 0.38, 0.4, 10, 0.2, 0.014, 0.004, 160, 0.014, 4.7, 0.3, 0.7, 0.4, 1, 18, 2.0, 0.004, 0.001, 2.6, 0.26, 5, 0.005])
-	M_BH_lo = (0.7/h)**2*1e8*np.array([5, 2, 0.10, 7, 10, 0.022, 0.3, 0.0, 0.8, 3.5, 0.05, 1.3, 0.09, 0.04, 0.003, 0.03, 0.35, 2, 0.6, 0.004, 0.13, 0.1, 0.05, 0.005, 0.2, 0.012, 2.7, 0.06, 0.5, 0.015, 0.06, 1.0, 0.02, 0.02, 0.3, 0.008, 0.6, 0.5, 0.6, 26, 1.9, 0.3, 0.07, 0.01, 1.0, 2.5, 1.5, 0.002, 0.13, 0.9, 0.08, 0.5, 0.09, 0.4, 0.33, 0.4, 10, 0.1, 0.014, 0.004, 160, 0.007, 3.0, 0.4, 0.7, 1.5, 1, 11, 2.0, 0.004, 0.001, 1.5, 0.19, 4, 0.005])
-	M_sph_obs = (0.7/h)**2*1e10*np.array([69, 37, 1.4, 55, 27, 2.4, 0.46, 1.0, 19, 23, 0.61, 4.6, 11, 1.9, 4.5, 1.4, 0.66, 4.7, 26, 2.0, 0.39, 0.35, 0.30, 3.5, 6.7, 0.88, 1.9, 0.93, 1.24, 0.86, 2.0, 5.4, 1.2, 4.9, 2.0, 0.66, 5.1, 2.6, 3.2, 100, 1.4, 0.88, 1.3, 0.56, 29, 6.1, 0.65, 3.3, 2.0, 6.9, 1.4, 7.7, 0.9, 3.9, 1.8, 8.4, 27, 6.0, 0.43, 1.0, 122, 0.30, 29, 11, 20, 2.8, 24, 78, 96, 3.6, 2.6, 55, 1.4, 64, 1.2])
-	M_sph_hi = (0.7/h)**2*1e10*np.array([59, 32, 2.0, 80, 23, 3.5, 0.68, 1.5, 16, 19, 0.89, 6.6, 9, 2.7, 6.6, 2.1, 0.91, 6.9, 22, 2.9, 0.57, 0.52, 0.45, 5.1, 5.7, 1.28, 2.7, 1.37, 1.8, 1.26, 1.7, 4.7, 1.7, 7.1, 2.9, 0.97, 7.4, 3.8, 2.7, 86, 2.1, 1.30, 1.9, 0.82, 25, 5.2, 0.96, 4.9, 3.0, 5.9, 1.2, 6.6, 1.3, 5.7, 2.7, 7.2, 23, 5.2, 0.64, 1.5, 105, 0.45, 25, 10, 17, 2.4, 20, 67, 83, 5.2, 3.8, 48, 2.0, 55, 1.8])
-	M_sph_lo = (0.7/h)**2*1e10*np.array([32, 17, 0.8, 33, 12, 1.4, 0.28, 0.6, 9, 10, 0.39, 2.7, 5, 1.1, 2.7, 0.8, 0.40, 2.8, 12, 1.2, 0.23, 0.21, 0.18, 2.1, 3.1, 0.52, 1.1, 0.56, 0.7, 0.51, 0.9, 2.5, 0.7, 2.9, 1.2, 0.40, 3.0, 1.5, 1.5, 46, 0.9, 0.53, 0.8, 0.34, 13, 2.8, 0.39, 2.0, 1.2, 3.2, 0.6, 3.6, 0.5, 2.3, 1.1, 3.9, 12, 2.8, 0.26, 0.6, 57, 0.18, 13, 5, 9, 1.3, 11, 36, 44, 2.1, 1.5, 26, 0.8, 30, 0.7])
-	core = np.array([1,1,0,1,1,0,0,0,1,1,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,1,1,0,0,0,1,1,0,0,0,0,0,1,0,1,0,0,1,0,0,0,1,0,1,0,1,0,1,1,1,0,0,1,0,1,0])
-	yerr2, yerr1 = gc.logten(gc.divide(M_BH_obs+M_BH_hi, M_BH_obs)), -gc.logten(gc.divide(M_BH_obs-M_BH_lo, M_BH_obs))
-	xerr2, xerr1 = gc.logten(gc.divide(M_sph_obs+M_sph_hi, M_sph_obs)), -gc.logten(gc.divide(M_sph_obs-M_sph_lo, M_sph_obs))
-	plt.errorbar(np.log10(M_sph_obs[core==0]), np.log10(M_BH_obs[core==0]), yerr=[yerr1[core==0],yerr2[core==0]], xerr=[xerr1[core==0],xerr2[core==0]], color='purple', alpha=0.3, label=r'S13 core', ls='none', lw=2, ms=0)
-	plt.errorbar(np.log10(M_sph_obs[core==1]), np.log10(M_BH_obs[core==1]), yerr=[yerr1[core==1],yerr2[core==1]], xerr=[xerr1[core==1],xerr2[core==1]], color='c', alpha=0.5, label=r'S13 S\`{e}rsic', ls='none', lw=2, ms=0)
+    M_BH_obs = (0.7/h)**2*1e8*np.array([39, 11, 0.45, 25, 24, 0.044, 1.4, 0.73, 9.0, 58, 0.10, 8.3, 0.39, 0.42, 0.084, 0.66, 0.73, 15, 4.7, 0.083, 0.14, 0.15, 0.4, 0.12, 1.7, 0.024, 8.8, 0.14, 2.0, 0.073, 0.77, 4.0, 0.17, 0.34, 2.4, 0.058, 3.1, 1.3, 2.0, 97, 8.1, 1.8, 0.65, 0.39, 5.0, 3.3, 4.5, 0.075, 0.68, 1.2, 0.13, 4.7, 0.59, 6.4, 0.79, 3.9, 47, 1.8, 0.06, 0.016, 210, 0.014, 7.4, 1.6, 6.8, 2.6, 11, 37, 5.9, 0.31, 0.10, 3.7, 0.55, 13, 0.11])
+    M_BH_hi = (0.7/h)**2*1e8*np.array([4, 2, 0.17, 7, 10, 0.044, 0.9, 0.0, 0.9, 3.5, 0.10, 2.7, 0.26, 0.04, 0.003, 0.03, 0.69, 2, 0.6, 0.004, 0.02, 0.09, 0.04, 0.005, 0.2, 0.024, 10, 0.1, 0.5, 0.015, 0.04, 1.0, 0.01, 0.02, 0.3, 0.008, 1.4, 0.5, 1.1, 30, 2.0, 0.6, 0.07, 0.01, 1.0, 0.9, 2.3, 0.002, 0.13, 0.4, 0.08, 0.5, 0.03, 0.4, 0.38, 0.4, 10, 0.2, 0.014, 0.004, 160, 0.014, 4.7, 0.3, 0.7, 0.4, 1, 18, 2.0, 0.004, 0.001, 2.6, 0.26, 5, 0.005])
+    M_BH_lo = (0.7/h)**2*1e8*np.array([5, 2, 0.10, 7, 10, 0.022, 0.3, 0.0, 0.8, 3.5, 0.05, 1.3, 0.09, 0.04, 0.003, 0.03, 0.35, 2, 0.6, 0.004, 0.13, 0.1, 0.05, 0.005, 0.2, 0.012, 2.7, 0.06, 0.5, 0.015, 0.06, 1.0, 0.02, 0.02, 0.3, 0.008, 0.6, 0.5, 0.6, 26, 1.9, 0.3, 0.07, 0.01, 1.0, 2.5, 1.5, 0.002, 0.13, 0.9, 0.08, 0.5, 0.09, 0.4, 0.33, 0.4, 10, 0.1, 0.014, 0.004, 160, 0.007, 3.0, 0.4, 0.7, 1.5, 1, 11, 2.0, 0.004, 0.001, 1.5, 0.19, 4, 0.005])
+    M_sph_obs = (0.7/h)**2*1e10*np.array([69, 37, 1.4, 55, 27, 2.4, 0.46, 1.0, 19, 23, 0.61, 4.6, 11, 1.9, 4.5, 1.4, 0.66, 4.7, 26, 2.0, 0.39, 0.35, 0.30, 3.5, 6.7, 0.88, 1.9, 0.93, 1.24, 0.86, 2.0, 5.4, 1.2, 4.9, 2.0, 0.66, 5.1, 2.6, 3.2, 100, 1.4, 0.88, 1.3, 0.56, 29, 6.1, 0.65, 3.3, 2.0, 6.9, 1.4, 7.7, 0.9, 3.9, 1.8, 8.4, 27, 6.0, 0.43, 1.0, 122, 0.30, 29, 11, 20, 2.8, 24, 78, 96, 3.6, 2.6, 55, 1.4, 64, 1.2])
+    M_sph_hi = (0.7/h)**2*1e10*np.array([59, 32, 2.0, 80, 23, 3.5, 0.68, 1.5, 16, 19, 0.89, 6.6, 9, 2.7, 6.6, 2.1, 0.91, 6.9, 22, 2.9, 0.57, 0.52, 0.45, 5.1, 5.7, 1.28, 2.7, 1.37, 1.8, 1.26, 1.7, 4.7, 1.7, 7.1, 2.9, 0.97, 7.4, 3.8, 2.7, 86, 2.1, 1.30, 1.9, 0.82, 25, 5.2, 0.96, 4.9, 3.0, 5.9, 1.2, 6.6, 1.3, 5.7, 2.7, 7.2, 23, 5.2, 0.64, 1.5, 105, 0.45, 25, 10, 17, 2.4, 20, 67, 83, 5.2, 3.8, 48, 2.0, 55, 1.8])
+    M_sph_lo = (0.7/h)**2*1e10*np.array([32, 17, 0.8, 33, 12, 1.4, 0.28, 0.6, 9, 10, 0.39, 2.7, 5, 1.1, 2.7, 0.8, 0.40, 2.8, 12, 1.2, 0.23, 0.21, 0.18, 2.1, 3.1, 0.52, 1.1, 0.56, 0.7, 0.51, 0.9, 2.5, 0.7, 2.9, 1.2, 0.40, 3.0, 1.5, 1.5, 46, 0.9, 0.53, 0.8, 0.34, 13, 2.8, 0.39, 2.0, 1.2, 3.2, 0.6, 3.6, 0.5, 2.3, 1.1, 3.9, 12, 2.8, 0.26, 0.6, 57, 0.18, 13, 5, 9, 1.3, 11, 36, 44, 2.1, 1.5, 26, 0.8, 30, 0.7])
+    core = np.array([1,1,0,1,1,0,0,0,1,1,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,1,1,0,0,0,1,1,0,0,0,0,0,1,0,1,0,0,1,0,0,0,1,0,1,0,1,0,1,1,1,0,0,1,0,1,0])
+    yerr2, yerr1 = gc.logten(gc.divide(M_BH_obs+M_BH_hi, M_BH_obs)), -gc.logten(gc.divide(M_BH_obs-M_BH_lo, M_BH_obs))
+    xerr2, xerr1 = gc.logten(gc.divide(M_sph_obs+M_sph_hi, M_sph_obs)), -gc.logten(gc.divide(M_sph_obs-M_sph_lo, M_sph_obs))
+    plt.errorbar(np.log10(M_sph_obs[core==1]), np.log10(M_BH_obs[core==1]), yerr=[yerr1[core==1],yerr2[core==1]], xerr=[xerr1[core==1],xerr2[core==1]], color='c', alpha=0.5, label=r'Scott et al.~(2013) S\`{e}rsic', ls='none', lw=2, ms=0)
+    plt.errorbar(np.log10(M_sph_obs[core==0]), np.log10(M_BH_obs[core==0]), yerr=[yerr1[core==0],yerr2[core==0]], xerr=[xerr1[core==0],xerr2[core==0]], color='purple', alpha=0.3, label=r'Core-S\`{e}rsic', ls='none', lw=2, ms=0)
 
 
 def BH_bulge_carnage(h=0.678):
@@ -1301,7 +1338,7 @@ def coolinglum(Vvir, Cooling, extra=0, Nbins=50, ls='x', lw=2, c='k', label=r'In
 		plt.errorbar(np.log10(A_temp), A_Ltot-40, yerr=A_Ltot_uncert, marker='_', alpha=0.8, color='purple', markersize=15, ls='none', label=r'A15', mew=2, lw=2)
 
 
-def SFRD_obs(h, alpha=0.3, ax=None):
+def SFRD_obs(h, alpha=0.3, ax=None, plus=0):
     ### Observational data as first compiled in Somerville et al. (2001) ###
     ObsSFRdensity = np.array([
                               [0, 0.0158489, 0, 0, 0.0251189, 0.01000000],
@@ -1349,15 +1386,37 @@ def SFRD_obs(h, alpha=0.3, ax=None):
     # Add Madau & Dickinson data
     z, z_err, SFRD, SFRD_err_high, SFRD_err_low = gr.md14data(h)
     
+    # Driver et al. (2017) data
+    D17 = np.array([[0.85, 0.02, 0.08, -1.95, 0.03, 0.00, 0.07, 0.00],
+                    [1.52, 0.06, 0.14, -1.82, 0.03, 0.01, 0.05, 0.01],
+                    [2.16, 0.14, 0.20, -1.90, 0.02, 0.00, 0.04, 0.00],
+                    [2.90, 0.20, 0.28, -1.77, 0.01, 0.00, 0.05, 0.00],
+                    [3.65, 0.28, 0.36, -1.75, 0.01, 0.00, 0.06, 0.01],
+                    [4.35, 0.36, 0.45, -1.79, 0.01, 0.01, 0.06, 0.01],
+                    [5.11, 0.45, 0.56, -1.73, 0.04, 0.01, 0.09, 0.03],
+                    [5.86, 0.56, 0.68, -1.56, 0.05, 0.00, 0.07, 0.02],
+                    [6.59, 0.68, 0.82, -1.42, 0.06, 0.01, 0.06, 0.04],
+                    [7.36, 0.82, 1.00, -1.29, 0.05, 0.00, 0.07, 0.01],
+                    [8.11, 1.00, 1.20, -1.31, 0.04, 0.00, 0.05, 0.01],
+                    [8.82, 1.20, 1.45, -1.27, 0.03, 0.00, 0.06, 0.02],
+                    [9.50, 1.45, 1.75, -1.17, 0.02, 0.00, 0.06, 0.03],
+                    [10.21, 1.75, 2.20, -1.30, 0.04, 0.01, 0.07, 0.06],
+                    [10.78, 2.20, 2.60, -1.29, 0.04, 0.01, 0.04, 0.09],
+                    [11.29, 2.60, 3.25, -1.28, 0.04, 0.01, 0.04, 0.11],
+                    [11.69, 3.25, 3.75, -1.33, 0.03, 0.01, 0.03, 0.08],
+                    [11.95, 3.75, 4.25, -1.42, 0.04, 0.04, 0.05, 0.02],
+                    [12.19, 4.25, 5.00, -1.45, 0.03, 0.04, 0.04, 0.04]])
+                    
+                    
+    
     if ax is None:
-        plt.errorbar(ObsRedshift, ObsSFR, yerr=[yErrLo, yErrHi], xerr=[xErrLo, xErrHi], color='purple', lw=2.0, alpha=alpha, ls='none', label=r'Somerville et al.~(2001)', ms=0)
-        plt.errorbar(z, SFRD, yerr=[SFRD_err_high, SFRD_err_low], xerr=z_err, color='cyan', lw=2.0, alpha=alpha, ls='none', label=r'Madau \$ Dickinson (2014)', ms=0)
+        plt.errorbar(ObsRedshift+plus, ObsSFR, yerr=[yErrLo, yErrHi], xerr=[xErrLo, xErrHi], color='purple', lw=2.0, alpha=alpha, ls='none', label=r'Somerville et al.~(2001)', ms=0)
+        plt.errorbar(z+plus, SFRD, yerr=[SFRD_err_high, SFRD_err_low], xerr=z_err, color='cyan', lw=2.0, alpha=alpha, ls='none', label=r'Madau \& Dickinson (2014)', ms=0)
+        plt.errorbar((D17[:,1]+D17[:,2])/2.+plus, D17[:,3]+np.log10(h/0.7), yerr=np.sum(D17[:,5:],axis=1), xerr=(D17[:,1]-D17[:,2])/2., color='goldenrod', lw=2.0, alpha=alpha, ls='none', label=r'Driver et al.~(2018)', ms=0)
     else:
-        ax.errorbar(ObsRedshift, ObsSFR, yerr=[yErrLo, yErrHi], xerr=[xErrLo, xErrHi], color='purple', lw=2.0, alpha=alpha, ls='none', label=r'Somerville et al.~(2001)', ms=0)
-        ax.errorbar(z, SFRD, yerr=[SFRD_err_high, SFRD_err_low], xerr=z_err, color='cyan', lw=2.0, alpha=alpha, ls='none', label=r'Madau \$ Dickinson (2014)', ms=0)
-
-
-
+        ax.errorbar(ObsRedshift+plus, ObsSFR, yerr=[yErrLo, yErrHi], xerr=[xErrLo, xErrHi], color='purple', lw=2.0, alpha=alpha, ls='none', label=r'Somerville et al.~(2001)', ms=0)
+        ax.errorbar(z+plus, SFRD, yerr=[SFRD_err_high, SFRD_err_low], xerr=z_err, color='cyan', lw=2.0, alpha=alpha, ls='none', label=r'Madau \& Dickinson (2014)', ms=0)
+        ax.errorbar((D17[:,1]+D17[:,2])/2.+plus, D17[:,3]+np.log10(h/0.7), yerr=np.sum(D17[:,5:],axis=1), xerr=(D17[:,1]-D17[:,2])/2., color='goldenrod', lw=2.0, alpha=alpha, ls='none', label=r'Driver et al.~(2018)', ms=0)
 
 def SFR_function_obs(h=0.678):
 	data = np.array([[-0.5, 0.0, -1.78, 0.23],
