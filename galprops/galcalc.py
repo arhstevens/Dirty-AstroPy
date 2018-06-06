@@ -687,126 +687,124 @@ def rotategalall2(pos,vel,m,r=25e3):
 
 
 def centreonhalo(haloid,star,gas,dm,bh=None,use_baryons=True):
-	# Recentre the coordinate system and frame of reference onto a DIFFERENT halo/galaxy.
-	# Centres on stars or baryons centre of mass.
-	# Each of stars, gas, dm should be lists of arrays in the order [x,y,z,mass,hid,vx,vy,vz]
-	# At this stage, bh only requires [x,y,z]
-	[x, y, z, mass, hid, vx, vy, vz] = star
-	[x_g, y_g, z_g, mass_g, hid_g, vx_g, vy_g, vz_g] = gas
-	[x_dm, y_dm, z_dm, mass_dm, hid_dm, vx_dm, vy_dm, vz_dm] = dm
-	assert np.all(np.isfinite(x))
-	
-	if bh is not None:
-		x_bh, y_bh, z_bh = bh[0], bh[1], bh[2] # Read Black Holes if they're provided
-	else:
-		x_bh, y_bh, z_bh = np.array([]), np.array([]), np.array([])
-
-	# Create filter and assign new position and velocity vectors corresponding to all baryonic particles that match the input haloid
-	fs, fg, fdm = (hid==haloid), (hid_g==haloid), (hid_dm==haloid)
-	xf, yf, zf = np.concatenate((x[fs],x_g[fg])), np.concatenate((y[fs],y_g[fg])), np.concatenate((z[fs],z_g[fg])) # Filtered baryons' positions
-	vxf,vyf,vzf = np.concatenate((vx[fs],vx_g[fg])), np.concatenate((vy[fs],vy_g[fg])), np.concatenate((vz[fs],vz_g[fg])) # Filtered baryons' velocities
-	mf = np.concatenate((mass[fs],mass_g[fg])) # Filtered baryons' masses
-
-
-	if (len(xf)>5 or len(xf)>len(x_dm)) and use_baryons: # set minimum number of particles, else use DM
-#		print('\nNumber of baryon particles from (sub)halo '+str(haloid)+' = '+str(len(xf)))
-
-		if len(x[fs])>5: # use stars if enough for centering
-			x0,y0,z0,vx0,vy0,vz0 = x[fs][0], y[fs][0], z[fs][0], vx[fs][0], vy[fs][0], vz[fs][0]
-			xc,yc,zc,vxc,vyc,vzc = recentregal(x[fs],y[fs],z[fs],vx[fs],vy[fs],vz[fs],mass[fs])
-			delta_x, delta_y, delta_z = xc[0]-x0, yc[0]-y0, zc[0]-z0
-			delta_vx, delta_vy, delta_vz = vx[0]-vx0, vy[0]-vy0, vz[0]-vz0
-		else:
-			xf0,yf0,zf0,vxf0,vyf0,vzf0 = xf[0],yf[0],zf[0],vxf[0],vyf[0],vzf[0] # Store original coords/velocities of 1 particle
-			# Why not recentregalall?
-			xf,yf,zf,vxf,vyf,vzf = recentregal(xf,yf,zf,vxf,vyf,vzf,mf) # Properly centre on the halo
-			delta_x, delta_y, delta_z = xf[0]-xf0, yf[0]-yf0, zf[0]-zf0
-			delta_vx, delta_vy, delta_vz = vxf[0]-vxf0, vyf[0]-vyf0, vzf[0]-vzf0
-            
-		# Translate all the stars
-		x += delta_x
-		y += delta_y
-		z += delta_z
-		vx += delta_vx
-		vy += delta_vy
-		vz += delta_vz
+    # Recentre the coordinate system and frame of reference onto a DIFFERENT halo/galaxy.
+    # Centres on stars or baryons centre of mass.
+    # Each of stars, gas, dm should be lists of arrays in the order [x,y,z,mass,hid,vx,vy,vz]
+    # At this stage, bh only requires [x,y,z]
+    [x, y, z, mass, hid, vx, vy, vz] = star
+    [x_g, y_g, z_g, mass_g, hid_g, vx_g, vy_g, vz_g] = gas
+    [x_dm, y_dm, z_dm, mass_dm, hid_dm, vx_dm, vy_dm, vz_dm] = dm
+    assert np.all(np.isfinite(x))
     
-		assert np.all(np.isfinite(x))
-        
-		# Translate all the gas
-		x_g += delta_x
-		y_g += delta_y
-		z_g += delta_z
-		vx_g += delta_vx
-		vy_g += delta_vy
-		vz_g += delta_vz
-        
-		# Translate all the dark matter
-		x_dm += delta_x
-		y_dm += delta_y
-		z_dm += delta_z
-		vx_dm += delta_vx
-		vy_dm += delta_vy
-		vz_dm += delta_vz
-
-		if len(x[fs])>5: # Use stars to determine the disk
-			axis, angle = compute_rotation_to_z(x[fs],y[fs],z[fs],vx[fs],vy[fs],vz[fs],mass[fs]) # Calculate angle to rotate coordinates
-			rot = True
-		elif len(xf)>5: # If not enough particles use all baryons
-			axis, angle = compute_rotation_to_z(xf,yf,zf,vxf,vyf,vzf,mf)
-			rot = True
-		else: # If still not enough, then don't bother with rotating
-			print 'centreonhalo will not rotate particles due to lack of baryons'
-			rot = False
+    if bh is not None:
+        x_bh, y_bh, z_bh = bh[0], bh[1], bh[2] # Read Black Holes if they're provided
+    else:
+        x_bh, y_bh, z_bh = np.array([]), np.array([]), np.array([])
+    
+    # Create filter and assign new position and velocity vectors corresponding to all baryonic particles that match the input haloid
+    fs, fg, fdm = (hid==haloid), (hid_g==haloid), (hid_dm==haloid)
+    xf, yf, zf = np.concatenate((x[fs],x_g[fg])), np.concatenate((y[fs],y_g[fg])), np.concatenate((z[fs],z_g[fg])) # Filtered baryons' positions
+    vxf,vyf,vzf = np.concatenate((vx[fs],vx_g[fg])), np.concatenate((vy[fs],vy_g[fg])), np.concatenate((vz[fs],vz_g[fg])) # Filtered baryons' velocities
+    mf = np.concatenate((mass[fs],mass_g[fg])) # Filtered baryons' masses
+    
+    
+    if (len(xf)>5 or len(xf)>len(x_dm[fdm])) and use_baryons: # set minimum number of particles, else use DM
+    #		print('\nNumber of baryon particles from (sub)halo '+str(haloid)+' = '+str(len(xf)))
+    
+        if len(x[fs])>5: # use stars if enough for centering
+            x0,y0,z0,vx0,vy0,vz0 = x[fs][0], y[fs][0], z[fs][0], vx[fs][0], vy[fs][0], vz[fs][0]
+            xc,yc,zc,vxc,vyc,vzc = recentregal(x[fs],y[fs],z[fs],vx[fs],vy[fs],vz[fs],mass[fs])
+            delta_x, delta_y, delta_z = xc[0]-x0, yc[0]-y0, zc[0]-z0
+            delta_vx, delta_vy, delta_vz = vx[0]-vx0, vy[0]-vy0, vz[0]-vz0
+        else:
+            xf0,yf0,zf0,vxf0,vyf0,vzf0 = xf[0],yf[0],zf[0],vxf[0],vyf[0],vzf[0] # Store original coords/velocities of 1 particle
+            # Why not recentregalall?
+            xf,yf,zf,vxf,vyf,vzf = recentregal(xf,yf,zf,vxf,vyf,vzf,mf) # Properly centre on the halo
+            delta_x, delta_y, delta_z = xf[0]-xf0, yf[0]-yf0, zf[0]-zf0
+            delta_vx, delta_vy, delta_vz = vxf[0]-vxf0, vyf[0]-vyf0, vzf[0]-vzf0
                 
-		halo_coords = -np.array([delta_x, delta_y, delta_z])
-		halo_vel = -np.array([delta_vx, delta_vy, delta_vz])
-
-		if rot:
-			x,y,z = rotate(x,y,z,axis,angle) # Rotate positions so z is normal to the disk
-			vx,vy,vz = rotate(vx,vy,vz,axis,angle)
-			assert np.all(np.isfinite(x))
-            
-			x_g, y_g, z_g = rotate(x_g,y_g,z_g,axis,angle) # Rotate gas to match coords
-			vx_g,vy_g,vz_g = rotate(vx_g,vy_g,vz_g,axis,angle) # Ditto velocities
-			
-			x_dm, y_dm, z_dm = rotate(x_dm,y_dm,z_dm,axis,angle) # Rotate dark matter to match coords
-			vx_dm,vy_dm,vz_dm = rotate(vx_dm,vy_dm,vz_dm,axis,angle) # Ditto velocities
-
-		if bh is not None:
-			x_bh, y_bh, z_bh = x_bh+delta_x, y_bh+delta_y, z_bh+delta_z # Recentre DM to match coords
-			if rot: x_bh, y_bh, z_bh = rotate(x_bh,y_bh,z_bh,axis,angle) # Rotate to match coords
-
-	elif len(x_dm)>0: # If no baryons to centre on, then just use DM data (won't rotate)
-		halo_coords = np.array([divide(np.mean(x_dm[fdm]*mass_dm[fdm]),np.mean(x_dm[fdm])),
-                                divide(np.mean(y_dm[fdm]*mass_dm[fdm]),np.mean(y_dm[fdm])),
-                                divide(np.mean(z_dm[fdm]*mass_dm[fdm]),np.mean(z_dm[fdm]))])
-		halo_vel = np.array([np.mean(vx_dm[fdm]), np.mean(vy_dm[fdm]), np.mean(vz_dm[fdm])])
-		
-		x_dm, y_dm, z_dm = x_dm-halo_coords[0], y_dm-halo_coords[1], z_dm-halo_coords[2] # Recentre DM to match coords
-		vx_dm,vy_dm,vz_dm = vx_dm-halo_vel[0], vy_dm-halo_vel[1], vz_dm-halo_vel[2]
-    
-        x, y, z = x-halo_coords[0], y-halo_coords[1], z-halo_coords[2]
-        vx, vy, vz = vx-halo_vel[0], vy-halo_vel[1], vz-halo_vel[2]
+        # Translate all the stars
+        x += delta_x
+        y += delta_y
+        z += delta_z
+        vx += delta_vx
+        vy += delta_vy
+        vz += delta_vz
+        
         assert np.all(np.isfinite(x))
-
-        x_g, y_g, z_g = x_g-halo_coords[0], y_g-halo_coords[1], z_g-halo_coords[2]
-        vx_g, vy_g, vz_g = vx_g-halo_vel[0], vy_g-halo_vel[1], vz_g-halo_vel[2]
-
+        
+        # Translate all the gas
+        x_g += delta_x
+        y_g += delta_y
+        z_g += delta_z
+        vx_g += delta_vx
+        vy_g += delta_vy
+        vz_g += delta_vz
+        
+        # Translate all the dark matter
+        x_dm += delta_x
+        y_dm += delta_y
+        z_dm += delta_z
+        vx_dm += delta_vx
+        vy_dm += delta_vy
+        vz_dm += delta_vz
+                
+        if len(x[fs])>5: # Use stars to determine the disk
+            axis, angle = compute_rotation_to_z(x[fs],y[fs],z[fs],vx[fs],vy[fs],vz[fs],mass[fs]) # Calculate angle to rotate coordinates
+            rot = True
+        elif len(xf)>5: # If not enough particles use all baryons
+            axis, angle = compute_rotation_to_z(xf,yf,zf,vxf,vyf,vzf,mf)
+            rot = True
+        else: # If still not enough, then don't bother with rotating
+            print 'centreonhalo will not rotate particles due to lack of baryons'
+            rot = False
+                                            
+        halo_coords = -np.array([delta_x, delta_y, delta_z])
+        halo_vel = -np.array([delta_vx, delta_vy, delta_vz])
+                                            
+        if rot:
+            x,y,z = rotate(x,y,z,axis,angle) # Rotate positions so z is normal to the disk
+            vx,vy,vz = rotate(vx,vy,vz,axis,angle)
+            assert np.all(np.isfinite(x))
+            
+            x_g, y_g, z_g = rotate(x_g,y_g,z_g,axis,angle) # Rotate gas to match coords
+            vx_g,vy_g,vz_g = rotate(vx_g,vy_g,vz_g,axis,angle) # Ditto velocities
+            
+            x_dm, y_dm, z_dm = rotate(x_dm,y_dm,z_dm,axis,angle) # Rotate dark matter to match coords
+            vx_dm,vy_dm,vz_dm = rotate(vx_dm,vy_dm,vz_dm,axis,angle) # Ditto velocities
+                                                        
         if bh is not None:
-            x_bh, y_bh, z_bh = x_bh-halo_coords[0], y_bh-halo_coords[1], z_bh-halo_coords[2]
+            x_bh, y_bh, z_bh = x_bh+delta_x, y_bh+delta_y, z_bh+delta_z # Recentre DM to match coords
+            if rot: x_bh, y_bh, z_bh = rotate(x_bh,y_bh,z_bh,axis,angle) # Rotate to match coords
+        
+        elif len(x_dm[fdm])>0: # If no baryons to centre on, then just use DM data (won't rotate)
+            halo_coords = com(x_dm[fdm], y_dm[fdm], z_dm[fdm], mass_dm[fdm])
+            halo_vel = np.array([np.mean(vx_dm[fdm]), np.mean(vy_dm[fdm]), np.mean(vz_dm[fdm])])
+        
+            x_dm, y_dm, z_dm = x_dm-halo_coords[0], y_dm-halo_coords[1], z_dm-halo_coords[2] # Recentre DM to match coords
+            vx_dm,vy_dm,vz_dm = vx_dm-halo_vel[0], vy_dm-halo_vel[1], vz_dm-halo_vel[2]
+        
+            x, y, z = x-halo_coords[0], y-halo_coords[1], z-halo_coords[2]
+            vx, vy, vz = vx-halo_vel[0], vy-halo_vel[1], vz-halo_vel[2]
+            assert np.all(np.isfinite(x))
 
-	else: # Just in case one gets through that doesn't actually have any particles (happened in trials)
-		halo_coords, halo_vel = np.array([0,0,0]), np.array([0,0,0])
-		print 'centreonhalo failed due to lack of particles in the desired halo'
+            x_g, y_g, z_g = x_g-halo_coords[0], y_g-halo_coords[1], z_g-halo_coords[2]
+            vx_g, vy_g, vz_g = vx_g-halo_vel[0], vy_g-halo_vel[1], vz_g-halo_vel[2]
 
-	assert np.all(np.isfinite(x))
-
-
-	if bh is None:
-		return [halo_coords,halo_vel],[x,y,z],[vx,vy,vz],[x_g,y_g,z_g],[vx_g,vy_g,vz_g],[x_dm,y_dm,z_dm],[vx_dm,vy_dm,vz_dm] # Returns the original coordinates if the halo particles can't be identified.
-	else:
-		return [halo_coords,halo_vel],[x,y,z],[vx,vy,vz],[x_g,y_g,z_g],[vx_g,vy_g,vz_g],[x_dm,y_dm,z_dm],[vx_dm,vy_dm,vz_dm],[x_bh,y_bh,z_bh]
+            if bh is not None:
+                x_bh, y_bh, z_bh = x_bh-halo_coords[0], y_bh-halo_coords[1], z_bh-halo_coords[2]
+        
+        else: # Just in case one gets through that doesn't actually have any particles (happened in trials)
+            halo_coords, halo_vel = np.array([0,0,0]), np.array([0,0,0])
+            print 'centreonhalo failed due to lack of particles in the desired halo'
+        
+        assert np.all(np.isfinite(x))
+        
+        
+        if bh is None:
+            return [halo_coords,halo_vel],[x,y,z],[vx,vy,vz],[x_g,y_g,z_g],[vx_g,vy_g,vz_g],[x_dm,y_dm,z_dm],[vx_dm,vy_dm,vz_dm] # Returns the original coordinates if the halo particles can't be identified.
+        else:
+            return [halo_coords,halo_vel],[x,y,z],[vx,vy,vz],[x_g,y_g,z_g],[vx_g,vy_g,vz_g],[x_dm,y_dm,z_dm],[vx_dm,vy_dm,vz_dm],[x_bh,y_bh,z_bh]
 
 
 def centreonhalo2(haloid, pos, vel, mass, ids, use_baryons=True):
