@@ -700,7 +700,7 @@ def centreonhalo(haloid,star,gas,dm,bh=None,use_baryons=True):
         x_bh, y_bh, z_bh = bh[0], bh[1], bh[2] # Read Black Holes if they're provided
     else:
         x_bh, y_bh, z_bh = np.array([]), np.array([]), np.array([])
-    
+
     # Create filter and assign new position and velocity vectors corresponding to all baryonic particles that match the input haloid
     fs, fg, fdm = (hid==haloid), (hid_g==haloid), (hid_dm==haloid)
     xf, yf, zf = np.concatenate((x[fs],x_g[fg])), np.concatenate((y[fs],y_g[fg])), np.concatenate((z[fs],z_g[fg])) # Filtered baryons' positions
@@ -772,39 +772,38 @@ def centreonhalo(haloid,star,gas,dm,bh=None,use_baryons=True):
             
             x_dm, y_dm, z_dm = rotate(x_dm,y_dm,z_dm,axis,angle) # Rotate dark matter to match coords
             vx_dm,vy_dm,vz_dm = rotate(vx_dm,vy_dm,vz_dm,axis,angle) # Ditto velocities
-                                                        
+
         if bh is not None:
             x_bh, y_bh, z_bh = x_bh+delta_x, y_bh+delta_y, z_bh+delta_z # Recentre DM to match coords
             if rot: x_bh, y_bh, z_bh = rotate(x_bh,y_bh,z_bh,axis,angle) # Rotate to match coords
-        
-        elif len(x_dm[fdm])>0: # If no baryons to centre on, then just use DM data (won't rotate)
-            halo_coords = com(x_dm[fdm], y_dm[fdm], z_dm[fdm], mass_dm[fdm])
-            halo_vel = np.array([np.mean(vx_dm[fdm]), np.mean(vy_dm[fdm]), np.mean(vz_dm[fdm])])
-        
-            x_dm, y_dm, z_dm = x_dm-halo_coords[0], y_dm-halo_coords[1], z_dm-halo_coords[2] # Recentre DM to match coords
-            vx_dm,vy_dm,vz_dm = vx_dm-halo_vel[0], vy_dm-halo_vel[1], vz_dm-halo_vel[2]
-        
-            x, y, z = x-halo_coords[0], y-halo_coords[1], z-halo_coords[2]
-            vx, vy, vz = vx-halo_vel[0], vy-halo_vel[1], vz-halo_vel[2]
-            assert np.all(np.isfinite(x))
-
-            x_g, y_g, z_g = x_g-halo_coords[0], y_g-halo_coords[1], z_g-halo_coords[2]
-            vx_g, vy_g, vz_g = vx_g-halo_vel[0], vy_g-halo_vel[1], vz_g-halo_vel[2]
-
-            if bh is not None:
-                x_bh, y_bh, z_bh = x_bh-halo_coords[0], y_bh-halo_coords[1], z_bh-halo_coords[2]
-        
-        else: # Just in case one gets through that doesn't actually have any particles (happened in trials)
-            halo_coords, halo_vel = np.array([0,0,0]), np.array([0,0,0])
-            print 'centreonhalo failed due to lack of particles in the desired halo'
-        
+                
+    elif len(x_dm[fdm])>0: # If no baryons to centre on, then just use DM data (won't rotate)
+        halo_coords = com(x_dm[fdm], y_dm[fdm], z_dm[fdm], mass_dm[fdm])
+        halo_vel = np.array([np.mean(vx_dm[fdm]), np.mean(vy_dm[fdm]), np.mean(vz_dm[fdm])])
+    
+        x_dm, y_dm, z_dm = x_dm-halo_coords[0], y_dm-halo_coords[1], z_dm-halo_coords[2] # Recentre DM to match coords
+        vx_dm,vy_dm,vz_dm = vx_dm-halo_vel[0], vy_dm-halo_vel[1], vz_dm-halo_vel[2]
+    
+        x, y, z = x-halo_coords[0], y-halo_coords[1], z-halo_coords[2]
+        vx, vy, vz = vx-halo_vel[0], vy-halo_vel[1], vz-halo_vel[2]
         assert np.all(np.isfinite(x))
+
+        x_g, y_g, z_g = x_g-halo_coords[0], y_g-halo_coords[1], z_g-halo_coords[2]
+        vx_g, vy_g, vz_g = vx_g-halo_vel[0], vy_g-halo_vel[1], vz_g-halo_vel[2]
+
+        if bh is not None:
+            x_bh, y_bh, z_bh = x_bh-halo_coords[0], y_bh-halo_coords[1], z_bh-halo_coords[2]
         
-        
-        if bh is None:
-            return [halo_coords,halo_vel],[x,y,z],[vx,vy,vz],[x_g,y_g,z_g],[vx_g,vy_g,vz_g],[x_dm,y_dm,z_dm],[vx_dm,vy_dm,vz_dm] # Returns the original coordinates if the halo particles can't be identified.
-        else:
-            return [halo_coords,halo_vel],[x,y,z],[vx,vy,vz],[x_g,y_g,z_g],[vx_g,vy_g,vz_g],[x_dm,y_dm,z_dm],[vx_dm,vy_dm,vz_dm],[x_bh,y_bh,z_bh]
+    else: # Just in case one gets through that doesn't actually have any particles (happened in trials)
+        halo_coords, halo_vel = np.array([0,0,0]), np.array([0,0,0])
+        print 'centreonhalo failed due to lack of particles in the desired halo'
+    
+    assert np.all(np.isfinite(x))
+    
+    if bh is None:
+        return [halo_coords,halo_vel],[x,y,z],[vx,vy,vz],[x_g,y_g,z_g],[vx_g,vy_g,vz_g],[x_dm,y_dm,z_dm],[vx_dm,vy_dm,vz_dm] # Returns the original coordinates if the halo particles can't be identified.
+    else:
+        return [halo_coords,halo_vel],[x,y,z],[vx,vy,vz],[x_g,y_g,z_g],[vx_g,vy_g,vz_g],[x_dm,y_dm,z_dm],[vx_dm,vy_dm,vz_dm],[x_bh,y_bh,z_bh]
 
 
 def centreonhalo2(haloid, pos, vel, mass, ids, use_baryons=True):
@@ -818,7 +817,7 @@ def centreonhalo2(haloid, pos, vel, mass, ids, use_baryons=True):
         [halo_coords,halo_vel], posl_s, vell_s, posl_g, vell_g, posl_dm, vell_dm, posl_bh = centreonhalo(haloid,star,gas,dm,bh,use_baryons)
         return [halo_coords,halo_vel], [np.array(posl_s).T, np.array(posl_g).T, np.array(posl_dm).T, np.array(posl_bh).T], [np.array(vell_s).T, np.array(vell_g).T, np.array(vell_dm).T]
     else:
-        [halo_coords,halo_vel], posl_s, vell_s, posl_g, vell_g, posl_dm, vell_dm = centreonhalo(haloid,star,gas,dm,use_baryons=use_baryons)
+        [halo_coords,halo_vel], posl_s, vell_s, posl_g, vell_g, posl_dm, vell_dm = centreonhalo(haloid,star,gas,dm,None,use_baryons)
         return [halo_coords,halo_vel], [np.array(posl_s).T, np.array(posl_g).T, np.array(posl_dm).T], [np.array(vell_s).T, np.array(vell_g).T, np.array(vell_dm).T]
 
 
@@ -3197,3 +3196,36 @@ def interp_polytonic(x, xp, yp):
         i = np.where(yp==ymax)[0][0]
         dx = xp[i+1] - xp[i]
         return yp[i]*(xp[i+1]-x)/dx + yp[i+1]*(x-xp[i])/dx
+
+
+def histogram(x, bins, weights=None):
+    Nbin = len(bins)-1
+    hist = np.zeros(Nbin, dtype=np.int32) if weights==None else np.zeros(Nbin, dtype=np.float32)
+    for i in xrange(Nbin):
+        f = (x>=bins[i]) * (x<bins[i]) if i!=Nbin-1 else (x>=bins[i]) * (x<=bins[i])
+        hist[i] = len(x[f]) if weights==None else np.sum(weights[f])
+    return hist
+
+
+def comoving_distance(z, H_0=67.74, Omega_R=0, Omega_M=0.3089, Omega_L=0.6911):
+    # calculate co-moving distance from redshift
+    zprime = np.linspace(0,z,10000)
+    E = np.sqrt(Omega_R*(1+zprime)**4 + Omega_M*(1+zprime)**3 + Omega_L)
+    integrand = 1/E
+    integral = np.sum(0.5*(integrand[1:]+integrand[:-1])*np.diff(zprime))
+    c = 299792.458
+    return c/H_0 * integral
+
+
+def survey_volume(RA, dec, z, H_0=67.74, Omega_R=0, Omega_M=0.3089, Omega_L=0.6911):
+    # calculate comoving survey volume from RA, dec, z ranges.  Each input is a list with 2 entries.
+    dmin = comoving_distance(z[0], H_0, Omega_R, Omega_M ,Omega_L) * (1+z[0])**2
+    dmax = comoving_distance(z[1], H_0, Omega_R, Omega_M ,Omega_L) * (1+z[0])**2
+    vol = 1./3. * abs(RA[1]-RA[0])*np.pi/180 * abs(np.sin(dec[1]*np.pi/180)-np.sin(dec[0]*np.pi/180)) * abs(dmax**3 - dmin**3)
+    return vol
+
+def Mvir2Rvir(mass, crit_fac=200., z=0, H_0=67.74, Omega_R=0, Omega_M=0.3089, Omega_L=0.6911):
+    # convert virial mass [Msun] to virial radius [kpc]
+    vol = mass / critdens(z,H_0,Omega_R,Omega_M,Omega_L) / crit_fac
+    return (3.*vol/4./np.pi)**(1./3.) * 1e-3
+

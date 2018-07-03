@@ -359,7 +359,10 @@ def ahfhaloid(fpre, ids):
 #        f = open(fpre+'.AHF_particles.gz')
 #        d = f.read()
 #    ds = np.array(d.split(),dtype='i8')
-    ds = np.loadtxt(fpre+'.AHF_particles.gz', skiprows=1, usecols=0, dtype=np.int64)
+    try:
+        ds = np.loadtxt(fpre+'.AHF_particles', skiprows=1, usecols=0, dtype=np.int64)
+    except IOError:
+        ds = np.loadtxt(fpre+'.AHF_particles.gz', skiprows=1, usecols=0, dtype=np.int64)
 
 #    Nhalo = int(ds[0]) # Number of haloes for the file
     accum = 1 # Value used to keep track of reading the AHF file
@@ -3786,10 +3789,10 @@ def FaucherGiguere09():
                      qdot_HI])
 
 
-def csv_dict(fname, skiprows, dtypes, keylist=None, delimiter=','):
+def csv_dict(fname, skiprows, dtypes, keylist=None, delimiter=',', head_delimiter=','):
     with open(fname, 'r') as f:
         for i in xrange(skiprows): line = f.readline()
-    keys = line.split(',')
+    keys = line.split(head_delimiter)
     keys[-1] = keys[-1][:-1] # gets rid of \n at the end
     if keylist==None: keylist = keys
     print 'Number of properties =', len(keys)
@@ -4202,3 +4205,54 @@ def OG14(h, disconly=False):
         logj_star -= np.log10(1-BTT)
 
     return BTT, logM_star, logM_HIH2, logj_star, logj_HIH2
+
+
+def xGASS_xCOLDGASS(indir=None, h=0.6774):
+    if indir is None: indir = '/Users/adam/xGASS/'
+    keys = ['GASS', 'lgMstar', 'SFR_best', 'lgMHI', 'HIsrc', 'env_code_B', 'logMh_Mst_B', 'lvir_ratB']
+    key_dtypes = [np.int32, np.float32, np.float32, np.float32, np.uint16, np.int16, np.float32, np.float32]
+    G = csv_dict(indir+'xGASS_data.txt', 1, key_dtypes, keylist=keys, delimiter=None, head_delimiter=', ')
+
+    import pyfits
+    C = pyfits.open(indir+'xCOLDGASS_PubCat.fits')[1].data
+
+    xGASS_ID = np.unique(np.append(C['ID'], G['GASS']))
+    Ngal = len(xGASS_ID)
+    
+    arg1 = np.searchsorted(xGASS_ID, G['GASS'])
+    arg2 = np.searchsorted(xGASS_ID, C['ID'])
+    
+    xGASS_logMstar = np.zeros(Ngal, dtype=np.float32)
+    xGASS_logMstar[arg2] = C['LOGMSTAR']
+    xGASS_logMstar[arg1] = G['lgMstar']
+
+    xGASS_logSFR = np.zeros(Ngal, dtype=np.float32)
+    xGASS_logSFR[arg2] = C['LOGSFR_BEST']
+    xGASS_logSFR[arg1] = np.log10(G['SFR_best'])
+
+    xGASS_logMHI = np.zeros(Ngal, dtype=np.float32) # If 0, no measurement has been made at all
+    xGASS_logMHI[arg1] = G['lgMstar']
+
+    xGASS_HIdet = np.zeros(Ngal, dtype=bool) # Non-detections have their upper limit provided as their mass entry
+    xGASS_HIdet[arg1[G['HIsrc']<=3]] = True
+
+    xGASS_Type = -np.ones(Ngal, dtype=np.int16) # -1 means it isn't in the group finder
+    xGASS_Type[arg1[G['env_code_B']==0]] = 1
+    xGASS_Type[arg1[G['env_code_B']>=1]] = 0
+
+    xGASS_logMhalo = np.zeros(Ngal, dtype=np.float32)
+    xGASS_logMhalo[arg1] = G['logMh_Mst_B']
+
+    xGASS_logRonRvir = np.zeros(Ngal, dtype=np.float32)
+    xGASS_logRonRvir[arg1] = G['lvir_ratB']
+
+    xGASS_logMH2 = np.zeros(Ngal, dtype=np.float32) # If 0, no measurement has been made at all
+    xGASS_logMH2[arg2] = C['LOGMH2']
+    f = (C['LIM_LOGMH2']>0)
+    xGASS_logMH2[arg2[f]] = C['LIM_LOGMH2'][f]
+    
+    xGASS_H2det = np.zeros(Ngal, dtype=bool)
+    xGASS_H2det[arg2[C['FLAG_CO']==1]] = True
+    
+    return xGASS_ID, xGASS_logMstar, xGASS_logSFR, xGASS_logMHI, xGASS_HIdet, xGASS_Type, xGASS_logMhalo, xGASS_logRonRvir, xGASS_logMH2, xGASS_H2det
+    

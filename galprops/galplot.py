@@ -483,7 +483,7 @@ def massfunction(mass, Lbox, colour='k', label=r'Input', extra=0, fsize=28, pt=1
 	# Make a mass function plot.  Input vector of halo masses in solar masses and length of box in Mpc.
 	# Setting h=1 means masses are being put in with a factor of h^2 already considered.  Else use physical units.
     #masslog = np.log10(gc.cleansample(mass))
-    masslog = np.log10(mass)
+    masslog = np.log10(mass, dtype=np.float32)
     masslog = masslog[np.isfinite(masslog)]
     if range==None:
         lbound, ubound = max(8,np.min(masslog)), min(12.5,np.max(masslog))
@@ -492,17 +492,21 @@ def massfunction(mass, Lbox, colour='k', label=r'Input', extra=0, fsize=28, pt=1
     if lbound>ubound:
         print 'WTF, lbound, ubound =', lbound, ubound
         exit()
-    if binwidth is not None: Nbins = int((ubound - lbound) / binwidth)
+    lbound, ubound = np.float32(lbound), np.float32(ubound) # Try and stop BS histogram bug
+    if binwidth is not None: 
+        Nbins = int((ubound - lbound) / binwidth)
     if pt==0 or pt==1 or pt==4:
         try:
             N, edges = np.histogram(masslog, bins=Nbins, range=[lbound,ubound]) # number of galaxies in each bin.  Doing a specific range for stars and gas.
+            xhist, edges = np.histogram(masslog, bins=Nbins, range=[lbound,ubound], weights=10**masslog)
         except ValueError:
             print 'Triggered ValueError'
             print 'masslog', masslog
             print 'Nbins', Nbins
             print '[lbound,ubound]', [lbound,ubound]
-        N, edges = np.histogram(masslog, bins=Nbins, range=[lbound,ubound])
-        xhist, edges = np.histogram(masslog, bins=Nbins, range=[lbound,ubound], weights=10**masslog)
+            edges = np.linspace(lbound,ubound,Nbins)
+            N = gc.histogram(masslog, edges)
+            xhist = gc.histogram(masslog, edges, 10**masslog)
     elif pt==3:
         N, edges = np.histogram(masslog, bins=Nbins, range=[6+2*np.log10(0.7/h),9+np.log10(5)+2*np.log10(0.7/h)])
         xhist, edges = np.histogram(masslog, bins=Nbins, range=[6+2*np.log10(0.7/h),9+np.log10(5)+2*np.log10(0.7/h)], weights=10**masslog)
