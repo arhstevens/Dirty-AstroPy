@@ -4225,13 +4225,16 @@ def xGASS_xCOLDGASS(indir=None, h=0.6774):
     xGASS_logMstar = np.zeros(Ngal, dtype=np.float32)
     xGASS_logMstar[arg2] = C['LOGMSTAR']
     xGASS_logMstar[arg1] = G['lgMstar']
+    xGASS_logMstar[xGASS_logMstar!=0] += 2*np.log10(0.7/h)
 
     xGASS_logSFR = np.zeros(Ngal, dtype=np.float32)
     xGASS_logSFR[arg2] = C['LOGSFR_BEST']
     xGASS_logSFR[arg1] = np.log10(G['SFR_best'])
+    xGASS_logSFR[xGASS_logSFR!=0] += 2*np.log10(0.7/h)
 
     xGASS_logMHI = np.zeros(Ngal, dtype=np.float32) # If 0, no measurement has been made at all
-    xGASS_logMHI[arg1] = G['lgMstar']
+    xGASS_logMHI[arg1] = G['lgMHI']
+    xGASS_logMHI[xGASS_logMHI!=0] += 2*np.log10(0.7/h)
 
     xGASS_HIdet = np.zeros(Ngal, dtype=bool) # Non-detections have their upper limit provided as their mass entry
     xGASS_HIdet[arg1[G['HIsrc']<=3]] = True
@@ -4242,6 +4245,7 @@ def xGASS_xCOLDGASS(indir=None, h=0.6774):
 
     xGASS_logMhalo = np.zeros(Ngal, dtype=np.float32)
     xGASS_logMhalo[arg1] = G['logMh_Mst_B']
+    xGASS_logMhalo[xGASS_logMhalo!=0] += 2*np.log10(0.7/h)
 
     xGASS_logRonRvir = np.zeros(Ngal, dtype=np.float32)
     xGASS_logRonRvir[arg1] = G['lvir_ratB']
@@ -4250,7 +4254,8 @@ def xGASS_xCOLDGASS(indir=None, h=0.6774):
     xGASS_logMH2[arg2] = C['LOGMH2']
     f = (C['LIM_LOGMH2']>0)
     xGASS_logMH2[arg2[f]] = C['LIM_LOGMH2'][f]
-    
+    xGASS_logMH2[xGASS_logMH2!=0] += 2*np.log10(0.7/h)
+
     xGASS_H2det = np.zeros(Ngal, dtype=bool)
     xGASS_H2det[arg2[C['FLAG_CO']==1]] = True
     

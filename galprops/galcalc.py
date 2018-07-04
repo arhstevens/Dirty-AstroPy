@@ -2981,7 +2981,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
         mHI_list += [mass_HI]
         mH2_list += [mass_H2]
 
-    if method==3: # GD14, eq6 (entry 1 for method==0)
+    if method==3: # GD14, eq6
         for it in xrange(it_max):
             if it==it_max-1: print 'iterations hit maximum for GD14, eq6 in HI_H2_masses()'
             f_mol = X*fneutral*f_H2_old /  (X+Y)
@@ -3010,7 +3010,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
         mass_HI[fzero] = 0.
 
 
-    if method==5 or method==0: # GD14, eq8 (entry 3 for method==0)
+    if method==5 or method==0: # GD14, eq8 (entry 1 for method==0)
         # This has now replaced eq6 for the same output position when method=0
         for it in xrange(it_max):
             if it==it_max-1: print 'iterations hit maximum for GD14, eq8 in HI_H2_masses()'
