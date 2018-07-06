@@ -3902,6 +3902,40 @@ def Brown_HI_fractions_satcen(h):
     return [logM_cen, logHIfrac_cen, logHIfrac_err_cen], [logM_sat, logHIfrac_sat, logHIfrac_err_sat], [logHIfrac_sSFR_cen, logsSFR_cen, logHIfrac_sSFR_err_cen], [logHIfrac_sSFR_sat, logsSFR_sat, logHIfrac_sSFR_err_sat], [logM_all, logHIfrac_all, logHIfrac_all_err], [logsSFR_all, logHIfrac_sSFR_all]
 
 
+def Brown_HIfrac_satenv_4bins(h=0.6774, indir='/Users/adam/ALFALFA/'):
+    data = np.loadtxt(indir+'HIfrac_env_4bin.txt', delimiter=', ')
+    data[:4,:] += (2*np.log10(0.7/h) + np.log10(0.61/0.66)) # adjust for cosmology and IMF
+    data[4:8,:] /= (0.61/0.66)
+    data[12:16,:] += (np.log10(0.63/0.67) - np.log10(0.61/0.66))
+    data[16:20,:] /= (0.61/0.66)
+    
+#    data[8:12,:] = np.log10((data[4:8,:]+data[8:12,:])/data[4:8,:])
+#    data[20:24,:] = np.log10((data[16:20,:]+data[20:24,:])/data[16:20,:])
+    data[4:8,:] = np.log10(data[4:8,:])
+    data[16:20,:] = np.log10(data[16:20,:])
+
+    B17_12_m = data[[0,4,8],:3] # number after _ is the highest halo mass of the bin, m means mass
+    B17_12_s = data[[12,16,20],:3] # s means ssfr
+    B17_13_m = data[[1,5,9],:4]
+    B17_13_s = data[[13,17,21],:4]
+    B17_14_m = data[[2,6,10],:5]
+    B17_14_s = data[[14,18,22],:4]
+    B17_15_m = data[[3,7,11],:5]
+    B17_15_s = data[[15,19,23],:4]
+
+    return [B17_12_m, B17_13_m, B17_14_m, B17_15_m], [B17_12_s, B17_13_s, B17_14_s, B17_15_s]
+
+
+def Brown_deltaHIfrac_satenv_4bins(h=0.6774, indir='/Users/adam/ALFALFA/'):
+    B17_m, B17_s = Brown_HIfrac_satenv_4bins(h, indir)
+    [logM_cen, logHIfrac_cen, logHIfrac_err_cen], [logM_sat, logHIfrac_sat, logHIfrac_err_sat], [logHIfrac_sSFR_cen, logsSFR_cen, logHIfrac_sSFR_err_cen], [logHIfrac_sSFR_sat, logsSFR_sat, logHIfrac_sSFR_err_sat], [logM_all, logHIfrac_all, logHIfrac_all_err], [logsSFR_all, logHIfrac_sSFR_all] = Brown_HI_fractions_satcen(h)
+
+    for i in xrange(len(B17_m)):
+        B17_m[i][1,:] -= np.interp(B17_m[i][0,:], logM_sat, logHIfrac_sat)
+        B17_s[i][1,:] -= np.interp(B17_s[i][0,:], logsSFR_sat-9, logHIfrac_sSFR_sat)
+
+    return B17_m, B17_s
+
 def carnage(fname, dir='', addH=False, fields_of_interest=None):
     # For full details on fields, see http://cosmiccarnage2015.pbworks.com/w/page/95901731/File%20Formats
     all_fields = [['haloid', np.int64],

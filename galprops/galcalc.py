@@ -2138,7 +2138,7 @@ def hist_Nmin(x, bins, Nmin):
     if bins[-1]>np.max(x): bins[-1] = np.max(x)
     return Nhist, bins
 
-def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xrange=None, yrange=None, Nmin=10):
+def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xrange=None, yrange=None, Nmin=10, weights=None):
     # Given some values to go on x and y axes, bin them along x and return the percentile ranges
     f = np.isfinite(x)*np.isfinite(y)
     if xrange is not None: f = (x>=xrange[0])*(x<=xrange[1])*f
@@ -2154,16 +2154,19 @@ def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xran
     y_low, y_med, y_high = np.zeros(Nbins), np.zeros(Nbins), np.zeros(Nbins)
     x_av, N = np.zeros(Nbins), np.zeros(Nbins)
     if addMean: y_mean = np.zeros(Nbins)
+    if weights is not None: weights /= np.sum(weights)
     for i in range(Nbins):
         f = (x>=bins[i])*(x<bins[i+1])
+        if weights is not None: wy = weights[f][np.argsort(y[f])]
         yy = np.sort(y[f])
         if len(yy)>2:
-            i_low, i_med, i_high = int(low*len(yy))-1, int(med*len(yy))-1, int(high*len(yy))-1
-            frac_low, frac_med, frac_high = low*len(yy)-i_low-1, med*len(yy)-i_med-1, high*len(yy)-i_high-1
+            i_low, i_med, i_high = int(low*(len(yy)-1)), int(med*(len(yy)-1)), int(high*(len(yy)-1))
+            frac_low, frac_med, frac_high = low*(len(yy)-1)-i_low, med*(len(yy)-1)-i_med, high*(len(yy)-1)-i_high
             if i_high<=i_med or i_med<=i_low or i_high<=i_low: print 'i_low, i_med, i_high = ', i_low, i_med, i_high
             y_low[i] = yy[i_low]*(1-frac_low) + yy[i_low+1]*frac_low if i_low>0 else yy[0]
             y_med[i] = yy[i_med]*(1-frac_med) + yy[i_med+1]*frac_med if i_med>0 else yy[0]
             y_high[i] = yy[i_high]*(1-frac_high) + yy[i_high+1]*frac_high if i_high<len(yy)-1 else yy[-1]
+#            [y_low[i], y_med[i], y_high[i]] = np.percentile(y[f], [100*low, 100*med, 100*high], interpolation='linear')
             x_av[i] = np.mean(x[f])
             N[i] = len(x[f])
             if addMean: y_mean[i] = np.mean(yy)
@@ -2796,6 +2799,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
         rho = density of particles/cells [M_sun/pc^3]
         temp = temperature of particles [K] OR specific thermal energy [(m/s)^2] (see mode)
         fneutral = fraction of particle/cell mass that is not ionized.  If given as None, it will automatically be calculated using the Rahmati+13 prescription.
+        redshift = single float for the redshift being considered
         method = 0 - Return results for methods 2, 3, and 4
                  1 - Gnedin & Kravtsov (2011) eq 6
                  2 - Gnedin & Kravtsov (2011) eq 10
@@ -2819,7 +2823,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
         Jeans_cold = use cold clouds of SF gas cells only for calculating Jeans length [NOT YET IMPLEMENTED]
         Sigma_SFR0 = local star formation rate surface density of the solar neighbourhood [Msun/yr/pc^2]
         UV_MW = pre-computed UV fluxes (normed by Milky Way) for each cell
-        X = pre-computed hydrogen fractions for cells (or a chosen constant)
+        X = pre-computed hydrogen fractions for particles/cells (or a chosen constant)
         UV_pos = positions of particles/cells, used to approximate the UV field of non-SF particles/cells based on nearby SF particles/cells.  Using this will definitely slow the code but should return more realistic HI/H2 fractions for non-star-forming cells/particles.  Is redundant when UV_MW is provided. [pc]
         f_esc = fudge factor for escape fraction in the approximate calculation for UV
         f_ISM = boolean array for particles/cells stating whether they should be considered 'ISM' for the sake of the K13 prescription.  Those that are not will not have the nCNMhydro floor applied.  This will also inform the mean Sigma_SFR for the UV calculation.
