@@ -2154,27 +2154,38 @@ def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xran
     y_low, y_med, y_high = np.zeros(Nbins), np.zeros(Nbins), np.zeros(Nbins)
     x_av, N = np.zeros(Nbins), np.zeros(Nbins)
     if addMean: y_mean = np.zeros(Nbins)
-    if weights is not None: weights /= np.sum(weights)
     for i in range(Nbins):
         f = (x>=bins[i])*(x<bins[i+1])
-        if weights is not None: wy = weights[f][np.argsort(y[f])]
-        yy = np.sort(y[f])
-        if len(yy)>2:
-            i_low, i_med, i_high = int(low*(len(yy)-1)), int(med*(len(yy)-1)), int(high*(len(yy)-1))
-            frac_low, frac_med, frac_high = low*(len(yy)-1)-i_low, med*(len(yy)-1)-i_med, high*(len(yy)-1)-i_high
-            if i_high<=i_med or i_med<=i_low or i_high<=i_low: print 'i_low, i_med, i_high = ', i_low, i_med, i_high
-            y_low[i] = yy[i_low]*(1-frac_low) + yy[i_low+1]*frac_low if i_low>0 else yy[0]
-            y_med[i] = yy[i_med]*(1-frac_med) + yy[i_med+1]*frac_med if i_med>0 else yy[0]
-            y_high[i] = yy[i_high]*(1-frac_high) + yy[i_high+1]*frac_high if i_high<len(yy)-1 else yy[-1]
-#            [y_low[i], y_med[i], y_high[i]] = np.percentile(y[f], [100*low, 100*med, 100*high], interpolation='linear')
+        if len(f[f])>2:
+            if weights is None:
+                [y_low[i], y_med[i], y_high[i]] = np.percentile(y[f], [100*low, 100*med, 100*high], interpolation='linear')
+            else:
+                [y_low[i], y_med[i], y_high[i]] = weighted_percentile(y[f], [low, med, high], weights[f])
             x_av[i] = np.mean(x[f])
             N[i] = len(x[f])
-            if addMean: y_mean[i] = np.mean(yy)
+            if addMean: y_mean[i] = np.mean(y[f])
     fN = (N>0)
     if not addMean:
         return x_av[fN], y_high[fN], y_med[fN], y_low[fN]
     else:
         return x_av[fN], y_high[fN], y_med[fN], y_low[fN], y_mean[fN]
+
+def weighted_percentile(data, percentile, weights):
+    arg = np.argsort(data)
+    data = data[arg]
+    weights = weights[arg]
+    weights /= np.sum(weights)
+    wsum = np.append(0, np.cumsum(weights))
+    if type(percentile)==float:
+        w = np.searchsorted(wsum, percentile)-1
+        return data[w]
+    else:
+        out = []
+        for p in percentile:
+            w = np.searchsorted(wsum, p)-1
+            out += [data[w]]
+        return out
+
 
 def meantrend(x, y, bins=20, xrange=None, yrange=None):
     f = np.isfinite(x)*np.isfinite(y) 
