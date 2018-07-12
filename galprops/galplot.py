@@ -18,7 +18,7 @@ def figure():
 	plt.subplot(111)
 
 
-def contour(x,y,Nbins=None,weights=None,range=None,Nlevels=25,c='k',ls='-',lw=2,pcs=None,smooth=True):
+def contour(x,y,Nbins=None,weights=None,range=None,Nlevels=25,c='k',ls='-',lw=2,pcs=None,smooth=True,ax=plt.gca()):
 	# Plot a 2D contour by first doing a 2D histogram of data with axis positions x and y
 	
 	if range==None: range = [[np.min(x),np.max(x)],[np.min(y),np.max(y)]]
@@ -70,15 +70,15 @@ def contour(x,y,Nbins=None,weights=None,range=None,Nlevels=25,c='k',ls='-',lw=2,
 	        zzlevel[level] = zval
 #        print 'zzlevel', zzlevel
 	    if type(ls)==str:
-	        plt.contour(xp, yp, zz, zzlevel, colors=c, linestyles=ls, linewidths=lw, zorder=1)
+	        ax.contour(xp, yp, zz, zzlevel, colors=c, linestyles=ls, linewidths=lw, zorder=1)
 	    else:
-	        CS = plt.contour(xp, yp, zz, zzlevel, colors=c, linestyles='-', linewidths=lw, zorder=1)
+	        CS = ax.contour(xp, yp, zz, zzlevel, colors=c, linestyles='-', linewidths=lw, zorder=1)
 	        for c in CS.collections: c.set_dashes([(0, tuple(ls))])
 	else:
 	    if type(ls)==str:
-	        plt.contour(xp, yp, im.transpose(), levels=Nlevels, colors=c, linestyles=ls, linewidths=lw, zorder=1)
+	        ax.contour(xp, yp, im.transpose(), levels=Nlevels, colors=c, linestyles=ls, linewidths=lw, zorder=1)
 	    else:
-	        CS = plt.contour(xp, yp, im.transpose(), levels=Nlevels, colors=c, linestyles='-', linewidths=lw, zorder=1)
+	        CS = ax.contour(xp, yp, im.transpose(), levels=Nlevels, colors=c, linestyles='-', linewidths=lw, zorder=1)
 	        for c in CS.collections: c.set_dashes([(0, tuple(ls))])
 
 

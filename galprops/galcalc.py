@@ -1009,7 +1009,7 @@ def z2t(z,H_0=67.3,Omega_R=0,Omega_M=0.315,Omega_Lambda=0.685):
 	return t # Gives cosmic time in Gyr
 
 
-def z2dA(z,H_0=67.3,Omega_R=0,Omega_M=0.315,Omega_Lambda=0.685):
+def z2dA(z,H_0=67.74,Omega_R=0,Omega_M=0.3089,Omega_Lambda=0.6911):
 	# Convert redshift to an angular-diameter distance
 	c = 299792.458 # Speed of light in km/s
 	Omega_k = 1 - Omega_R - Omega_M - Omega_Lambda
@@ -2125,20 +2125,22 @@ def rotate2(xyz, axis, angle):
     return np.concatenate((np.array([x]).T,np.array([y]).T,np.array([z]).T), axis=1)
 
 
-def hist_Nmin(x, bins, Nmin):
+def hist_Nmin(x, bins, Nmin, hard_bins=np.array([])):
     Nhist, bins = np.histogram(x, bins)
     while len(Nhist[Nhist<Nmin])>0:
         ii = np.where(Nhist<Nmin)[0][0]
-        if ii==0 or (ii!=len(Nhist)-1 and Nhist[ii+1]<Nhist[ii-1]):
+        if (ii==0 or (ii!=len(Nhist)-1 and Nhist[ii+1]<Nhist[ii-1])) and np.all(~(bins[ii+1] <= 1.01*hard_bins and bins[ii+1] >= 0.99*hard_bins)):
             bins = np.delete(bins,ii+1)
-        else:
+        elif np.all(~(bins[ii] <= 1.01*hard_bins and bins[ii] >= 0.99*hard_bins)):
             bins = np.delete(bins,ii)
+        else:
+            print 'hard_bins prevented gc.hist_Nmin() from enforcing Nmin.  Try using wider input bins.'
         Nhist, bins = np.histogram(x, bins)
     if bins[0]<np.min(x): bins[0] = np.min(x)
     if bins[-1]>np.max(x): bins[-1] = np.max(x)
     return Nhist, bins
 
-def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xrange=None, yrange=None, Nmin=10, weights=None):
+def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xrange=None, yrange=None, Nmin=10, weights=None, hard_bins=np.array([]), outBins=False):
     # Given some values to go on x and y axes, bin them along x and return the percentile ranges
     f = np.isfinite(x)*np.isfinite(y)
     if xrange is not None: f = (x>=xrange[0])*(x<=xrange[1])*f
@@ -2149,7 +2151,7 @@ def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xran
         indices = np.array(np.linspace(0,len(x)-1,bins+1), dtype=int)
         bins = np.sort(x)[indices]
     elif Nmin>0: # Ensure a minimum number of data in each bin
-        Nhist, bins = hist_Nmin(x, bins, Nmin)
+        Nhist, bins = hist_Nmin(x, bins, Nmin, hard_bins)
     Nbins = len(bins)-1
     y_low, y_med, y_high = np.zeros(Nbins), np.zeros(Nbins), np.zeros(Nbins)
     x_av, N = np.zeros(Nbins), np.zeros(Nbins)
@@ -2165,10 +2167,14 @@ def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xran
             N[i] = len(x[f])
             if addMean: y_mean[i] = np.mean(y[f])
     fN = (N>0)
-    if not addMean:
+    if not addMean and not outBins:
         return x_av[fN], y_high[fN], y_med[fN], y_low[fN]
-    else:
+    elif not addMean and outBins:
+        return x_av[fN], y_high[fN], y_med[fN], y_low[fN], bins
+    elif addMean and  not outBins:
         return x_av[fN], y_high[fN], y_med[fN], y_low[fN], y_mean[fN]
+    else:
+        return x_av[fN], y_high[fN], y_med[fN], y_low[fN], y_mean[fN], bins
 
 def weighted_percentile(data, percentile, weights):
     arg = np.argsort(data)
@@ -3243,4 +3249,9 @@ def Mvir2Rvir(mass, crit_fac=200., z=0, H_0=67.74, Omega_R=0, Omega_M=0.3089, Om
     # convert virial mass [Msun] to virial radius [kpc]
     vol = mass / critdens(z,H_0,Omega_R,Omega_M,Omega_L) / crit_fac
     return (3.*vol/4./np.pi)**(1./3.) * 1e-3
+
+def Mvir2Vvir(mass, crit_fac=200., z=0, H_0=67.74, Omega_R=0, Omega_M=0.3089, Omega_L=0.6911):
+    # convert virial mass [Msun] to virial velocity [km/s]
+    Rvir = Mvir2Rvir(mass, crit_fac, z, H_0, Omega_R, Omega_M, Omega_L)
+    return np.sqrt(6.67408e-11 * mass*1.989e30 / (Rvir*3.0857e19))*1e-3
 

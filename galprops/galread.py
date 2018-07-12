@@ -4285,10 +4285,8 @@ def xGASS_xCOLDGASS(indir=None, h=0.6774):
     xGASS_logRonRvir[arg1] = G['lvir_ratB']
 
     xGASS_logMH2 = np.zeros(Ngal, dtype=np.float32) # If 0, no measurement has been made at all
-    xGASS_logMH2[arg2] = C['LOGMH2']
-    f = (C['LIM_LOGMH2']>0)
-    xGASS_logMH2[arg2[f]] = C['LIM_LOGMH2'][f]
-    xGASS_logMH2[xGASS_logMH2!=0] += 2*np.log10(0.7/h)
+    xGASS_logMH2[arg2] = np.log10(C['XCO_A17']*C['LCO'])
+    xGASS_logMH2[xGASS_logMH2!=0] += (2*np.log10(0.7/h) - np.log10(1.36)) # 1.36 is the "helium contribution" to the conversion factor (wut)
 
     xGASS_H2det = np.zeros(Ngal, dtype=bool)
     xGASS_H2det[arg2[C['FLAG_CO']==1]] = True
