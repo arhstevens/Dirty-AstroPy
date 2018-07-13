@@ -133,7 +133,7 @@ def surfdensfit(r_vec,Sigma_fit,dsr,n):
 
 
 
-def circle(r,colour='white',centre=[0,0],lw=3,ls='-',half='f',inclination=0,fill=False,alpha=1,part=1):
+def circle(r,colour='white',centre=[0,0],lw=3,ls='-',half='f',inclination=0,fill=False,alpha=1,part=1,zorder=1):
 	# Plot a circle with radius r centred on coordinates "centre"
 	# "Half" indicates whether to do a full circle (f), or just the top (t) or bottom (b) halves
 	r = abs(r)
@@ -154,14 +154,14 @@ def circle(r,colour='white',centre=[0,0],lw=3,ls='-',half='f',inclination=0,fill
 			filt = (yp < np.max(yp) - (1-part)*(np.max(yp)-np.min(yp)))
 			xp, yp = xp[filt], yp[filt]
 			top = np.max(yp)
-		plot(xp, yp, linewidth=lw, color=colour, linestyle=ls)
+		plot(xp, yp, linewidth=lw, color=colour, linestyle=ls, zorder=zorder)
 	if fill:
 		if part<1 and part>0:
 			filt = (y2<top)
 			x, y1, y2 = x[filt], y1[filt], y2[filt]
 			y1[y1>top] = top
 			print top
-		plt.fill_between(x, y1, y2, color=colour, alpha=alpha)
+		plt.fill_between(x, y1, y2, color=colour, alpha=alpha, zorder=zorder)
 
 
 

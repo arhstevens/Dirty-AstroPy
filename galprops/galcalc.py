@@ -671,6 +671,11 @@ def recentregalall2(pos,vel,m):
     x,y,z,vx,vy,vz = recentregalall(x,y,z,vx,vy,vz,m)
     return x,y,z,vx,vy,vz
 
+def recentregal_coord(pos,vel,m):
+    x,y,z,vx,vy,vz = recentregalall2(pos,vel,m)
+    pos_move = pos[0][0,:] - np.array([x[0][0], y[0][0], z[0][0]])
+    vel_move = vel[0][0,:] - np.array([vx[0][0], vy[0][0], vz[0][0]])
+    return pos_move, vel_move
 
 def rotategalall2(pos,vel,m,r=25e3):
     x,y,z,vx,vy,vz = [],[],[],[],[],[]
