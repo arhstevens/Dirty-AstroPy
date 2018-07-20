@@ -467,6 +467,10 @@ def recentre(x,y,z,vx,vy,vz,mass,r=0):
     else:
         filt = ((x**2+y**2+z**2)<r**2)
 
+    if len(filt[filt]):
+        print 'gc.recentre() found no particles within r =', r
+        return x, y, z, vx, vy, vz
+
     xcom, ycom, zcom = com(x[filt], y[filt], z[filt], mass[filt])
     vxcom, vycom, vzcom = com(vx[filt], vy[filt], vz[filt], mass[filt])
 
@@ -489,7 +493,7 @@ def com(x,y,z,mass):
     # Find centre of mass
     M = sum(mass)
     mx, my, mz = x*mass, y*mass, z*mass
-    xcom, ycom, zcom = sum(mx)/M, sum(my)/M, sum(mz)/M #divide(sum(mx),M), divide(sum(my),M), divide(sum(mz),M)
+    xcom, ycom, zcom = divide(sum(mx),M), divide(sum(my),M), divide(sum(mz),M)
     return xcom, ycom, zcom
 
 
@@ -1342,7 +1346,7 @@ def divide(num,den):
 			den = float(den) # Ensure at least one of the inputs is a float to return a float
 			ans = num/den
 		else:
-			ans = 0
+			ans = 0.
 
 	return ans
 

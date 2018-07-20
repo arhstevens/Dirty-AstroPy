@@ -884,6 +884,90 @@ def galdtype():
 	Galdesc = np.dtype({'names':names, 'formats':formats}, align=True)
 	return Galdesc
 
+def galdtype_DarkSage2016():
+    # Specific for the version used in the 2016 paper.
+    Nannuli=30
+    floattype = np.float32
+    Galdesc_full = [
+                    ('Type'                         , np.int32),
+                    ('GalaxyIndex'                  , np.int64),
+                    ('HaloIndex'                    , np.int32),
+                    ('SimulationHaloIndex'          , np.int32),
+                    ('TreeIndex'                    , np.int32),
+                    ('SnapNum'                      , np.int32),
+                    ('CentralGalaxyIndex'           , np.int64),
+                    ('CentralMvir'                  , floattype),
+                    ('mergeType'                    , np.int32),
+                    ('mergeIntoID'                  , np.int32),
+                    ('mergeIntoSnapNum'             , np.int32),
+                    ('dT'                           , floattype),
+                    ('Pos'                          , (floattype, 3)),
+                    ('Vel'                          , (floattype, 3)),
+                    ('Spin'                         , (floattype, 3)),
+                    ('Len'                          , np.int32),
+                    ('Mvir'                         , floattype),
+                    ('Rvir'                         , floattype),
+                    ('Vvir'                         , floattype),
+                    ('Vmax'                         , floattype),
+                    ('VelDisp'                      , floattype),
+                    ('DiscRadii'                    , (floattype, Nannuli+1)),
+                    ('ColdGas'                      , floattype),
+                    ('StellarMass'                  , floattype),
+                    ('MergerBulgeMass'              , floattype),
+                    ('InstabilityBulgeMass'          , floattype),
+                    ('HotGas'                       , floattype),
+                    ('EjectedMass'                  , floattype),
+                    ('BlackHoleMass'                , floattype),
+                    ('IntraClusterStars'            , floattype),
+                    ('DiscGas'                      , (floattype, Nannuli)),
+                    ('DiscStars'                    , (floattype, Nannuli)),
+                    ('SpinStars'                    , (floattype, 3)),
+                    ('SpinGas'                      , (floattype, 3)),
+                    ('SpinSecularBulge'             , (floattype, 3)),
+                    ('SpinClassicalBulge'           , (floattype, 3)),
+                    ('StarsInSitu'                  , floattype),
+                    ('StarsInstability'             , floattype),
+                    ('StarsMergeBurst'              , floattype),
+                    ('DiscHI'                       , (floattype, Nannuli)),
+                    ('DiscH2'                       , (floattype, Nannuli)),
+                    ('DiscSFR'                      , (floattype, Nannuli)),
+                    ('TotInstabEvents'              , np.int32),
+                    ('TotInstabEventsGas'           , np.int32),
+                    ('TotInstabEventsStar'          , np.int32),
+                    ('TotInstabAnnuliGas'           , np.int32),
+                    ('TotInstabAnnuliStar'          , np.int32),
+                    ('FirstUnstableAvGas'           , floattype),
+                    ('FirstUnstableAvStar'          , floattype),
+                    ('TotSinkGas'                   , (floattype, 30)),
+                    ('TotSinkStar'                  , (floattype, 30)),
+                    ('MetalsColdGas'                , floattype),
+                    ('MetalsStellarMass'            , floattype),
+                    ('ClassicalMetalsBulgeMass'     , floattype),
+                    ('SecularMetalsBulgeMass'       , floattype),
+                    ('MetalsHotGas'                 , floattype),
+                    ('MetalsEjectedMass'            , floattype),
+                    ('MetalsIntraClusterStars'      , floattype),
+                    ('DiscGasMetals'                , (floattype, Nannuli)),
+                    ('DiscStarsMetals'              , (floattype, Nannuli)),
+                    ('SfrDisk'                      , floattype),
+                    ('SfrBulge'                     , floattype),
+                    ('SfrDiskZ'                     , floattype),
+                    ('SfrBulgeZ'                    , floattype),
+                    ('DiskScaleRadius'              , floattype),
+                    ('BulgeRadius'                  , floattype),
+                    ('Cooling'                      , floattype),
+                    ('Heating'                      , floattype),
+                    ('LastMajorMerger'              , floattype),
+                    ('OutflowRate'                  , floattype),
+                    ('infallMvir'                   , floattype),
+                    ('infallVvir'                   , floattype),
+                    ('infallVmax'                   , floattype)
+                    ]
+    names = [Galdesc_full[i][0] for i in xrange(len(Galdesc_full))]
+    formats = [Galdesc_full[i][1] for i in xrange(len(Galdesc_full))]
+    Galdesc = np.dtype({'names':names, 'formats':formats}, align=True)
+    return Galdesc
+
 
 def galdtype_adam(Nannuli=30):
 	# Give data type for SAGE output that includes my edits for the disc project
@@ -1320,80 +1404,80 @@ def galdtype_multidark():
 
 
 def sageoutsingle(fname, dir=0, suff='', new=False, disc=False, public=False, old=0, carnage=False, fof64=False, extra_output=False, multidark=False, Nannuli=30):
-	# Read a single SAGE output file, returning all the galaxy data in a record array
-	
-	if type(dir) != str:
-		dir = '/Users/astevens/Documents/SAGE/darrencroton-sage-adc90ce8bbcc/output/results/millennium/millennium_mini/'
-	
-	if len(suff)>0:
-		dir = dir[:-1]+suff+'/' # suff is the suffix to the default directory name, eg. suff='_alt'
-	
-	# Note that although not all the read-in information is used, it's needed to read things in correctly.
-	if disc:
-		Galdesc = galdtype_adam(Nannuli=Nannuli) 
-	elif public:
-		if extra_output:
-			Galdesc = galdtype_public_extra()
-		elif old==0:
-			Galdesc = galdtype_public_old0()
-		elif old==1:
-			Galdesc = galdtype_public_old1(fof64)
-		elif old==2:
-			Galdesc = galdtype_public_old2()
-		else:
-			Galdesc = galdtype_public()
-	elif carnage:
-		Galdesc = galdtype_carnage_workshop()
-	elif multidark:
-		Galdesc = galdtype_multidark()
-	else:
-		Galdesc = galdtype()
-	fin = open(dir+fname, 'rb')  # Open the file
-	Ntrees = np.fromfile(fin,np.dtype(np.int32),1)  # Read number of trees in file
-	NtotGals = np.fromfile(fin,np.dtype(np.int32),1)[0]  # Read number of gals in file.
-	GalsPerTree = np.fromfile(fin, np.dtype((np.int32, Ntrees)),1) # Read the number of gals in each tree
-	G = np.fromfile(fin, Galdesc, NtotGals) # Read all the galaxy data
-	if new: return G, NtotGals # Literally new feature for easy combining (Feb 2015)
-	G = G.view(np.recarray) # Convert into a record array
-	fin.close()
-	return G
+    # Read a single SAGE output file, returning all the galaxy data in a record array
+    
+    if type(dir) != str:
+        dir = '/Users/astevens/Documents/SAGE/darrencroton-sage-adc90ce8bbcc/output/results/millennium/millennium_mini/'
+        
+    if len(suff)>0:
+        dir = dir[:-1]+suff+'/' # suff is the suffix to the default directory name, eg. suff='_alt'
+    
+    # Note that although not all the read-in information is used, it's needed to read things in correctly.
+    if disc:
+        Galdesc = galdtype_adam(Nannuli=Nannuli) if not old else galdtype_DarkSage2016()
+    elif public:
+        if extra_output:
+            Galdesc = galdtype_public_extra()
+        elif old==0:
+            Galdesc = galdtype_public_old0()
+        elif old==1:
+            Galdesc = galdtype_public_old1(fof64)
+        elif old==2:
+            Galdesc = galdtype_public_old2()
+        else:
+            Galdesc = galdtype_public()
+    elif carnage:
+        Galdesc = galdtype_carnage_workshop()
+    elif multidark:
+        Galdesc = galdtype_multidark()
+    else:
+        Galdesc = galdtype()
+    fin = open(dir+fname, 'rb')  # Open the file
+    Ntrees = np.fromfile(fin,np.dtype(np.int32),1)  # Read number of trees in file
+    NtotGals = np.fromfile(fin,np.dtype(np.int32),1)[0]  # Read number of gals in file.
+    GalsPerTree = np.fromfile(fin, np.dtype((np.int32, Ntrees)),1) # Read the number of gals in each tree
+    G = np.fromfile(fin, Galdesc, NtotGals) # Read all the galaxy data
+    if new: return G, NtotGals # Literally new feature for easy combining (Feb 2015)
+    G = G.view(np.recarray) # Convert into a record array
+    fin.close()
+    return G
 
 def sagesnap(fpre, firstfile=0, lastfile=7, dir='./', suff='', disc=False, public=False, old=0, carnage=False, extra_output=False, multidark=False, SMfilt=None, Nannuli=30):
-	# Read full SAGE snapshot, going through each file and compiling into 1 array
-	if disc:
-		Galdesc = galdtype_adam(Nannuli) 
-	elif public:
-		if extra_output:
-			Galdesc = galdtype_public_extra()
-		elif old==0:
-			Galdesc = galdtype_public_old0()
-		elif old==1:
-			Galdesc = galdtype_public_old1()
-		elif old==2:
-			Galdesc = galdtype_public_old2()
-		else:
-			Galdesc = galdtype_public()
-	elif carnage:
-		Galdesc = galdtype_carnage_workshop()
-	elif multidark:
-		Galdesc = galdtype_multidark()
-	else:
-		Galdesc = galdtype()
-	Glist = []
-	Ngal = np.array([],dtype=np.int32)
-	for i in range(firstfile,lastfile+1):
-		G1, N1 = sageoutsingle(fpre+'_'+str(i), dir, suff, True, disc, public, old, extra_output=extra_output, multidark=multidark, Nannuli=Nannuli)
-		if SMfilt is not None:
-			G1 = G1[G1.view(np.recarray).StellarMass>=SMfilt]
-			N1 = len(G1)
-		Glist += [G1]
-		Ngal = np.append(Ngal,N1)
-	G = np.empty(sum(Ngal), dtype=Galdesc)
-	for i in range(firstfile,lastfile+1):
-		j = i-firstfile
-		G[sum(Ngal[:j]):sum(Ngal[:j+1])] = Glist[j][0:Ngal[j]].copy()
-	G = G.view(np.recarray)
-	return G
+    # Read full SAGE snapshot, going through each file and compiling into 1 array
+    if disc:
+        Galdesc = galdtype_adam(Nannuli=Nannuli) if not old else galdtype_DarkSage2016()
+    elif public:
+        if extra_output:
+            Galdesc = galdtype_public_extra()
+        elif old==0:
+            Galdesc = galdtype_public_old0()
+        elif old==1:
+            Galdesc = galdtype_public_old1()
+        elif old==2:
+            Galdesc = galdtype_public_old2()
+        else:
+            Galdesc = galdtype_public()
+    elif carnage:
+        Galdesc = galdtype_carnage_workshop()
+    elif multidark:
+        Galdesc = galdtype_multidark()
+    else:
+        Galdesc = galdtype()
+    Glist = []
+    Ngal = np.array([],dtype=np.int32)
+    for i in range(firstfile,lastfile+1):
+        G1, N1 = sageoutsingle(fpre+'_'+str(i), dir, suff, True, disc, public, old, extra_output=extra_output, multidark=multidark, Nannuli=Nannuli)
+        if SMfilt is not None:
+            G1 = G1[G1.view(np.recarray).StellarMass>=SMfilt]
+            N1 = len(G1)
+        Glist += [G1]
+        Ngal = np.append(Ngal,N1)
+    G = np.empty(sum(Ngal), dtype=Galdesc)
+    for i in range(firstfile,lastfile+1):
+        j = i-firstfile
+        G[sum(Ngal[:j]):sum(Ngal[:j+1])] = Glist[j][0:Ngal[j]].copy()
+    G = G.view(np.recarray)
+    return G
 
 def zlistmm():
 	# Call the list of strings which correspond to the redshift values of the output of the mini millennium files (i.e. so one can call to read the files in a list).  This is specific to details of how SAGE was run (i.e. in the desired_outputsnaps file)
