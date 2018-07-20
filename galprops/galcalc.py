@@ -467,7 +467,7 @@ def recentre(x,y,z,vx,vy,vz,mass,r=0):
     else:
         filt = ((x**2+y**2+z**2)<r**2)
 
-    if len(filt[filt]):
+    if len(filt[filt])==0:
         print 'gc.recentre() found no particles within r =', r
         return x, y, z, vx, vy, vz
 
