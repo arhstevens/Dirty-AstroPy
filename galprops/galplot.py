@@ -516,7 +516,7 @@ def massfunction(mass, Lbox, colour='k', label=r'Input', extra=0, fsize=28, pt=1
     y = N/(binwidth*Lbox**3)
     if ax is None:
         if step==True:
-            plt.step(x, y, where='mid', color=colour, linewidth=lw, label=label)
+            plt.step(x, y, where='mid', color=colour, linewidth=lw, label=label, linestyle=ls)
         else:
             if type(ls)==str:
                 plt.plot(x, y, colour+ls, linewidth=lw, label=label)
@@ -525,7 +525,7 @@ def massfunction(mass, Lbox, colour='k', label=r'Input', extra=0, fsize=28, pt=1
         plt.yscale('log', nonposy='clip')
     else:
         if step==True:
-            ax.step(x, y, where='mid', color=colour, linewidth=lw, label=label)
+            ax.step(x, y, where='mid', color=colour, linewidth=lw, label=label, linestyle=ls)
         else:
             if type(ls)==str:
                 ax.plot(x, y, colour+ls, linewidth=lw, label=label)

@@ -1040,8 +1040,8 @@ def galdtype_adam(Nannuli=30):
                     ('SfrDisk'                      , floattype), #--# Removed run 554
                     ('SfrBulge'                     , floattype),
 #                    ('SfrFromH2'                    , floattype), #----# Added run 554
-#                    ('SfrInstab'                    , floattype),
-#                    ('SfrMergeBurst'                , floattype),
+#                    ('SfrInstab'                    , floattype), #----# 
+#                    ('SfrMergeBurst'                , floattype), #----# 
                     ('SfrDiskZ'                     , floattype),
                     ('SfrBulgeZ'                    , floattype),
                     ('DiskScaleRadius'              , floattype),
@@ -1366,7 +1366,7 @@ def galdtype_multidark():
                     ('Vvir'                         , np.float32),
                     ('Vmax'                         , np.float32),
                     ('VelDisp'                      , np.float32),
-                    ('M_otherMvir'                      , np.float32), #temp
+#                    ('M_otherMvir'                      , np.float32), #temp
                     ('ColdGas'                      , np.float32),
                     ('StellarMass'                  , np.float32),
                     ('BulgeMass'                    , np.float32),
@@ -1437,6 +1437,9 @@ def sageoutsingle(fname, dir=0, suff='', new=False, disc=False, public=False, ol
     NtotGals = np.fromfile(fin,np.dtype(np.int32),1)[0]  # Read number of gals in file.
     GalsPerTree = np.fromfile(fin, np.dtype((np.int32, Ntrees)),1) # Read the number of gals in each tree
     G = np.fromfile(fin, Galdesc, NtotGals) # Read all the galaxy data
+    if NtotGals!=len(G): 
+        print 'Ngals in sageoutsingle seems contradictory', NtotGals, len(G)
+        NtotGals = len(G)
     if new: return G, NtotGals # Literally new feature for easy combining (Feb 2015)
     G = G.view(np.recarray) # Convert into a record array
     fin.close()
@@ -4327,8 +4330,8 @@ def OG14(h, disconly=False):
 
 def xGASS_xCOLDGASS(indir=None, h=0.6774):
     if indir is None: indir = '/Users/adam/xGASS/'
-    keys = ['GASS', 'lgMstar', 'SFR_best', 'lgMHI', 'HIsrc', 'env_code_B', 'logMh_Mst_B', 'lvir_ratB']
-    key_dtypes = [np.int32, np.float32, np.float32, np.float32, np.uint16, np.int16, np.float32, np.float32]
+    keys = ['GASS', 'lgMstar', 'SFR_best', 'lgMHI', 'HIsrc', 'env_code_B', 'logMh_Mst_B', 'lvir_ratB', 'zSDSS']
+    key_dtypes = [np.int32, np.float32, np.float32, np.float32, np.uint16, np.int16, np.float32, np.float32, np.float32]
     G = csv_dict(indir+'xGASS_data.txt', 1, key_dtypes, keylist=keys, delimiter=None, head_delimiter=', ')
 
     import pyfits
@@ -4372,8 +4375,18 @@ def xGASS_xCOLDGASS(indir=None, h=0.6774):
     xGASS_logMH2[arg2] = np.log10(C['XCO_A17']*C['LCO'])
     xGASS_logMH2[xGASS_logMH2!=0] += (2*np.log10(0.7/h) - np.log10(1.36)) # 1.36 is the "helium contribution" to the conversion factor (wut)
 
+    xGASS_logMH2_corr = np.zeros(Ngal, dtype=np.float32) # _corr means the aperture correction has been applied
+    xGASS_logMH2_corr[arg2[C['FLAG_CO']==1]] = C['LOGMH2'][C['FLAG_CO']==1]
+    xGASS_logMH2_corr[arg2[C['FLAG_CO']==2]] = C['LIM_LOGMH2'][C['FLAG_CO']==2]
+    xGASS_logMH2_corr[xGASS_logMH2_corr!=0] += (2*np.log10(0.7/h) - np.log10(1.36))
+
     xGASS_H2det = np.zeros(Ngal, dtype=bool)
     xGASS_H2det[arg2[C['FLAG_CO']==1]] = True
     
-    return xGASS_ID, xGASS_logMstar, xGASS_logSFR, xGASS_logMHI, xGASS_HIdet, xGASS_Type, xGASS_logMhalo, xGASS_logRonRvir, xGASS_logMH2, xGASS_H2det
+    xGASS_redshift = np.zeros(Ngal, dtype=np.float32)
+    xGASS_redshift[arg2] = C['Z_SDSS']
+    xGASS_redshift[arg1] = G['zSDSS']
+
+    
+    return xGASS_ID, xGASS_logMstar, xGASS_logSFR, xGASS_logMHI, xGASS_HIdet, xGASS_Type, xGASS_logMhalo, xGASS_logRonRvir, xGASS_logMH2, xGASS_H2det, xGASS_logMH2_corr, xGASS_redshift
     

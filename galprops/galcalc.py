@@ -2138,12 +2138,16 @@ def hist_Nmin(x, bins, Nmin, hard_bins=np.array([])):
     Nhist, bins = np.histogram(x, bins)
     while len(Nhist[Nhist<Nmin])>0:
         ii = np.where(Nhist<Nmin)[0][0]
-        if (ii==0 or (ii!=len(Nhist)-1 and Nhist[ii+1]<Nhist[ii-1])) and np.all(~(bins[ii+1] <= 1.01*hard_bins and bins[ii+1] >= 0.99*hard_bins)):
+#        print ii==0 or (ii!=len(Nhist)-1 and Nhist[ii+1]<Nhist[ii-1])
+#        print np.all(~(bins[ii+1] <= 1.01*hard_bins and bins[ii+1] >= 0.99*hard_bins))
+        if (ii==0 or (ii!=len(Nhist)-1 and Nhist[ii+1]<Nhist[ii-1])) and np.all(~((bins[ii+1] <= 1.01*hard_bins) * (bins[ii+1] >= 0.99*hard_bins))):
             bins = np.delete(bins,ii+1)
-        elif np.all(~(bins[ii] <= 1.01*hard_bins and bins[ii] >= 0.99*hard_bins)):
+        elif np.all(~((bins[ii] <= 1.01*hard_bins) * (bins[ii] >= 0.99*hard_bins))):
             bins = np.delete(bins,ii)
         else:
             print 'hard_bins prevented gc.hist_Nmin() from enforcing Nmin.  Try using wider input bins.'
+            Nhist, bins = np.histogram(x, bins)
+            break
         Nhist, bins = np.histogram(x, bins)
     if bins[0]<np.min(x): bins[0] = np.min(x)
     if bins[-1]>np.max(x): bins[-1] = np.max(x)
