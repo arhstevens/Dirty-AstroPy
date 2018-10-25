@@ -4390,3 +4390,75 @@ def xGASS_xCOLDGASS(indir=None, h=0.6774):
     
     return xGASS_ID, xGASS_logMstar, xGASS_logSFR, xGASS_logMHI, xGASS_HIdet, xGASS_Type, xGASS_logMhalo, xGASS_logRonRvir, xGASS_logMH2, xGASS_H2det, xGASS_logMH2_corr, xGASS_redshift
     
+
+def HI_surface_density_profiles_obs(dir='/Users/adam/HI profiles/'):
+    
+    # Read THINGS and LITTLE THINGS data
+    import pandas as PDF
+    from rpy2.robjects import r
+    from rpy2.robjects import pandas2ri
+    pandas2ri.activate()
+    r.load(dir+'DataAdamStevens.img')
+    T = pandas2ri.ri2py(r.galaxy)
+    
+    # Read Bluedisk and LVHIS data
+    import pyfits
+    B = pyfits.open(dir+'Bluedisk.fits')[1].data
+    L = pyfits.open(dir+'LVHIS.fits')[1].data
+
+    nT = len(T)
+    nB = len(B)
+    nL = len(L)
+    ntot = nT+nB+nL
+
+    Sigma_cen = np.zeros(ntot)
+    rHI = np.zeros(ntot)
+    r_cen = np.zeros(ntot)
+    survey = []
+    r_profile = []
+    SigmaHI_profile = []
+
+    for i in xrange(ntot):
+        if i<nT:
+            rad = np.array(T[i][-2])
+            SigHI = np.array(T[i][-1])
+        elif i<nT+nB:
+            j = i-nT
+            rad = B['RADIUS'][j,:]
+            SigHI = B['MU'][j,:]
+        else:
+            j = i-nT-nB
+            if L['R1'][j]/L['BMAJ'][j] < 1.5: continue
+            rad = L['RADI'][j,:]
+            SigHI = L['DENS'][j,:]
+
+        f = np.isfinite(rad) * np.isfinite(SigHI)
+        rad, SigHI = rad[f], SigHI[f]
+        if len(rad)==0: continue
+        annuli = np.append(np.append(0., rad[:-1]+0.5*np.diff(rad)), rad[-1]+0.5*np.diff(rad)[-1])
+        area = np.pi * (annuli[1:]**2 - annuli[:-1]**2)
+        r_cen[i] = rad[SigHI>=0.9*np.max(SigHI)][-1]
+        try:
+            w = np.where((SigHI<=1.)*(rad>r_cen[i]))[0][0]
+        except IndexError:
+            continue
+        rHI[i] = np.interp(0., np.log10(SigHI[w-1:w+1])[::-1], rad[w-1:w+1][::-1])
+        Sigma_cen[i] = min(np.sum((SigHI*area)[rad<=r_cen[i]]) / (np.pi * r_cen[i]**2), np.max(SigHI))
+        r_profile += [rad/rHI[i]]
+        SigmaHI_profile += [SigHI]
+        
+        if i<nT:
+            survey += [T[i][0][0]]
+        elif i<nT+nB:
+            survey += ['BlueDisk']
+        else:
+            survey += ['LVHIS']
+
+    rho = r_cen / rHI
+    f = np.isfinite(rho) * np.isfinite(Sigma_cen) * (Sigma_cen>0)
+    rho, Sigma_cen = rho[f], Sigma_cen[f]
+    survey = np.array(survey)
+    return r_profile, SigmaHI_profile, rho, Sigma_cen, survey
+
+        
+

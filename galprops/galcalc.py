@@ -999,7 +999,7 @@ def virrad(mass,x,y,z,rho_crit,r_max=400000.,it_max=400,densfac=200.):
 
 
 
-def z2t(z,H_0=67.3,Omega_R=0,Omega_M=0.315,Omega_Lambda=0.685):
+def z2t(z,H_0=67.74,Omega_R=0,Omega_M=0.3089,Omega_Lambda=0.6911):
 	# Convert redshift z to cosmic time t.  See ztlookup for other parameter definitions.
 	
 	Omega_k = 1 - Omega_R - Omega_M - Omega_Lambda # Curvature density as found from the radiation, matter and dark energy energy densities.
@@ -1030,7 +1030,7 @@ def z2dA(z,H_0=67.74,Omega_R=0,Omega_M=0.3089,Omega_Lambda=0.6911):
 	return d_A
 
 
-def ztlookup(zmin=-0.5,zmax=8,H_0=67.3,Omega_R=0,Omega_M=0.315,Omega_Lambda=0.685):
+def ztlookup(zmin=-0.5,zmax=8,H_0=67.74,Omega_R=0,Omega_M=0.3089,Omega_Lambda=0.6911):
 	# Produce a look-up table for converting cosmic time to redshift in spaces of 0.001 in redshift
 	
 	###  INPUTS ###
@@ -2179,7 +2179,7 @@ def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xran
             x_av[i] = np.mean(x[f])
             N[i] = len(x[f])
             if addMean: y_mean[i] = np.mean(y[f])
-    fN = (N>0)
+    fN = (N>0) if Nmin>0 else np.array([True]*Nbins)
     if not addMean and not outBins:
         return x_av[fN], y_high[fN], y_med[fN], y_low[fN]
     elif not addMean and outBins:
