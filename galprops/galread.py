@@ -1038,7 +1038,7 @@ def galdtype_adam(Nannuli=30):
                     ('DiscGasMetals'                , (floattype, Nannuli)),
                     ('DiscStarsMetals'              , (floattype, Nannuli)),
                     ('SfrDisk'                      , floattype), #--# Removed run 554
-                    ('SfrBulge'                     , floattype),
+                    ('SfrBulge'                     , floattype), #--#
 #                    ('SfrFromH2'                    , floattype), #----# Added run 554
 #                    ('SfrInstab'                    , floattype), #----# 
 #                    ('SfrMergeBurst'                , floattype), #----# 
@@ -4435,7 +4435,7 @@ def HI_surface_density_profiles_obs(dir='/Users/adam/HI profiles/'):
 
         f = np.isfinite(rad) * np.isfinite(SigHI)
         rad, SigHI = rad[f], SigHI[f]
-        if len(rad)==0: continue
+        if len(rad)<10: continue
         annuli = np.append(np.append(0., rad[:-1]+0.5*np.diff(rad)), rad[-1]+0.5*np.diff(rad)[-1])
         area = np.pi * (annuli[1:]**2 - annuli[:-1]**2)
         r_cen[i] = rad[SigHI>=0.9*np.max(SigHI)][-1]
@@ -4457,8 +4457,8 @@ def HI_surface_density_profiles_obs(dir='/Users/adam/HI profiles/'):
             survey += ['LVHIS']
 
     rho = r_cen / rHI
-    f = np.isfinite(rho) * np.isfinite(Sigma_cen) * (Sigma_cen>0)
-    rho, Sigma_cen = rho[f], Sigma_cen[f]
+    f = (mHI>0) * (rHI > 0)
+    rho, Sigma_cen, mHI, rHI = rho[f], Sigma_cen[f], mHI[f], rHI[f]
     survey = np.array(survey)
     return r_profile, SigmaHI_profile, rho, Sigma_cen, rHI, mHI, survey
 

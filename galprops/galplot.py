@@ -516,7 +516,7 @@ def massfunction(mass, Lbox, colour='k', label=r'Input', extra=0, fsize=28, pt=1
     y = N/(binwidth*Lbox**3)
     if ax is None:
         if step==True:
-            plt.step(np.append(0,x), np.append(0,y), where='mid', color=colour, linewidth=lw, label=label, linestyle=ls)
+            plt.step(edges, np.append(0,y), where='pre', color=colour, linewidth=lw, label=label, linestyle=ls)
         else:
             if type(ls)==str:
                 plt.plot(x, y, colour+ls, linewidth=lw, label=label)
@@ -525,7 +525,7 @@ def massfunction(mass, Lbox, colour='k', label=r'Input', extra=0, fsize=28, pt=1
         plt.yscale('log', nonposy='clip')
     else:
         if step==True:
-            ax.step(np.append(0,x), np.append(0,y), where='mid', color=colour, linewidth=lw, label=label, linestyle=ls)
+            ax.step(edges, np.append(0,y), where='pre', color=colour, linewidth=lw, label=label, linestyle=ls)
         else:
             if type(ls)==str:
                 ax.plot(x, y, colour+ls, linewidth=lw, label=label)
@@ -533,7 +533,7 @@ def massfunction(mass, Lbox, colour='k', label=r'Input', extra=0, fsize=28, pt=1
                 ax.plot(x, y, colour+'-', linewidth=lw, label=label, dashes=ls)
         ax.set_yscale('log', nonposy='clip')
 
-    if Print is not None: print Print, '\n', x, '\n', y, '\n'
+    if Print is not None: print Print, '\n', x, '\n', edges, '\n', y, '\n'
 
     if extra>0:
         axlogic(x,y,yscale='log') # Set axis

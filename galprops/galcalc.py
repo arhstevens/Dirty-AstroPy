@@ -2662,6 +2662,8 @@ def rahmati2013_neutral_frac(redshift, nH, T, onlyA1=True,noCol = False,onlyCol 
 
     return f_neutral
 
+
+### WARNING: THE FOLLOWING FUNCTIONS WERE INHERETED AND IS NOT USED FOR SCIENCE.  ITS PRESENCE IS MERELY TO COMPARE TO OLDER METHODS.  SEE HI_H2_MASSES() BELOW FOR THE PROPER FUNCTION ###
 def fH2_Gnedin_ParticleBasis(SFR,m,Zgas,nH,Density_Tot,T,fneutral,redshift):
     #;Formalism described in Gnedin and Kravtsov (2011) to calculate H2-to-total H ratio applied to EAGLE.
     #
@@ -2680,7 +2682,8 @@ def fH2_Gnedin_ParticleBasis(SFR,m,Zgas,nH,Density_Tot,T,fneutral,redshift):
     #;fH2_Gnedin_ParticleBasis,SFR,Zgas,nH,T,redshift,Fh2_SFR
     #;Writen by Claudia Lagos, converted to python by Michelle Furlong
     # Further editing by me
-    
+    print 'WARNING: YOU ARE CALLING AN OLD FUNCTION FOR THE GK11 HI/H2 PRESCRIPTION THAT PROBABLY SHOULD NOT BE USED FOR SCIENCE!'
+
     
     SFRMW        = 6.62e-21 #; in units of gr/s/cm^2. SFR density of the local neighbourhood (Bonatto+11)
     
@@ -2737,6 +2740,8 @@ def fH2_Gnedin_ParticleBasis(SFR,m,Zgas,nH,Density_Tot,T,fneutral,redshift):
     
     return Fh2_SFR
 
+
+### WARNING: THE FOLLOWING FUNCTION WAS INHERETED AND IS NOT USED FOR SCIENCE.  ITS PRESENCE IS MERELY TO COMPARE TO OLDER METHODS
 def fH2_Krumholz_ParticleBasis(SFR,m,Zgas,nH,Density_Tot,T,fneutral,redshift):
     #;Formalism described in Krumholz (2013) to calculate H2-to-total H ratio applied to EAGLE.
     #
@@ -2755,6 +2760,8 @@ def fH2_Krumholz_ParticleBasis(SFR,m,Zgas,nH,Density_Tot,T,fneutral,redshift):
     #;fH2_Krumholz_ParticleBasis,SFR,Zgas,nH,T,redshift,Fh2_SFR
     #;Writen by Claudia Lagos, converted to python by Michelle Furlong
     # Further editing by me
+    
+    print 'WARNING: YOU ARE CALLING AN OLD FUNCTION FOR THE K13 HI/H2 PRESCRIPTION THAT PROBABLY SHOULD NOT BE USED FOR SCIENCE!'
     
     SFRMW        = 6.62e-21          #;in units of gr/s/cm^2. SFR density of the local neighbourhood (Bonatto+11)
     Zfloor       = 1e-5              #;Arbitrary floor applied to metallicities.
@@ -2817,6 +2824,11 @@ def fH2_Krumholz_ParticleBasis(SFR,m,Zgas,nH,Density_Tot,T,fneutral,redshift):
         Fh2_SFR[lows] = 0.0
     
     return Fh2_SFR
+### =================================================================================================================================================================================== ###
+
+
+
+
 
 
 def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T', UVB='FG09-Dec11', U_MW_z0=None, rho_sd=0.01, col=2, gamma_fixed=None, mu_fixed=None, S_Jeans=True, T_CNMmax=243., Pth_Lagos=False, Jeans_cold=False, Sigma_SFR0=1e-9, UV_MW=None, X=None, UV_pos=None, f_esc=0.15, f_ISM=None):
@@ -2882,8 +2894,6 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
     denom = m_p * (m_per_pc*100)**3
     n_H = X * rho / denom
     
-    fzero = (fneutral <= 0)
-    fneutral[fzero] = 1e-6 # Floor on neutral fraction.  Prevents division by zero below
     
     if gamma_fixed is not None:
         gamma = 1.0*gamma_fixed
@@ -2902,6 +2912,9 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
     # Calculate (initialise in the case of mode='u') neutral fraction if it wasn't already provided
     if calc_fneutral:
         fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp, UVB=UVB)
+
+    fzero = (fneutral <= 0)
+    fneutral[fzero] = 1e-6 # Floor on neutral fraction.  Prevents division by zero below
 
     if mu_fixed is not None:
         mu = 1.0*mu_fixed
@@ -2981,7 +2994,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
         mass_H2[fzero] = 0.
         mass_HI[fzero] = 0.
 
-    if method==2 or method==0: # GK11, eq11 (entry 0 for method==0)
+    if method==2 or method==0: # GK11, eq10 (entry 0 for method==0)
         for it in xrange(it_max):
             if it==it_max-1: print 'iterations hit maximum for GK11, eq11 in HI_H2_masses()'
             f_mol = X*fneutral*f_H2_old /  (X+Y)
