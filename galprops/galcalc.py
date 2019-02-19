@@ -487,7 +487,9 @@ def recentre(x,y,z,vx,vy,vz,mass,r=0):
     else:
         return xc, yc, zc, vxc, vyc, vzc
 
-
+def recentre2(pos, vel, mass, r=0):
+    x, y, z, vx, vy, vz = recentre(pos[:,0], pos[:,1], pos[:,2], vel[:,0], vel[:,1], vel[:,2], mass, r)
+    return x, y, z, vx, vy, vz
 
 def com(x,y,z,mass):
     # Find centre of mass
@@ -2099,7 +2101,11 @@ def compute_rotation_to_z(x,y,z,vx,vy,vz,m):
     
     return axis, angle
 
-def compute_rotation_to_z2(pos,vel,m):
+def compute_rotation_to_z2(pos,vel,m,r=0):
+    if r>0:
+        f = np.sqrt(np.sum(pos**2, axis=1)) <= r
+        pos = pos[f]
+        vel = vel[f]
     return compute_rotation_to_z(pos[:,0], pos[:,1], pos[:,2], vel[:,0], vel[:,1], vel[:,2], m)
 
 
