@@ -4440,7 +4440,7 @@ def HI_surface_density_profiles_obs(dir='/Users/adam/HI profiles/'):
         area = np.pi * (annuli[1:]**2 - annuli[:-1]**2)
         r_cen[i] = rad[SigHI>=0.9*np.max(SigHI)][-1]
         try:
-            w = np.where((SigHI<=1.)*(rad>r_cen[i]))[0][0]
+            w = np.where((SigHI>1.)*(rad>r_cen[i]))[0][-1]+1
         except IndexError:
             continue
         rHI[i] = np.interp(0., np.log10(SigHI[w-1:w+1])[::-1], rad[w-1:w+1][::-1])

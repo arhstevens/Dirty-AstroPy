@@ -2106,6 +2106,7 @@ def compute_rotation_to_z2(pos,vel,m,r=0):
         f = np.sqrt(np.sum(pos**2, axis=1)) <= r
         pos = pos[f]
         vel = vel[f]
+        m = m[f]
     return compute_rotation_to_z(pos[:,0], pos[:,1], pos[:,2], vel[:,0], vel[:,1], vel[:,2], m)
 
 
@@ -2952,6 +2953,10 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
         else:
             UVbackground = data[1,:] / data[1,0] * U_MW_z0
     ISRF_floor = 10**np.interp(redshift, redshift_UVB, np.log10(UVbackground)) * np.ones(len(mass))
+    
+    # Leaving this commented as I have been feeding in values that already have this floor applied.  Note that in future if values fed in don't have the floor applied, these lines should be uncommented.
+#    if UV_MW is not None:
+#        UV_MW[UV_MW<ISRF_floor] = ISRF_floor
 
     # Approximate UV field based on average SF density
     sf = (SFR>0) if f_ISM is None else (SFR>0) * f_ISM
