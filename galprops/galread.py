@@ -4443,7 +4443,8 @@ def HI_surface_density_profiles_obs(dir='/Users/adam/HI profiles/'):
             w = np.where((SigHI>1.)*(rad>r_cen[i]))[0][-1]+1
         except IndexError:
             continue
-        rHI[i] = np.interp(0., np.log10(SigHI[w-1:w+1])[::-1], rad[w-1:w+1][::-1])
+#        rHI[i] = np.interp(0., np.log10(SigHI[w-1:w+1])[::-1], rad[w-1:w+1][::-1])
+        rHI[i] = np.interp(1., SigHI[w-1:w+1][::-1], rad[w-1:w+1][::-1])
         Sigma_cen[i] = min(np.sum((SigHI*area)[rad<=r_cen[i]]) / (np.pi * r_cen[i]**2), np.max(SigHI))
         r_profile += [rad/rHI[i]]
         SigmaHI_profile += [SigHI]

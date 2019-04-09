@@ -3266,7 +3266,7 @@ def histogram(x, bins, weights=None):
 
 
 def comoving_distance(z, H_0=67.74, Omega_R=0, Omega_M=0.3089, Omega_L=0.6911):
-    # calculate co-moving distance from redshift
+    # calculate co-moving distance from redshift [Mpc]
     zprime = np.linspace(0,z,10000)
     E = np.sqrt(Omega_R*(1+zprime)**4 + Omega_M*(1+zprime)**3 + Omega_L)
     integrand = 1/E
@@ -3291,4 +3291,28 @@ def Mvir2Vvir(mass, crit_fac=200., z=0, H_0=67.74, Omega_R=0, Omega_M=0.3089, Om
     # convert virial mass [Msun] to virial velocity [km/s]
     Rvir = Mvir2Rvir(mass, crit_fac, z, H_0, Omega_R, Omega_M, Omega_L)
     return np.sqrt(6.67408e-11 * mass*1.989e30 / (Rvir*3.0857e19))*1e-3
+
+def integrand_HIprof_model1(r_norm, rb, Sigma_0):
+    # These HI profiles refer to my size--mass paper of 2019
+    Sigma_c = 1.0 # Msun/pc^2
+    Sigma_HI = np.ones(len(r_norm))*Sigma_0
+    rs =  (1-rb) / np.log(Sigma_0/Sigma_c) if rb<1 else 0.
+    fexp = np.where(r_norm>rb)[0]
+    Sigma_HI[fexp] *= np.exp(-(r_norm[fexp]-rb)/rs)
+    return r_norm * Sigma_HI
+
+def integrand_HIprof_model2(r_norm, rb, Sigma_0):
+    Sigma_c = 1.0 # Msun/pc^2
+    Sigma_HI = np.ones(len(r_norm))*Sigma_0
+    rS =  (1-rb) / np.sqrt(np.log(Sigma_0/Sigma_c)) if rb<1 else 0.
+    fexp = np.where(r_norm>rb)[0]
+    Sigma_HI[fexp] *= np.exp(-((r_norm[fexp]-rb)/rS)**2)
+    return r_norm * Sigma_HI
+
+def integrand_HIprof_model3(r_norm, rd, delta_logSigma):
+    logSigma_0H = delta_logSigma + np.log10(np.exp(1./rd))
+    Sigma_0H = 10**logSigma_0H
+    rd = min(rd, -1./np.log((2.6 + Sigma_0H**0.6)/(1.6*Sigma_0H - Sigma_0H**0.4))) # enforce limit
+    Sigma_HI = Sigma_0H * np.exp(-r_norm / rd) / (1 + Sigma_0H*np.exp((0.6-1.6*r_norm)/rd) - np.exp(1.6*(1-r_norm)/rd))
+    return r_norm * Sigma_HI
 
