@@ -4464,4 +4464,73 @@ def HI_surface_density_profiles_obs(dir='/Users/adam/HI profiles/'):
     return r_profile, SigmaHI_profile, rho, Sigma_cen, rHI, mHI, survey
 
         
+def DS_HI_profilefits(file_suffices, h, dir='./', alt=False):
+    # file_suffices is a list of length-2 lists giving the file number boundaries used to generate each file
+    Ngal_f_DS_total = 0
+    
+    for i, fno in enumerate(file_suffices):
+        fname = dir + 'HI_ProfileFits_DarkSage_'
+        fname = fname + str(fno[0]) + '_' + str(fno[1]) if not alt else fname + 'alt'
+        fname = fname + '.bin'
+        f = open(fname, 'rb')
+        Ngal_f_DS = np.fromfile(f, 'i4', 1)[0]
+        Ngal_f_DS_total += Ngal_f_DS
+        Nann_f_DS = np.fromfile(f, 'i4', 1)[0]
+        if not alt: Nfit_f_DS = np.fromfile(f, 'i4', 1)[0]
+        GalaxyIDs_f_DS = np.fromfile(f, 'i8', Ngal_f_DS)
+        if i==0:
+            fit1_Sig_f_DS = np.fromfile(f, 'f4', Ngal_f_DS)
+            fit1_rb_f_DS = np.fromfile(f, 'f4', Ngal_f_DS)
+            fit1_chi_f_DS = np.fromfile(f, 'f4', Ngal_f_DS)
+            fit1_residual_f_DS = np.fromfile(f,np.dtype(('f4',Nann_f_DS)), Ngal_f_DS)
+            if not alt: fit1_residual_fit_f_DS = np.fromfile(f, np.dtype(('f4',Nfit_f_DS)), Ngal_f_DS)
+            fit2_Sig_f_DS = np.fromfile(f, 'f4', Ngal_f_DS)
+            fit2_rb_f_DS = np.fromfile(f, 'f4', Ngal_f_DS)
+            fit2_chi_f_DS = np.fromfile(f, 'f4', Ngal_f_DS)
+            fit2_residual_f_DS = np.fromfile(f, np.dtype(('f4',Nann_f_DS)), Ngal_f_DS)
+            if not alt: fit2_residual_fit_f_DS = np.fromfile(f, np.dtype(('f4',Nfit_f_DS)), Ngal_f_DS)
+            fit3_dlSig_f_DS = np.fromfile(f, 'f4', Ngal_f_DS)
+            fit3_rd_f_DS = np.fromfile(f, 'f4', Ngal_f_DS)
+            fit3_chi_f_DS = np.fromfile(f, 'f4', Ngal_f_DS)
+            fit3_residual_f_DS = np.fromfile(f, np.dtype(('f4',Nann_f_DS)), Ngal_f_DS)
+            if not alt: 
+                fit3_residual_fit_f_DS = np.fromfile(f, np.dtype(('f4',Nfit_f_DS)), Ngal_f_DS)
+                StellarMass_f_DS = np.fromfile(f, 'f4', Ngal_f_DS) * 1e10/h
+                Type_f_DS = np.fromfile(f, 'i2', Ngal_f_DS)
+                MvirCen = np.fromfile(f, 'f4', Ngal_f_DS) * 1e10/h
+                mHI = np.fromfile(f, 'f4', Ngal_f_DS)
+                rHI = np.fromfile(f, 'f4', Ngal_f_DS)
+                fit3_mHI_f_DS = np.fromfile(f, 'f4', Ngal_f_DS)
+                DiscRadiiNorm = np.fromfile(f, np.dtype(('f4',Nann_f_DS)), Ngal_f_DS)
+        else:
+            fit1_Sig_f_DS = np.append(fit1_Sig_f_DS, np.fromfile(f, 'f4', Ngal_f_DS))
+            fit1_rb_f_DS = np.append(fit1_rb_f_DS, np.fromfile(f, 'f4', Ngal_f_DS))
+            fit1_chi_f_DS = np.append(fit1_chi_f_DS, np.fromfile(f, 'f4', Ngal_f_DS))
+            fit1_residual_f_DS =  np.append(fit1_residual_f_DS, np.fromfile(f, np.dtype(('f4',Nann_f_DS)), Ngal_f_DS), axis=0)
+            if not alt: fit1_residual_fit_f_DS = np.append(fit1_residual_fit_f_DS, np.fromfile(f, np.dtype(('f4',Nfit_f_DS)), Ngal_f_DS))
+            fit2_Sig_f_DS = np.append(fit2_Sig_f_DS, np.fromfile(f, 'f4', Ngal_f_DS))
+            fit2_rb_f_DS = np.append(fit2_rb_f_DS, np.fromfile(f, 'f4', Ngal_f_DS))
+            fit2_chi_f_DS = np.append(fit2_chi_f_DS, np.fromfile(f, 'f4', Ngal_f_DS))
+            fit2_residual_f_DS = np.append(fit2_residual_f_DS, np.fromfile(f, np.dtype(('f4',Nann_f_DS)), Ngal_f_DS), axis=0)
+            if not alt: fit2_residual_fit_f_DS = np.append(fit2_residual_fit_f_DS, np.fromfile(f, np.dtype(('f4',Nfit_f_DS)), Ngal_f_DS))
+            fit3_dlSig_f_DS = np.append(fit3_dlSig_f_DS, np.fromfile(f, 'f4', Ngal_f_DS))
+            fit3_rd_f_DS = np.append(fit3_rd_f_DS, np.fromfile(f, 'f4', Ngal_f_DS))
+            fit3_chi_f_DS = np.append(fit3_chi_f_DS, np.fromfile(f, 'f4', Ngal_f_DS))
+            fit3_residual_f_DS = np.append(fit3_residual_f_DS, np.fromfile(f, np.dtype(('f4',Nann_f_DS)), Ngal_f_DS), axis=0)
+            if not alt: 
+                fit3_residual_fit_f_DS = np.append(fit3_residual_fit_f_DS, np.fromfile(f, np.dtype(('f4',Nfit_f_DS)), Ngal_f_DS), axis=0)
+                StellarMass_f_DS = np.append(StellarMass_f_DS, np.fromfile(f, 'f4', Ngal_f_DS) * 1e10/h)
+                Type_f_DS = np.append(Type_f_DS, np.fromfile(f, 'i2', Ngal_f_DS))
+                MvirCen = np.append(MvirCen, np.fromfile(f, 'f4', Ngal_f_DS) * 1e10/h)
+                mHI = np.append(mHI, np.fromfile(f, 'f4', Ngal_f_DS))
+                rHI = np.append(rHI, np.fromfile(f, 'f4', Ngal_f_DS))
+                fit3_mHI_f_DS = np.append(fit3_mHI_f_DS, np.fromfile(f, 'f4', Ngal_f_DS))
+                DiscRadiiNorm = np.append(DiscRadiiNorm, np.fromfile(f, np.dtype(('f4',Nann_f_DS)), Ngal_f_DS), axis=0)
+
+        f.close()
+
+    if not alt:
+        return Ngal_f_DS_total, fit1_Sig_f_DS, fit1_rb_f_DS, fit1_chi_f_DS, fit1_residual_f_DS, fit1_residual_fit_f_DS, fit2_Sig_f_DS, fit2_rb_f_DS, fit2_chi_f_DS, fit2_residual_f_DS, fit2_residual_fit_f_DS, fit3_dlSig_f_DS, fit3_rd_f_DS, fit3_chi_f_DS, fit3_residual_f_DS, fit3_residual_fit_f_DS, StellarMass_f_DS, Type_f_DS, MvirCen, mHI, rHI, fit3_mHI_f_DS, DiscRadiiNorm
+    else:
+        return Ngal_f_DS_total, fit1_Sig_f_DS, fit1_rb_f_DS, fit1_chi_f_DS, fit1_residual_f_DS, fit2_Sig_f_DS, fit2_rb_f_DS, fit2_chi_f_DS, fit2_residual_f_DS
 

@@ -3310,9 +3310,61 @@ def integrand_HIprof_model2(r_norm, rb, Sigma_0):
     return r_norm * Sigma_HI
 
 def integrand_HIprof_model3(r_norm, rd, delta_logSigma):
+    rd, delta_logSigma = limits_model3(rd, delta_logSigma)
     logSigma_0H = delta_logSigma + np.log10(np.exp(1./rd))
     Sigma_0H = 10**logSigma_0H
-    rd = min(rd, -1./np.log((2.6 + Sigma_0H**0.6)/(1.6*Sigma_0H - Sigma_0H**0.4))) # enforce limit
     Sigma_HI = Sigma_0H * np.exp(-r_norm / rd) / (1 + Sigma_0H*np.exp((0.6-1.6*r_norm)/rd) - np.exp(1.6*(1-r_norm)/rd))
     return r_norm * Sigma_HI
 
+def limits_model3(rd_in, delta_logSigma_in):
+    Sigma_0H = 10**delta_logSigma_in * np.exp(1./rd_in)
+#    if Sigma_0H<4.2193: print 'Sigma_0H reset from', Sigma_0H, 'to 4.2193'
+    Sigma_0H = max(Sigma_0H, 4.2193) # enforce limit
+    rd = max(rd_in, 1./np.log(Sigma_0H))# enforce limit
+    rd = min(rd, -1./np.log((2.6 + Sigma_0H**0.6)/(1.6*Sigma_0H - Sigma_0H**0.4))) # enforce limit
+    delta_logSigma = np.log10(Sigma_0H * np.exp(-1./rd))
+    if not np.isfinite(delta_logSigma): delta_logSigma = min(1e-10, delta_logSigma_in)  # set to small number in case the exponential blows up
+#    if not np.allclose(rd_in, rd): 
+#        print '\nrd changed from', rd_in, 'to', rd
+#    if not np.allclose(delta_logSigma_in, delta_logSigma): 
+#        print '\ndelta_logSigma changed from', delta_logSigma_in, 'to', delta_logSigma
+#        print 'rd_in, rd, exp(-1/rd) =', rd_in, rd, np.exp(-1./rd)
+    return rd, delta_logSigma
+
+def mHI_model1(rb, Sigma_0, rHI, Sigma_c=1.):
+    rs =  (1-rb) / np.log(Sigma_0/Sigma_c)
+    if type(rs)==np.ndarray: rs[rb==1] = 0
+    return np.pi * Sigma_0 * (rb**2 + 2*rs*(rs+rb)) * rHI**2
+
+def mHI_model2(rb, Sigma_0, rHI, Sigma_c=1.):
+    rS =  (1-rb) / np.sqrt(np.log(Sigma_0/Sigma_c))
+    return np.pi * Sigma_0 * (rb**2 + rS*(rS+np.sqrt(np.pi)*rb)) * rHI**2
+
+def mHI_model3(rd, deltaLogSigma_0, rHI):
+    # Assuming Sigma_0 is normalised by Msun/pc^2
+    import mpmath as mm
+    logSigma_0H = deltaLogSigma_0 + np.log10(np.exp(1./rd))
+    Sigma_0 = 10**logSigma_0H
+    a1, a3 = 0.625, 0.625
+    a2 = 1.0
+    b1, b2 = 1.625, 1.625
+    if type(rd)==np.ndarray and type(Sigma_0)==np.ndarray:
+        hyper = np.zeros(len(rd))
+        for i in xrange(len(rd)):
+            c = np.exp(1.6/rd[i]) - Sigma_0[i]*np.exp(0.6/rd[i])
+            if np.isfinite(c): hyper[i] = mm.hyper([a1,a2,a3],[b1,b2],c)
+    elif type(rd)==np.ndarray:
+        hyper = np.zeros(len(rd))
+        for i in xrange(len(rd)):
+            c = np.exp(1.6/rd[i]) - Sigma_0*np.exp(0.6/rd[i])
+            if np.isfinite(c): hyper[i] = mm.hyper([a1,a2,a3],[b1,b2],c)
+    elif type(Sigma_0)==np.ndarray:
+        hyper = np.zeros(len(Sigma_0))
+        for i in xrange(len(Sigma_0)):
+            c = np.exp(1.6/rd) - Sigma_0[i]*np.exp(0.6/rd)
+            if np.isfinite(c): hyper[i] = mm.hyper([a1,a2,a3],[b1,b2],c)
+    else:
+        c = np.exp(1.6/rd) - Sigma_0*np.exp(0.6/rd)
+        hyper = mm.hyper([a1,a2,a3],[b1,b2],c)
+    
+    return 1.60769 * np.pi * Sigma_0 * rd**2 * hyper * rHI**2
