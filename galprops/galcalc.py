@@ -3368,3 +3368,16 @@ def mHI_model3(rd, deltaLogSigma_0, rHI):
         hyper = mm.hyper([a1,a2,a3],[b1,b2],c)
     
     return 1.60769 * np.pi * Sigma_0 * rd**2 * hyper * rHI**2
+
+def interp_2Darray(xval, xarr, yarr, rising=True):
+    # Linearly interpolate across each row of a 2D array with a corresponding 2D array for the same value
+    # Currently assumes the function is always increasing at the point where it is to be interpolated
+    (nrow, ncol) = xarr.shape
+    (row, col) = np.where(xarr<xval) if rising else np.where(xarr>xval)
+    filt = np.append(np.diff(row)>0, True)
+    row, col = row[filt], col[filt]
+    yout = np.zeros(nrow)
+    row, col = row[col<ncol-1], col[col<ncol-1]
+    gradient = (yarr[row,col+1]-yarr[row,col]) / (xarr[row,col+1]-xarr[row,col])
+    yout[row] = yarr[row,col] + gradient * (xval - xarr[row,col])
+    return yout

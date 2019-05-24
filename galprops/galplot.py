@@ -165,38 +165,38 @@ def circle(r,colour='white',centre=[0,0],lw=3,ls='-',half='f',inclination=0,fill
 
 
 
-def savepng(filename,xpix=2560,ypix=1440,ss=27,xpixplot=1024,ypixplot=None,fsize=28,addpdf=False,transparent=False, fig=None):
-	# Save a plotted image a png file in the working directory with optimized resolution
-	
-	###  INPUTS ###
-	# filename = filename of image to be saved
-	
-	# xpix = horizontal pixels of monitor
-	# ypix = vertical pixels of monitor
-	# ss = diagonal screen size in inches.  DEFAULTS SET TO MY SWINBURNE MAC
-	# xpixplot = saved image size along the x-axis in pixels
-	# fsize = fontsize of numbers in the plot
-	### ------- ###
-	
-	#rcParams.update({'font.size': int(xpixplot/80.)}) # Set size of numbers on graph to be dependent on image size.
-	#rcParams.update({'font.size': fsize})
-	
-	if ypixplot==None:
-		ypixplot = int(xpixplot*9./16)
-	
-	mydpi = np.sqrt(xpix**2 + ypix**2)/ss  # The dpi of your screen
-	xinplot = xpixplot*(9./7.)/mydpi
-	yinplot = ypixplot*(9./7.)/mydpi
-	if fig is None: fig = plt.gcf()
-	fig.set_size_inches(xinplot,yinplot)
-	fig.set_dpi(mydpi)
-	
-	
-	filename = str(filename)
-	if filename[-4:] != '.png':
-		filename = filename+'.png'
-	fig.savefig(filename, dpi=mydpi, bbox_inches='tight', transparent=transparent)
-	if addpdf==True: fig.savefig(filename[:-4]+'.pdf', bbox_inches='tight')
+def savepng(filename,xpix=2560,ypix=1440,ss=27,xpixplot=1024,ypixplot=None,fsize=28,addpdf=False,transparent=False, fig=None, facecolor=None):
+    # Save a plotted image a png file in the working directory with optimized resolution
+
+    ###  INPUTS ###
+    # filename = filename of image to be saved
+
+    # xpix = horizontal pixels of monitor
+    # ypix = vertical pixels of monitor
+    # ss = diagonal screen size in inches.  DEFAULTS SET TO MY SWINBURNE MAC
+    # xpixplot = saved image size along the x-axis in pixels
+    # fsize = fontsize of numbers in the plot
+    ### ------- ###
+
+    #rcParams.update({'font.size': int(xpixplot/80.)}) # Set size of numbers on graph to be dependent on image size.
+    #rcParams.update({'font.size': fsize})
+
+    if ypixplot==None:
+        ypixplot = int(xpixplot*9./16)
+
+    mydpi = np.sqrt(xpix**2 + ypix**2)/ss  # The dpi of your screen
+    xinplot = xpixplot*(9./7.)/mydpi
+    yinplot = ypixplot*(9./7.)/mydpi
+    if fig is None: fig = plt.gcf()
+    fig.set_size_inches(xinplot,yinplot)
+    fig.set_dpi(mydpi)
+    if facecolor is None: facecolor = fig.get_facecolor()
+
+    filename = str(filename)
+    if filename[-4:] != '.png':
+        filename = filename+'.png'
+    fig.savefig(filename, dpi=mydpi, bbox_inches='tight', transparent=transparent, facecolor=facecolor)
+    if addpdf==True: fig.savefig(filename[:-4]+'.pdf', bbox_inches='tight', transparent=transparent, facecolor=facecolor)
 
 
 def axlogic(x,y,yscale='linear'):

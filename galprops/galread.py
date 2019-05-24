@@ -4413,6 +4413,7 @@ def HI_surface_density_profiles_obs(dir='/Users/adam/HI profiles/'):
 
     Sigma_cen = np.zeros(ntot)
     rHI = np.zeros(ntot)
+    rHI50 = np.zeros(ntot)
     mHI = np.zeros(ntot)
     r_cen = np.zeros(ntot)
     survey = []
@@ -4449,6 +4450,7 @@ def HI_surface_density_profiles_obs(dir='/Users/adam/HI profiles/'):
         r_profile += [rad/rHI[i]]
         SigmaHI_profile += [SigHI]
         mHI[i] = np.sum(SigHI*area)
+        rHI50[i] = np.interp(0.5, np.append(0,np.cumsum(SigHI*area)/mHI[i]), annuli)
         
         if i<nT:
             survey += [T[i][0][0]]
@@ -4461,7 +4463,7 @@ def HI_surface_density_profiles_obs(dir='/Users/adam/HI profiles/'):
     f = (mHI>0) * (rHI > 0)
     rho, Sigma_cen, mHI, rHI = rho[f], Sigma_cen[f], mHI[f], rHI[f]
     survey = np.array(survey)
-    return r_profile, SigmaHI_profile, rho, Sigma_cen, rHI, mHI, survey
+    return r_profile, SigmaHI_profile, rho, Sigma_cen, rHI, mHI, survey, rHI50
 
         
 def DS_HI_profilefits(file_suffices, h, dir='./', alt=False):
