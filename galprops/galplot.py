@@ -44,7 +44,7 @@ def contour(x,y,Nbins=None,weights=None,range=None,Nlevels=25,c='k',ls='-',lw=2,
 	        zz = np.reshape(kernel(positions).T, xx.shape) # A better version of im essentially
 	        xp, yp = xedges, yedges
 	    else:
-	        if len(x)<1e7: print 'Warning: smoothing with lots of particles will take time!'
+	        if len(x)>1e7: print 'Warning: smoothing with lots of particles will take time!'
 	        k = gc.sphere2dk(3, 1, 7)
 	        im = ss.convolve2d(im,k,mode='same') # Smooth the image for cleaner contours
 	        zz = im.transpose()
