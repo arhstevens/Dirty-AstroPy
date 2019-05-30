@@ -4394,17 +4394,18 @@ def xGASS_xCOLDGASS(indir=None, h=0.6774):
 def HI_surface_density_profiles_obs(dir='/Users/adam/HI profiles/'):
     
     # Read THINGS and LITTLE THINGS data
-    import pandas as PDF
+#    import pandas as PDF
     from rpy2.robjects import r
     from rpy2.robjects import pandas2ri
     pandas2ri.activate()
     r.load(dir+'DataAdamStevens.img')
     T = pandas2ri.ri2py(r.galaxy)
-    
+
     # Read Bluedisk and LVHIS data
     import pyfits
     B = pyfits.open(dir+'Bluedisk.fits')[1].data
     L = pyfits.open(dir+'LVHIS.fits')[1].data
+    Lc = pyfits.open(dir+'LVHIS_cat.fits')[1].data
 
     nT = len(T)
     nB = len(B)
@@ -4424,15 +4425,18 @@ def HI_surface_density_profiles_obs(dir='/Users/adam/HI profiles/'):
         if i<nT:
             rad = np.array(T[i][-2])
             SigHI = np.array(T[i][-1])
+            mHI[i] = np.float32(T[i][5])[0]
         elif i<nT+nB:
             j = i-nT
-            rad = B['RADIUS'][j,:]
+            rad = B['RADIUS'][j,:] * np.pi / (180*60*60) * B['DIS'][j] * 1e6
             SigHI = B['MU'][j,:]
+            mHI[i] = 10**B['MHI'][j]
         else:
             j = i-nT-nB
             if L['R1'][j]/L['BMAJ'][j] < 1.5: continue
-            rad = L['RADI'][j,:]
+            rad = L['RADI'][j,:] * np.pi / (180*60*60) * Lc['DIS'][j] * 1e6
             SigHI = L['DENS'][j,:]
+            mHI[i] = 10**L['MHI_TOT'][j]
 
         f = np.isfinite(rad) * np.isfinite(SigHI)
         rad, SigHI = rad[f], SigHI[f]
@@ -4446,10 +4450,11 @@ def HI_surface_density_profiles_obs(dir='/Users/adam/HI profiles/'):
             continue
 #        rHI[i] = np.interp(0., np.log10(SigHI[w-1:w+1])[::-1], rad[w-1:w+1][::-1])
         rHI[i] = np.interp(1., SigHI[w-1:w+1][::-1], rad[w-1:w+1][::-1])
+#        if i>=nT and i<nT+nB: print 'rHI calc v read:', rHI[i], L['R1'][j]
         Sigma_cen[i] = min(np.sum((SigHI*area)[rad<=r_cen[i]]) / (np.pi * r_cen[i]**2), np.max(SigHI))
         r_profile += [rad/rHI[i]]
         SigmaHI_profile += [SigHI]
-        mHI[i] = np.sum(SigHI*area)
+        mHI[i] = max( mHI[i], np.sum(SigHI*area) )
         rHI50[i] = np.interp(0.5, np.append(0,np.cumsum(SigHI*area)/mHI[i]), annuli)
         
         if i<nT:
@@ -4461,7 +4466,7 @@ def HI_surface_density_profiles_obs(dir='/Users/adam/HI profiles/'):
 
     rho = r_cen / rHI
     f = (mHI>0) * (rHI > 0)
-    rho, Sigma_cen, mHI, rHI = rho[f], Sigma_cen[f], mHI[f], rHI[f]
+    rho, Sigma_cen, mHI, rHI, rHI50 = rho[f], Sigma_cen[f], mHI[f], rHI[f], rHI50[f]
     survey = np.array(survey)
     return r_profile, SigmaHI_profile, rho, Sigma_cen, rHI, mHI, survey, rHI50
 
