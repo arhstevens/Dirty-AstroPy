@@ -4450,10 +4450,12 @@ def HI_surface_density_profiles_obs(dir='/Users/adam/HI profiles/'):
             continue
 #        rHI[i] = np.interp(0., np.log10(SigHI[w-1:w+1])[::-1], rad[w-1:w+1][::-1])
         rHI[i] = np.interp(1., SigHI[w-1:w+1][::-1], rad[w-1:w+1][::-1])
-#        if i>=nT and i<nT+nB: print 'rHI calc v read:', rHI[i], L['R1'][j]
+#        if i>=nT and i<nT+nB: print 'rHI calc v read:', rHI[i], B['R1'][j] * np.pi / (180*60*60) * B['DIS'][j] * 1e6
+#        if i>=nT+nB: print 'rHI calc v read:', rHI[i], L['R1'][j] * np.pi / (180*60*60) * Lc['DIS'][j] * 1e6
         Sigma_cen[i] = min(np.sum((SigHI*area)[rad<=r_cen[i]]) / (np.pi * r_cen[i]**2), np.max(SigHI))
         r_profile += [rad/rHI[i]]
         SigmaHI_profile += [SigHI]
+#        print 'mHI read/calc, read/calc(r<rHI):', mHI[i] / np.sum(SigHI*area), mHI[i] / np.sum((SigHI*area)[rad<=rHI[i]])
         mHI[i] = max( mHI[i], np.sum(SigHI*area) )
         rHI50[i] = np.interp(0.5, np.append(0,np.cumsum(SigHI*area)/mHI[i]), annuli)
         
