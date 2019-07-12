@@ -3882,6 +3882,7 @@ def csv_dict(fname, skiprows, dtypes, keylist=None, delimiter=',', head_delimite
     keys = line.split(head_delimiter)
     keys[-1] = keys[-1][:-1] # gets rid of \n at the end
     if keylist==None: keylist = keys
+    while keys[0][0]=='#' or keys[0][0]==' ': keys[0] = keys[0][1:] # get rid of comment mark for header if present
     print 'Number of properties =', len(keys)
     dict = {}
     for i, key in enumerate(keys):
@@ -4543,3 +4544,10 @@ def DS_HI_profilefits(file_suffices, h, dir='./', alt=False):
     else:
         return Ngal_f_DS_total, fit1_Sig_f_DS, fit1_rb_f_DS, fit1_chi_f_DS, fit1_residual_f_DS, fit2_Sig_f_DS, fit2_rb_f_DS, fit2_chi_f_DS, fit2_residual_f_DS
 
+def Pearson_MS(h=0.6774):
+    z_av = np.array([0.7, 0.66, 0.95, 1.24, 1.59, 2.02, 2.59, 3.23, 4.34, 5.18])
+    alpha = np.array([0.43, 0.50, 0.46, 0.48, 0.51, 0.74, 0.83, 0.7, 0.93, 1.0])
+    beta = np.array([0.58, 0.92, 1.10, 1.22, 1.31, 1.39, 1.59, 1.77, 1.87, 1.92]) # log(Msun/yr)
+    hfrac = 2*np.log10(0.704/h)
+    beta -= (hfrac*(1-alpha)) # normalization changes due to different little h assumption
+    return z_av, alpha, beta

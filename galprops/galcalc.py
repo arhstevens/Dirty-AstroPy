@@ -2840,7 +2840,7 @@ def fH2_Krumholz_ParticleBasis(SFR,m,Zgas,nH,Density_Tot,T,fneutral,redshift):
 
 def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T', UVB='FG09-Dec11', U_MW_z0=None, rho_sd=0.01, col=2, gamma_fixed=None, mu_fixed=None, S_Jeans=True, T_CNMmax=243., Pth_Lagos=False, Jeans_cold=False, Sigma_SFR0=1e-9, UV_MW=None, X=None, UV_pos=None, f_esc=0.15, f_ISM=None):
     """
-        This is my own version of calculating the atomic- and molecular-hydrogen masses of gas particles/cells from simulations.  This was originally adapted from the Python scripts written by Claudia Lagos and Michelle Furlong, and followed the basis of Appendix A of Lagos et al (2015b).  This has been vastly modified and is still being developed further.  This has been developed in tandem with Benedikt Diemer's code for Illustris-TNG, and has been tested to produce the same results. 
+        This is my own version of calculating the atomic- and molecular-hydrogen masses of gas particles/cells from simulations.  This was originally adapted from the Python scripts written by Claudia Lagos and Michelle Furlong, and followed the basis of Appendix A of Lagos et al (2015b).  This has since been vastly modified and is still being developed further.  This has been developed in tandem with Benedikt Diemer's code for Illustris-TNG, and has been tested to produce the same results.  Please cite Stevens et al. (2019, MNRAS, 483, 5334) if you use this function for a publication (also note the erratum to that paper: 2019, MNRAS, 484, 5499).
         Expects each non-default input as an array, except for reshift.  Input definitions and units are as follows:
         mass = total mass of gas particles/cells [M_sun]
         SFR = star formation rate of particles/cells [M_sun/yr]
@@ -3381,3 +3381,33 @@ def interp_2Darray(xval, xarr, yarr, rising=True):
     gradient = (yarr[row,col+1]-yarr[row,col]) / (xarr[row,col+1]-xarr[row,col])
     yout[row] = yarr[row,col] + gradient * (xval - xarr[row,col])
     return yout
+
+
+def alpha_CO(logOH, logSFR, logMstar, z, h):
+    # Calcuate the conversion factor for CO(1-0) luminosity to H2 mass, based on Accurso et al. (2017, eq 25).  Uncertainty introduced is 0.165 dex.
+    
+    z_MS, slope_MS, norm_MS = gr.Pearson_MS(h) # Evolution of main sequence according to Person+18
+    slopes = np.interp(z, z_MS, slope_MS)
+    norms = np.interp(z, z_MS, norm_MS)
+    delta_MS = logSFR - (slopes*(logMstar-10.5) + norms)
+
+    log_alphaCO = 14.752 - 1.623*logOH + 0.062*delta_MS
+    alphaCO = 10**log_alphaCO * 0.76 # get rid of stupid helium contribution
+    return alphaCO
+
+
+def H2_from_CO(LCO, logSFR, logMstar, z, h, max_it=10):
+    # covert CO luminosity to H2 mass, provided other properties are supplied.  Assumes LCO is for the 1->0 transition and is in units of K*km*pc^2/s.  Uses gas fraction and redshift to approximate metallicity (loosely based on Fig. 9 of Torrey et al. 2019), then applies the conversion factor of Accurso et al. (2017, eq 25).
+    
+    z_MS, slope_MS, norm_MS = gr.Pearson_MS(h) # Evolution of main sequence according to Person+18
+    slopes = np.interp(z, z_MS, slope_MS)
+    norms = np.interp(z, z_MS, norm_MS)
+    delta_MS = logSFR - (slopes*(logMstar-10.5) + norms)
+
+    RHS1 = 14.752 + 0.062*delta_MS + np.log10(0.76)
+    RHS2 = 8.1 + 0.2*(logMstar-8.) - (np.log10(LCO)-logMstar) + 1.5*np.log10(0.5*(1+z)) + np.log10(0.76)
+    logOH = (RHS1 - RHS2) / 0.623
+    log_alphaCO = 14.752 - 1.623*logOH + 0.062*delta_MS
+    log_MH2 = log_alphaCO + np.log10(LCO*0.76) 
+    
+    return log_MH2
