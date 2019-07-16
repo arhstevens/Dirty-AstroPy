@@ -3392,22 +3392,28 @@ def alpha_CO(logOH, logSFR, logMstar, z, h):
     delta_MS = logSFR - (slopes*(logMstar-10.5) + norms)
 
     log_alphaCO = 14.752 - 1.623*logOH + 0.062*delta_MS
-    alphaCO = 10**log_alphaCO * 0.76 # get rid of stupid helium contribution
+    alphaCO = 10**log_alphaCO * 0.76 # get rid of helium contribution
     return alphaCO
 
 
-def H2_from_CO(LCO, logSFR, logMstar, z, h, max_it=10):
+def H2_from_CO(LCO, logSFR, logMstar, z, h):
     # covert CO luminosity to H2 mass, provided other properties are supplied.  Assumes LCO is for the 1->0 transition and is in units of K*km*pc^2/s.  Uses gas fraction and redshift to approximate metallicity (loosely based on Fig. 9 of Torrey et al. 2019), then applies the conversion factor of Accurso et al. (2017, eq 25).
     
     z_MS, slope_MS, norm_MS = gr.Pearson_MS(h) # Evolution of main sequence according to Person+18
-    slopes = np.interp(z, z_MS, slope_MS)
-    norms = np.interp(z, z_MS, norm_MS)
-    delta_MS = logSFR - (slopes*(logMstar-10.5) + norms)
+    i_z = np.searchsorted(z_MS, z)
+    
+    MS_low = slope_MS[i_z]*(logMstar-10.5) + norm_MS[i_z]
+    MS_high = slope_MS[i_z+1]*(logMstar-10.5) + norm_MS[i_z+1]
+    MS_interp = MS_low + (z-z_MS[i_z]) * (MS_high-MS_low)/(z_MS[i_z+1]-z_MS[i_z])
+    delta_MS = logSFR - MS_interp
 
-    RHS1 = 14.752 + 0.062*delta_MS + np.log10(0.76)
-    RHS2 = 8.1 + 0.2*(logMstar-8.) - (np.log10(LCO)-logMstar) + 1.5*np.log10(0.5*(1+z)) + np.log10(0.76)
+    RHS1 = 14.752 + 0.062*delta_MS
+    RHS2 = 8.1 + 0.2*(logMstar-8.) - (np.log10(LCO)-logMstar) + 1.5*np.log10(0.5*(1+z))
     logOH = (RHS1 - RHS2) / 0.623
-    log_alphaCO = 14.752 - 1.623*logOH + 0.062*delta_MS
-    log_MH2 = log_alphaCO + np.log10(LCO*0.76) 
+    log_alphaCO = 14.752 - 1.623*logOH + 0.062*delta_MS + np.log10(0.76) # no helium contribution
+    log_MH2 = log_alphaCO + np.log10(LCO)
+    
+#    log_MH2_sanity = -6.865 - 0.0995*delta_MS + 3.126*logMstar + 3.908*np.log10(0.5*(1+z)) - 1.605*np.log10(LCO)
+#    print 'sanity check', log_MH2, log_MH2_sanity
     
     return log_MH2
