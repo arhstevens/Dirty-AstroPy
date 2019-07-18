@@ -3408,12 +3408,67 @@ def H2_from_CO(LCO, logSFR, logMstar, z, h):
     delta_MS = logSFR - MS_interp
 
     RHS1 = 14.752 + 0.062*delta_MS
-    RHS2 = 8.1 + 0.2*(logMstar-8.) - (np.log10(LCO)-logMstar) + 1.5*np.log10(0.5*(1+z))
-    logOH = (RHS1 - RHS2) / 0.623
+    coeff_gf = 1.2
+    RHS2 = 8.1 + 0.2*(logMstar-8.) + 1.5*np.log10(0.5*(1+z)) - coeff_gf*(np.log10(LCO)-logMstar)
+    logOH = (RHS1 - RHS2/coeff_gf) / (1.623 - 1./coeff_gf)
+    
+    try:
+        logOH[logOH>9.2] = 9.2
+        logOH[logOH<7.2] = 7.2
+    except TypeError:
+        logOH = min(max(7.2, logOH), 9.2)
+    
     log_alphaCO = 14.752 - 1.623*logOH + 0.062*delta_MS + np.log10(0.76) # no helium contribution
     log_MH2 = log_alphaCO + np.log10(LCO)
     
 #    log_MH2_sanity = -6.865 - 0.0995*delta_MS + 3.126*logMstar + 3.908*np.log10(0.5*(1+z)) - 1.605*np.log10(LCO)
 #    print 'sanity check', log_MH2, log_MH2_sanity
     
-    return log_MH2
+    return log_MH2, logOH
+
+
+def fit_divide_SFMS(mass_stars, SFR, sSFR_init = 10**-10.5):
+    # Find and fit a star-forming main sequence, then find a dividing line for star-forming and quiescent galaxies
+    logSM = np.log10(mass_stars)
+
+    # fit SF main sequence
+    bins = np.arange(np.min(logSM), np.max(logSM)+0.2, 0.2)
+    f = (SFR >= sSFR_init * mass_stars) * (np.isfinite(SFR)) * (logSM<10.5)
+    f2 = ~f * np.isfinite(SFR) * (SFR>0)
+    p = np.polyfit(np.log10(mass_stars[f]), np.log10(SFR[f]), 1)
+    p2 = np.polyfit(np.log10(mass_stars[f2]), np.log10(SFR[f2]), 1)
+
+    nbins = len(bins)-1
+
+    p3 = np.array([2.,2.])
+    p3_old = np.array([1.,1.])
+
+    its = 0
+    while not np.allclose(p3, p3_old, rtol=1e-2, atol=1e-5):
+        its += 1
+        p3_old = p3
+        minima = -40*np.ones(nbins)
+        for i in xrange(nbins):
+            f = (mass_stars>=10**bins[i]) * (mass_stars<10**bins[i+1]) * (np.log10(SFR)<= p[0]*np.log10(mass_stars)+p[1]) * (np.log10(SFR)>= p2[0]*np.log10(mass_stars)+p2[1])
+            counts, edges = np.histogram(np.log10(SFR[f]), bins=12)
+            grad = abs(np.diff(counts))
+            gradgrad = np.diff(np.diff(counts))
+            try:
+                w = np.where(counts==np.min(counts))[0][0]
+                minima[i] = 0.5*(edges[w] + edges[w+1])
+            except:
+                pass
+
+        bincen = 0.5*(bins[1:]+bins[:-1])
+        p3 = np.polyfit(bincen[minima>-40], minima[minima>-40], 1)
+        sf = (np.log10(SFR) >= p3[0]*np.log10(mass_stars) + p3[1])
+        if its>990: print its, np.allclose(p3, p3_old, rtol=1e-2, atol=1e-5), p3, p3_old, chisqr(minima[minima>-40], p3[0]*bincen[minima>-40]+p3[1])
+        if its==1000: break
+        
+        f = (SFR >= sSFR_init * mass_stars) * (np.isfinite(SFR)) * (logSM<10.5)
+        f2 = ~f * np.isfinite(SFR) * (SFR>0)
+        p = np.polyfit(np.log10(mass_stars[f]), np.log10(SFR[f]), 1)
+        p2 = np.polyfit(np.log10(mass_stars[f2]), np.log10(SFR[f2]), 1)
+
+    # parameters for main sequence, red sequence, division line
+    return p, p2, p3
