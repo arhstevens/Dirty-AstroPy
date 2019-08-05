@@ -4645,6 +4645,22 @@ def TNG_gasprops(fname, highz=True):
             dict['SFR_short'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
             dict['SFR_long'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
 
+            if 'v3' not in fname: # applies for v4 and above
+                dict['metallicity_molecular_GK11'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+                dict['metallicity_molecular_K13'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+                dict['metallicity_molecular_GD14'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+
+                dict['Hfrac_molecular_GK11'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+                dict['Hfrac_molecular_K13'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+                dict['Hfrac_molecular_GD14'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+
+                dict['Cfrac_molecular_GK11'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+                dict['Cfrac_molecular_K13'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+                dict['Cfrac_molecular_GD14'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+
+                dict['Ofrac_molecular_GK11'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+                dict['Ofrac_molecular_K13'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+                dict['Ofrac_molecular_GD14'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
 
     f.close()
     return dict
