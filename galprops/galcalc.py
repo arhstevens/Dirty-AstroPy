@@ -3408,7 +3408,7 @@ def H2_from_CO(LCO, logSFR, logMstar, z, h):
     delta_MS = logSFR - MS_interp
 
     # momentarily hard-coding this read-in for ease
-    Zz_array = np.loadtxt('/Users/adam/Illustris/zhigh_gasprops/MassMetFits.txt')[:,::-1]
+    Zz_array = np.loadtxt('/Users/adam/Illustris/zhigh_gasprops/MassMetFits.txt')[::-1,:]
 
 #    RHS1 = 14.752 + 0.062*delta_MS
 #    coeff_gf = 1.2
@@ -3417,19 +3417,31 @@ def H2_from_CO(LCO, logSFR, logMstar, z, h):
 
     i_z = np.searchsorted(Zz_array[:,0], z)
 #    print i_z
-#    i_z[i_z==len(Zz_array[:,0])] -= 1
+    try:
+        i_z[i_z==len(Zz_array[:,0])] -= 1
+    except TypeError:
+        if i_z==len(Zz_array[:,0]): i_z -= 1
     b0, b1, b2 = Zz_array[i_z,1], Zz_array[i_z,2], Zz_array[i_z,3]
     logOH_low = ( b1*(14.752 + 0.062*delta_MS) +
                  (b2 + b0*logMstar + b1*(np.log10(LCO)-logMstar)) ) / (1.623*b1+1.)
-    print logOH_low
     try:
         b0, b1, b2 = Zz_array[i_z+1,1], Zz_array[i_z+1,2], Zz_array[i_z+1,3]
-        logOH_high = ( b1*(14.752 + 0.062*delta_MS) + (b2 + b0*logMstar + b1*(np.log10(LCO)-logMstar)) ) / (1.623*b1+1.)
+        logOH_high = ( b1*(14.752 + 0.062*delta_MS) + 
+                      (b2 + b0*logMstar + b1*(np.log10(LCO)-logMstar)) ) / (1.623*b1+1.)
         logOH = logOH_low + (z-Zz_array[i_z,0]) * (logOH_high-logOH_low)/(Zz_array[i_z+1,0]-Zz_array[i_z,0])
     except IndexError:
         logOH = 1.0*logOH_low
 
-    
+    # Get the approximate metallicity if they're on the other track (i.e. quiescent systems that have metallicity independent from gas fraction)
+    c1, c2 = Zz_array[i_z,4], Zz_array[i_z,5]
+    logOH_low = c1*logMstar + c2
+    try:
+        c1, c2 = Zz_array[i_z+1,4], Zz_array[i_z+1,5]
+        logOH_high = c1*logMstar + c2
+        logOH_alt = logOH_low + (z-Zz_array[i_z,0]) * (logOH_high-logOH_low)/(Zz_array[i_z+1,0]-Zz_array[i_z,0])
+    except IndexError:
+        logOH_alt = 1.0*logOH_low
+
 
 #    try:
 #        logOH[logOH>9.2] = 9.2
@@ -3439,10 +3451,28 @@ def H2_from_CO(LCO, logSFR, logMstar, z, h):
     
     log_alphaCO = 14.752 - 1.623*logOH + 0.062*delta_MS + np.log10(0.76) # no helium contribution
     log_MH2 = log_alphaCO + np.log10(LCO)
-    
+
+    log_alphaCO_alt = 14.752 - 1.623*logOH_alt + 0.062*delta_MS + np.log10(0.76) # no helium contribution
+    log_MH2_alt = log_alphaCO_alt + np.log10(LCO)
+
+
+    # If gas fraction is outside the nominal fitted range for metallicity, use the independent estimate
+    logGF = log_MH2 - logMstar
+    try:
+        f = (logGF>0.5) + (logGF<-2)
+        log_MH2[f] = log_MH2_alt[f]
+        logOH[f] = logOH_alt[f]
+    except TypeError:
+        if logGF>0.5 or logGF<-2:
+            log_MH2 = 1.0*log_MH2_alt
+            logOH = 1.0*logOH_alt
+
+
 #    log_MH2_sanity = -6.865 - 0.0995*delta_MS + 3.126*logMstar + 3.908*np.log10(0.5*(1+z)) - 1.605*np.log10(LCO)
 #    print 'sanity check', log_MH2, log_MH2_sanity
     
+#    return log_MH2, logOH, log_MH2_alt, logOH_alt
+#    return log_MH2_alt, logOH_alt
     return log_MH2, logOH
 
 
