@@ -3309,12 +3309,16 @@ def integrand_HIprof_model2(r_norm, rb, Sigma_0):
     Sigma_HI[fexp] *= np.exp(-((r_norm[fexp]-rb)/rS)**2)
     return r_norm * Sigma_HI
 
-def integrand_HIprof_model3(r_norm, rd, delta_logSigma):
+
+def logHIprof_model3(r_norm, rd, delta_logSigma):
     rd, delta_logSigma = limits_model3(rd, delta_logSigma)
     logSigma_0H = delta_logSigma + np.log10(np.exp(1./rd))
     Sigma_0H = 10**logSigma_0H
     Sigma_HI = Sigma_0H * np.exp(-r_norm / rd) / (1 + Sigma_0H*np.exp((0.6-1.6*r_norm)/rd) - np.exp(1.6*(1-r_norm)/rd))
-    return r_norm * Sigma_HI
+    return np.log10(Sigma_HI)
+
+def integrand_HIprof_model3(r_norm, rd, delta_logSigma):
+    return r_norm * 10**logHIprof_model3(r_norm, rd, delta_logSigma)
 
 def limits_model3(rd_in, delta_logSigma_in):
     Sigma_0H = 10**delta_logSigma_in * np.exp(1./rd_in)

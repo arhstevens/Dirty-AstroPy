@@ -4421,6 +4421,7 @@ def HI_surface_density_profiles_obs(dir='/Users/adam/HI profiles/'):
     survey = []
     r_profile = []
     SigmaHI_profile = []
+    gal_name = []
 
     for i in xrange(ntot):
         if i<nT:
@@ -4462,16 +4463,24 @@ def HI_surface_density_profiles_obs(dir='/Users/adam/HI profiles/'):
         
         if i<nT:
             survey += [T[i][0][0]]
+            gal_name += [T[i][1][0]]
         elif i<nT+nB:
             survey += ['BlueDisk']
+            gal_name += [B['NAME'][j]]
         else:
             survey += ['LVHIS']
+            gname = Lc['NAME'][j]
+            if gname[0]==' ': 
+                gname = gname[1:]
+            elif gname[-1]==' ': 
+                gname = gname[:gname.find(' ')]
+            gal_name += [gname]
 
     rho = r_cen / rHI
     f = (mHI>0) * (rHI > 0)
     rho, Sigma_cen, mHI, rHI, rHI50 = rho[f], Sigma_cen[f], mHI[f], rHI[f], rHI50[f]
     survey = np.array(survey)
-    return r_profile, SigmaHI_profile, rho, Sigma_cen, rHI, mHI, survey, rHI50
+    return r_profile, SigmaHI_profile, rho, Sigma_cen, rHI, mHI, survey, rHI50, gal_name
 
         
 def DS_HI_profilefits(file_suffices, h, dir='./', alt=False):
