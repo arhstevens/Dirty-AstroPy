@@ -19,67 +19,68 @@ def figure():
 
 
 def contour(x,y,Nbins=None,weights=None,range=None,Nlevels=25,c='k',ls='-',lw=2,pcs=None,smooth=True,ax=plt.gca()):
-	# Plot a 2D contour by first doing a 2D histogram of data with axis positions x and y
-	
-	if range==None: range = [[np.min(x),np.max(x)],[np.min(y),np.max(y)]]
-	if Nbins==None: Nbins = len(x)/10
-	
-	finite = np.isfinite(x) * np.isfinite(y)
-	x, y = x[finite], y[finite]
-	im, xedges, yedges = np.histogram2d(x, y, bins=Nbins, weights=weights, range=range)
-	xd, yd = xedges[1]-xedges[0], yedges[1]-yedges[0]
-	xp, yp = xedges[1:]-xd, yedges[1:]-yd
-	
+    # Plot a 2D contour by first doing a 2D histogram of data with axis positions x and y
+
+    if range==None: range = [[np.min(x),np.max(x)],[np.min(y),np.max(y)]]
+    if Nbins==None: Nbins = len(x)/10
+
+    finite = np.isfinite(x) * np.isfinite(y)
+    x, y = x[finite], y[finite]
+    im, xedges, yedges = np.histogram2d(x, y, bins=Nbins, weights=weights, range=range)
+    xd, yd = xedges[1]-xedges[0], yedges[1]-yedges[0]
+    xp, yp = xedges[1:]-xd, yedges[1:]-yd
+
     #k = gc.sphere2dk(3, 1, 7)
     #im = ss.convolve2d(im,k,mode='same') # Smooth the image for cleaner contours
-	
-	if pcs is not None: # Passing pcs trumps Nlevels, where Nlevels now essentially becomes len(pcs)
-	    print 'pcs is not None and len(x)=', len(x)
-	    if not smooth:
-	        xx, yy = np.array([(Nbins+1)*[xedges]]), np.array([(Nbins+1)*[yedges]])
-	        xx, yy = xx[0,:,:], yy[0,:,:].T
-	        positions = np.vstack([xx.ravel(), yy.ravel()])
-	        values = np.vstack([x, y])
-	        kernel = stats.gaussian_kde(values)
-	        zz = np.reshape(kernel(positions).T, xx.shape) # A better version of im essentially
-	        xp, yp = xedges, yedges
-	    else:
-	        if len(x)>1e7: print 'Warning: smoothing with lots of particles will take time!'
-	        k = gc.sphere2dk(3, 1, 7)
-	        im = ss.convolve2d(im,k,mode='same') # Smooth the image for cleaner contours
-	        zz = im.transpose()
-		#arr = np.array(im, dtype=int)
-		#vals = np.unique(arr)
-		#siglevel = 0
-	    zzlevel = np.zeros(len(pcs))
-	    zzsum = np.sum(zz)
-	    tol = 1e-3
-		
-	    for level in xrange(len(pcs)):
-	        high_bound = np.max(zz)
-	        low_bound = np.min(zz)
-	        for i in xrange(1000): # Arbitrary maximum number of iterations of 1000
-	            zval = (high_bound + low_bound)/2.
-	            pc_within = np.sum(zz[zz>=zval])/zzsum
-	            if pc_within < pcs[level]-tol:
-	                high_bound = float(zval)
-	            elif pc_within > pcs[level]+tol:
-	                low_bound = float(zval)
-	            else:
-	                break
-	        zzlevel[level] = zval
-#        print 'zzlevel', zzlevel
-	    if type(ls)==str:
-	        ax.contour(xp, yp, zz, zzlevel, colors=c, linestyles=ls, linewidths=lw, zorder=1)
-	    else:
-	        CS = ax.contour(xp, yp, zz, zzlevel, colors=c, linestyles='-', linewidths=lw, zorder=1)
-	        for c in CS.collections: c.set_dashes([(0, tuple(ls))])
-	else:
-	    if type(ls)==str:
-	        ax.contour(xp, yp, im.transpose(), levels=Nlevels, colors=c, linestyles=ls, linewidths=lw, zorder=1)
-	    else:
-	        CS = ax.contour(xp, yp, im.transpose(), levels=Nlevels, colors=c, linestyles='-', linewidths=lw, zorder=1)
-	        for c in CS.collections: c.set_dashes([(0, tuple(ls))])
+
+    if pcs is not None: # Passing pcs trumps Nlevels, where Nlevels now essentially becomes len(pcs)
+        print 'pcs is not None and len(x)=', len(x)
+        if smooth:
+            xx, yy = np.array([(Nbins+1)*[xedges]]), np.array([(Nbins+1)*[yedges]])
+            xx, yy = xx[0,:,:], yy[0,:,:].T
+            positions = np.vstack([xx.ravel(), yy.ravel()])
+            values = np.vstack([x, y])
+            kernel = stats.gaussian_kde(values)
+            zz = np.reshape(kernel(positions).T, xx.shape) # A better version of im essentially
+            xp, yp = xedges, yedges
+        else:
+            zz = im.T
+#            if len(x)>1e7: print 'Warning: smoothing with lots of particles will take time!'
+#            k = gc.sphere2dk(3, 1, 7)
+#            im = ss.convolve2d(im,k,mode='same') # Smooth the image for cleaner contours
+#            zz = im.transpose()
+        #arr = np.array(im, dtype=int)
+        #vals = np.unique(arr)
+        #siglevel = 0
+        zzlevel = np.zeros(len(pcs))
+        zzsum = np.sum(zz)
+        tol = 1e-3
+
+        for level in xrange(len(pcs)):
+            high_bound = np.max(zz)
+            low_bound = np.min(zz)
+            for i in xrange(1000): # Arbitrary maximum number of iterations of 1000
+                zval = (high_bound + low_bound)/2.
+                pc_within = np.sum(zz[zz>=zval])/zzsum
+                if pc_within < pcs[level]-tol:
+                    high_bound = float(zval)
+                elif pc_within > pcs[level]+tol:
+                    low_bound = float(zval)
+                else:
+                    break
+            zzlevel[level] = zval
+        print 'zzlevel', zzlevel
+        if type(ls)==str:
+            ax.contour(xp, yp, zz, zzlevel, colors=c, linestyles=ls, linewidths=lw, zorder=1)
+        else:
+            CS = ax.contour(xp, yp, zz, zzlevel, colors=c, linestyles='-', linewidths=lw, zorder=1)
+            for c in CS.collections: c.set_dashes([(0, tuple(ls))])
+    else:
+        if type(ls)==str:
+            ax.contour(xp, yp, im.transpose(), levels=Nlevels, colors=c, linestyles=ls, linewidths=lw, zorder=1)
+        else:
+            CS = ax.contour(xp, yp, im.transpose(), levels=Nlevels, colors=c, linestyles='-', linewidths=lw, zorder=1)
+            for c in CS.collections: c.set_dashes([(0, tuple(ls))])
 
 
 def surfdens(r,Sigma,colour='red',bright=False,fsize=28,rmax=None):
