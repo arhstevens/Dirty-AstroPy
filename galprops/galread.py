@@ -4483,7 +4483,7 @@ def HI_surface_density_profiles_obs(dir='/Users/adam/HI profiles/'):
     return r_profile, SigmaHI_profile, rho, Sigma_cen, rHI, mHI, survey, rHI50, gal_name
 
         
-def DS_HI_profilefits(file_suffices, h, dir='./', alt=False):
+def DS_HI_profilefits(file_suffices, h, dir='./', alt=False, btt_ssfr=False):
     # file_suffices is a list of length-2 lists giving the file number boundaries used to generate each file
     Ngal_f_DS_total = 0
     
@@ -4497,6 +4497,15 @@ def DS_HI_profilefits(file_suffices, h, dir='./', alt=False):
         Nann_f_DS = np.fromfile(f, 'i4', 1)[0]
         if not alt: Nfit_f_DS = np.fromfile(f, 'i4', 1)[0]
         GalaxyIDs_f_DS = np.fromfile(f, 'i8', Ngal_f_DS)
+        
+        if btt_ssfr:
+            fname2 = dir + 'DarkSage_BTT_sSFR' + str(fno[0]) + '_' + str(fno[1])+ '.bin'
+            f2 = open(fname2, 'rb')
+            Ngal_2 = np.fromfile(f2, 'i4', 1)[0]
+            assert Ngal_2==Ngal_f_DS
+            GalaxyIDs_2 = np.fromfile(f2, 'i8', Ngal_2)
+            assert np.all(GalaxyIDs_f_DS==GalaxyIDs_2)
+
         if i==0:
             fit1_Sig_f_DS = np.fromfile(f, 'f4', Ngal_f_DS)
             fit1_rb_f_DS = np.fromfile(f, 'f4', Ngal_f_DS)
@@ -4521,6 +4530,11 @@ def DS_HI_profilefits(file_suffices, h, dir='./', alt=False):
                 rHI = np.fromfile(f, 'f4', Ngal_f_DS)
                 fit3_mHI_f_DS = np.fromfile(f, 'f4', Ngal_f_DS)
                 DiscRadiiNorm = np.fromfile(f, np.dtype(('f4',Nann_f_DS)), Ngal_f_DS)
+                    
+            if btt_ssfr:
+                BTT = np.fromfile(f2, 'f4', Ngal_2)
+                sSFR = np.fromfile(f2, 'f4', Ngal_2)
+
         else:
             fit1_Sig_f_DS = np.append(fit1_Sig_f_DS, np.fromfile(f, 'f4', Ngal_f_DS))
             fit1_rb_f_DS = np.append(fit1_rb_f_DS, np.fromfile(f, 'f4', Ngal_f_DS))
@@ -4545,11 +4559,17 @@ def DS_HI_profilefits(file_suffices, h, dir='./', alt=False):
                 rHI = np.append(rHI, np.fromfile(f, 'f4', Ngal_f_DS))
                 fit3_mHI_f_DS = np.append(fit3_mHI_f_DS, np.fromfile(f, 'f4', Ngal_f_DS))
                 DiscRadiiNorm = np.vstack((DiscRadiiNorm, np.fromfile(f, np.dtype(('f4',Nann_f_DS)), Ngal_f_DS)))
+            if btt_ssfr:
+                BTT = np.append(BTT, np.fromfile(f2, 'f4', Ngal_2))
+                sSFR = np.append(sSFR, np.fromfile(f2, 'f4', Ngal_2))
 
         f.close()
 
     if not alt:
-        return Ngal_f_DS_total, fit1_Sig_f_DS, fit1_rb_f_DS, fit1_chi_f_DS, fit1_residual_f_DS, fit1_residual_fit_f_DS, fit2_Sig_f_DS, fit2_rb_f_DS, fit2_chi_f_DS, fit2_residual_f_DS, fit2_residual_fit_f_DS, fit3_dlSig_f_DS, fit3_rd_f_DS, fit3_chi_f_DS, fit3_residual_f_DS, fit3_residual_fit_f_DS, StellarMass_f_DS, Type_f_DS, MvirCen, mHI, rHI, fit3_mHI_f_DS, DiscRadiiNorm
+        if not btt_ssfr:
+            return Ngal_f_DS_total, fit1_Sig_f_DS, fit1_rb_f_DS, fit1_chi_f_DS, fit1_residual_f_DS, fit1_residual_fit_f_DS, fit2_Sig_f_DS, fit2_rb_f_DS, fit2_chi_f_DS, fit2_residual_f_DS, fit2_residual_fit_f_DS, fit3_dlSig_f_DS, fit3_rd_f_DS, fit3_chi_f_DS, fit3_residual_f_DS, fit3_residual_fit_f_DS, StellarMass_f_DS, Type_f_DS, MvirCen, mHI, rHI, fit3_mHI_f_DS, DiscRadiiNorm
+        else:
+            return Ngal_f_DS_total, fit1_Sig_f_DS, fit1_rb_f_DS, fit1_chi_f_DS, fit1_residual_f_DS, fit1_residual_fit_f_DS, fit2_Sig_f_DS, fit2_rb_f_DS, fit2_chi_f_DS, fit2_residual_f_DS, fit2_residual_fit_f_DS, fit3_dlSig_f_DS, fit3_rd_f_DS, fit3_chi_f_DS, fit3_residual_f_DS, fit3_residual_fit_f_DS, StellarMass_f_DS, Type_f_DS, MvirCen, mHI, rHI, fit3_mHI_f_DS, DiscRadiiNorm, BTT, sSFR
     else:
         return Ngal_f_DS_total, fit1_Sig_f_DS, fit1_rb_f_DS, fit1_chi_f_DS, fit1_residual_f_DS, fit2_Sig_f_DS, fit2_rb_f_DS, fit2_chi_f_DS, fit2_residual_f_DS
 
@@ -4673,3 +4693,16 @@ def TNG_gasprops(fname, highz=True):
 
     f.close()
     return dict
+
+def HIdatacube(file):
+    f = open(file, 'rb')
+    Npix = np.fromfile(f, 'i4', 1)[0] # number of pixels in each dimension
+    Nchan = np.fromfile(f, 'i4', 1)[0] # number of velocity channels
+    xedge = np.fromfile(f, 'f4', Npix+1) # array of pixels edges [kpc]
+    vedge = np.fromfile(f, 'f4', Nchan+1) # velocity bins [km/s]
+    data_cube = np.fromfile(f, 'f4', Npix*Npix*Nchan).reshape(Npix,Npix,Nchan) # "direct" datacube from simulation.  Units are solar masses/kpc^2/(km/s)
+    beamSmeared_cube = np.fromfile(f, 'f4', Npix*Npix*Nchan).reshape(Npix,Npix,Nchan) # data cube after beam smearing
+    noiseAdded_cube = np.fromfile(f, 'f4', Npix*Npix*Nchan).reshape(Npix,Npix,Nchan) # data cub after adding noise
+    f.close()
+
+    return xedge, vedge, data_cube, beamSmeared_cube, noiseAdded_cube
