@@ -3400,8 +3400,8 @@ def alpha_CO(logOH, logSFR, logMstar, z, h):
     return alphaCO
 
 
-def H2_from_CO(LCO, logSFR, logMstar, z, h):
-    # covert CO luminosity to H2 mass, provided other properties are supplied.  Assumes LCO is for the 1->0 transition and is in units of K*km*pc^2/s.  Uses gas fraction and redshift to approximate metallicity (loosely based on Fig. 9 of Torrey et al. 2019), then applies the conversion factor of Accurso et al. (2017, eq 25).
+def H2_from_CO(LCO, logSFR, logMstar, z, h, uncerts_logLCO=[0,0], uncerts_logMstar=[0,0]):
+    # covert CO luminosity to H2 mass, provided other properties are supplied.  Assumes LCO is for the 1->0 transition and is in units of K*km*pc^2/s.  Uses gas fraction and redshift to approximate metallicity using IllustrisTNG, then applies the conversion factor of Accurso et al. (2017, eq 25).  Uncerts should be lists of 2 arrays/values.
     
     z_MS, slope_MS, norm_MS = gr.Pearson_MS(h) # Evolution of main sequence according to Person+18
     i_z = np.searchsorted(z_MS, z)
@@ -3426,26 +3426,42 @@ def H2_from_CO(LCO, logSFR, logMstar, z, h):
     except TypeError:
         if i_z==len(Zz_array[:,0]): i_z -= 1
     b0, b1, b2 = Zz_array[i_z,1], Zz_array[i_z,2], Zz_array[i_z,3]
-    logOH_low = ( b1*(14.752 + 0.062*delta_MS) +
+    logOH_lowz = ( b1*(14.752 + 0.062*delta_MS) +
                  (b2 + b0*logMstar + b1*(np.log10(LCO)-logMstar)) ) / (1.623*b1+1.)
+    uncert_low_lowz = np.sqrt((((b0-b1)**2 + (0.062*b1)**2)*uncerts_logMstar[0]**2 + (b1*uncerts_logLCO[0])**2)/(1+1.623*b1)**2 + Zz_array[i_z,6]**2)
+    uncert_upp_lowz = np.sqrt((((b0-b1)**2 + (0.062*b1)**2)*uncerts_logMstar[1]**2 + (b1*uncerts_logLCO[1])**2)/(1+1.623*b1)**2 + Zz_array[i_z,6]**2)
     try:
         b0, b1, b2 = Zz_array[i_z+1,1], Zz_array[i_z+1,2], Zz_array[i_z+1,3]
-        logOH_high = ( b1*(14.752 + 0.062*delta_MS) + 
+        logOH_highz = ( b1*(14.752 + 0.062*delta_MS) + 
                       (b2 + b0*logMstar + b1*(np.log10(LCO)-logMstar)) ) / (1.623*b1+1.)
-        logOH = logOH_low + (z-Zz_array[i_z,0]) * (logOH_high-logOH_low)/(Zz_array[i_z+1,0]-Zz_array[i_z,0])
+        uncert_low_highz = np.sqrt((((b0-b1)**2 + (0.062*b1)**2)*uncerts_logMstar[0]**2 + (b1*uncerts_logLCO[0])**2)/(1+1.623*b1)**2 + Zz_array[i_z+1,6]**2)
+        uncert_upp_highz = np.sqrt((((b0-b1)**2 + (0.062*b1)**2)*uncerts_logMstar[1]**2 + (b1*uncerts_logLCO[1])**2)/(1+1.623*b1)**2 + Zz_array[i_z+1,6]**2)
+        zratio = (z-Zz_array[i_z,0])/(Zz_array[i_z+1,0]-Zz_array[i_z,0])
+        logOH = logOH_lowz + zratio * (logOH_highz-logOH_lowz)
+        logOH_uncert_low = np.maximum(uncert_low_highz, uncert_low_lowz) # conservatively take the max of the uncerts for the 2 redshifts
+        logOH_uncert_upp = np.maximum(uncert_upp_highz, uncert_upp_lowz)
     except IndexError:
-        logOH = 1.0*logOH_low
+        logOH = 1.0*logOH_lowz
+        logOH_uncert_low = 1.0*uncert_low_lowz
+        logOH_uncert_upp = 1.0*uncert_upp_lowz
 
     # Get the approximate metallicity if they're on the other track (i.e. quiescent systems that have metallicity independent from gas fraction)
     c1, c2 = Zz_array[i_z,4], Zz_array[i_z,5]
-    logOH_low = c1*logMstar + c2
+    logOH_lowz = c1*logMstar + c2
+    uncert_low_lowz = np.sqrt((c1*uncerts_logMstar[0])**2 + Zz_array[i_z,7]**2)
+    uncert_upp_lowz = np.sqrt((c1*uncerts_logMstar[1])**2 + Zz_array[i_z,7]**2)
     try:
         c1, c2 = Zz_array[i_z+1,4], Zz_array[i_z+1,5]
-        logOH_high = c1*logMstar + c2
-        logOH_alt = logOH_low + (z-Zz_array[i_z,0]) * (logOH_high-logOH_low)/(Zz_array[i_z+1,0]-Zz_array[i_z,0])
+        logOH_highz = c1*logMstar + c2
+        logOH_alt = logOH_lowz + (z-Zz_array[i_z,0]) * (logOH_highz-logOH_lowz)/(Zz_array[i_z+1,0]-Zz_array[i_z,0])
+        uncert_low_highz = np.sqrt((c1*uncerts_logMstar[0])**2 + Zz_array[i_z+1,7]**2)
+        uncert_upp_highz = np.sqrt((c1*uncerts_logMstar[1])**2 + Zz_array[i_z+1,7]**2)
+        logOH_alt_uncert_low = np.maximum(uncert_low_lowz, uncert_low_highz)
+        logOH_alt_uncert_upp = np.maximum(uncert_upp_lowz, uncert_upp_highz)
     except IndexError:
-        logOH_alt = 1.0*logOH_low
-
+        logOH_alt = 1.0*logOH_lowz
+        logOH_alt_uncert_low = 1.0*uncert_low_lowz
+        logOH_alt_uncert_upp = 1.0*uncert_upp_lowz
 
 #    try:
 #        logOH[logOH>9.2] = 9.2
@@ -3466,18 +3482,30 @@ def H2_from_CO(LCO, logSFR, logMstar, z, h):
         f = (logGF>0.5) + (logGF<-2)
         log_MH2[f] = log_MH2_alt[f]
         logOH[f] = logOH_alt[f]
+        logOH_uncert_low[f] = logOH_alt_uncert_low[f]
+        logOH_uncert_upp[f] = logOH_alt_uncert_upp[f]
     except TypeError:
         if logGF>0.5 or logGF<-2:
             log_MH2 = 1.0*log_MH2_alt
             logOH = 1.0*logOH_alt
+            logOH_uncert_low = 1.0*logOH_alt_uncert_low
+            logOH_uncert_upp = 1.0*logOH_alt_uncert_upp
 
+    log_MH2_uncerts = [np.sqrt(logOH_uncert_low**2 + 0.165**2),
+                       np.sqrt(logOH_uncert_upp**2 + 0.165**2)]
 
 #    log_MH2_sanity = -6.865 - 0.0995*delta_MS + 3.126*logMstar + 3.908*np.log10(0.5*(1+z)) - 1.605*np.log10(LCO)
 #    print 'sanity check', log_MH2, log_MH2_sanity
     
 #    return log_MH2, logOH, log_MH2_alt, logOH_alt
 #    return log_MH2_alt, logOH_alt
-    return log_MH2, logOH
+
+    try:
+        assert uncerts_logLCO==[0,0] 
+        assert uncerts_logMstar==[0,0]
+        return log_MH2, logOH
+    except ValueError or AssertionError:
+        return log_MH2, logOH, log_MH2_uncerts
 
 
 def fit_divide_SFMS(mass_stars, SFR, sSFR_init = 10**-10.5):
