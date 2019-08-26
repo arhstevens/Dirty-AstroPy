@@ -52,35 +52,41 @@ def contour(x,y,Nbins=None,weights=None,range=None,Nlevels=25,c='k',ls='-',lw=2,
         #arr = np.array(im, dtype=int)
         #vals = np.unique(arr)
         #siglevel = 0
-        zzlevel = np.zeros(len(pcs))
-        zzsum = np.sum(zz)
-        tol = 1e-3
-
-        for level in xrange(len(pcs)):
-            high_bound = np.max(zz)
-            low_bound = np.min(zz)
-            for i in xrange(1000): # Arbitrary maximum number of iterations of 1000
-                zval = (high_bound + low_bound)/2.
-                pc_within = np.sum(zz[zz>=zval])/zzsum
-                if pc_within < pcs[level]-tol:
-                    high_bound = float(zval)
-                elif pc_within > pcs[level]+tol:
-                    low_bound = float(zval)
-                else:
-                    break
-            zzlevel[level] = zval
-        print 'zzlevel', zzlevel
-        if type(ls)==str:
-            ax.contour(xp, yp, zz, zzlevel, colors=c, linestyles=ls, linewidths=lw, zorder=1)
-        else:
-            CS = ax.contour(xp, yp, zz, zzlevel, colors=c, linestyles='-', linewidths=lw, zorder=1)
-            for c in CS.collections: c.set_dashes([(0, tuple(ls))])
+        
+        im_contour_pcile(xp, yp, zz, pcs, c, ls, lw, ax)
+        
     else:
         if type(ls)==str:
             ax.contour(xp, yp, im.transpose(), levels=Nlevels, colors=c, linestyles=ls, linewidths=lw, zorder=1)
         else:
             CS = ax.contour(xp, yp, im.transpose(), levels=Nlevels, colors=c, linestyles='-', linewidths=lw, zorder=1)
             for c in CS.collections: c.set_dashes([(0, tuple(ls))])
+
+
+def im_contour_pcile(xp, yp, zz, pcs, c='k', ls='-', lw=2, ax=plt.gca(), zorder=1):
+    zzlevel = np.zeros(len(pcs))
+    zzsum = np.sum(zz)
+    tol = 1e-3
+    
+    for level in xrange(len(pcs)):
+        high_bound = np.max(zz)
+        low_bound = np.min(zz)
+        for i in xrange(1000): # Arbitrary maximum number of iterations of 1000
+            zval = (high_bound + low_bound)/2.
+            pc_within = np.sum(zz[zz>=zval])/zzsum
+            if pc_within < pcs[level]-tol:
+                high_bound = float(zval)
+            elif pc_within > pcs[level]+tol:
+                low_bound = float(zval)
+            else:
+                break
+        zzlevel[level] = zval
+    print 'zzlevel', zzlevel
+    if type(ls)==str:
+        ax.contour(xp, yp, zz, zzlevel, colors=c, linestyles=ls, linewidths=lw, zorder=zorder)
+    else:
+        CS = ax.contour(xp, yp, zz, zzlevel, colors=c, linestyles='-', linewidths=lw, zorder=zorder)
+        for c in CS.collections: c.set_dashes([(0, tuple(ls))])
 
 
 def surfdens(r,Sigma,colour='red',bright=False,fsize=28,rmax=None):

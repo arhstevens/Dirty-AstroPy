@@ -4706,3 +4706,27 @@ def HIdatacube(file):
     f.close()
 
     return xedge, vedge, data_cube, beamSmeared_cube, noiseAdded_cube
+
+
+def TNG_HIlines(file):
+    dict = {}
+    f = open(file, 'rb')
+    Ngal = dict['Ngal'] = np.fromfile(f, 'i8', 1)[0]
+    Nchan = dict['Nchan'] = np.fromfile(f, 'i8', 1)[0]
+    dict['subhaloes'] = np.fromfile(f, 'i8', Ngal)
+    dict['groupnr'] = np.fromfile(f, 'i8', Ngal)
+    dict['mass_stars'] = np.fromfile(f, 'f4', Ngal)
+    dict['mass_stars_mock'] = np.fromfile(f, 'f4', Ngal)
+    dict['mass_HI'] = np.fromfile(f, 'f8', Ngal)
+    dict['mass_HI_mock'] = np.fromfile(f, 'f8', Ngal)
+    dict['mass_halo'] = np.fromfile(f, 'f4', Ngal)
+    dict['mass_halo_mock'] = np.fromfile(f, 'f4', Ngal)
+    dict['SFR'] = np.fromfile(f, 'f4', Ngal)
+    dict['SFR_mock'] = np.fromfile(f, 'f4', Ngal)
+    dict['vbins'] = np.fromfile(f, 'f4', Nchan+1)
+    dict['HIline_true'] = np.fromfile(f, np.dtype(('f4',Nchan)), Ngal)
+    dict['HIline_mock'] = np.fromfile(f, np.dtype(('f4',Nchan)), Ngal)
+    dict['Type'] = np.fromfile(f, 'i2', Ngal) # -1 is isolated central, 0 is a central with satellite(s), 1 is a satellite
+    dict['Type_mock'] = np.fromfile(f, 'i2', Ngal)
+    f.close()
+    return dict
