@@ -1059,9 +1059,9 @@ def ztlookup(zmin=-0.5,zmax=8,H_0=67.74,Omega_R=0,Omega_M=0.3089,Omega_Lambda=0.
 
 
 
-def t2z(t,tarr,zarr=None):
+def t2z(t,tarr,zarr='None'):
 	# Convert time, t, (array of single value) in Gyr after Big Bang to redshift, z, by using a look-up table, tarr, produced from ztlookup with default parameters.
-	if zarr==None:
+	if type(zarr)==str:
 		zarr = np.arange(len(tarr))/1000.
 	
 	tarr = tarr[::-1]
