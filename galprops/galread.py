@@ -4329,7 +4329,7 @@ def OG14(h, disconly=False):
     return BTT, logM_star, logM_HIH2, logj_star, logj_HIH2
 
 
-def xGASS_xCOLDGASS(indir=None, h=0.6774):
+def xGASS_xCOLDGASS(indir=None, h=0.6774, extra=False):
     if indir is None: indir = '/Users/adam/xGASS/'
     keys = ['GASS', 'lgMstar', 'SFR_best', 'lgMHI', 'HIsrc', 'env_code_B', 'logMh_Mst_B', 'lvir_ratB', 'zSDSS']
     key_dtypes = [np.int32, np.float32, np.float32, np.float32, np.uint16, np.int16, np.float32, np.float32, np.float32]
@@ -4388,8 +4388,18 @@ def xGASS_xCOLDGASS(indir=None, h=0.6774):
     xGASS_redshift[arg2] = C['Z_SDSS']
     xGASS_redshift[arg1] = G['zSDSS']
 
-    
-    return xGASS_ID, xGASS_logMstar, xGASS_logSFR, xGASS_logMHI, xGASS_HIdet, xGASS_Type, xGASS_logMhalo, xGASS_logRonRvir, xGASS_logMH2, xGASS_H2det, xGASS_logMH2_corr, xGASS_redshift
+    if extra:
+        xGASS_LCO_corr = np.zeros(Ngal, dtype=np.float32)
+        xGASS_LCO_corr[arg2] = C['LCO_COR']
+        xGASS_LCO_corr_err = np.zeros(Ngal, dtype=np.float32)
+        xGASS_LCO_corr_err[arg2] = C['LCO_COR_ERR']
+        xGASS_logMH2_corr_err = np.zeros(Ngal, dtype=np.float32)
+        xGASS_logMH2_corr_err[arg2] = C['LOGMH2_ERR']
+        
+        
+        return xGASS_ID, xGASS_logMstar, xGASS_logSFR, xGASS_logMHI, xGASS_HIdet, xGASS_Type, xGASS_logMhalo, xGASS_logRonRvir, xGASS_logMH2, xGASS_H2det, xGASS_logMH2_corr, xGASS_redshift, xGASS_LCO_corr, xGASS_LCO_corr_err, xGASS_logMH2_corr_err
+    else:
+        return xGASS_ID, xGASS_logMstar, xGASS_logSFR, xGASS_logMHI, xGASS_HIdet, xGASS_Type, xGASS_logMhalo, xGASS_logRonRvir, xGASS_logMH2, xGASS_H2det, xGASS_logMH2_corr, xGASS_redshift
     
 
 def HI_surface_density_profiles_obs(dir='/Users/adam/HI profiles/'):
