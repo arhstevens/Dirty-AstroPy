@@ -2143,8 +2143,9 @@ def rotate2(xyz, axis, angle):
 
 def hist_Nmin(x, bins, Nmin, hard_bins=np.array([])):
     Nhist, bins = np.histogram(x, bins)
-    while len(Nhist[Nhist<Nmin])>0:
-        ii = np.where(Nhist<Nmin)[0][0]
+    ij = 0
+    while len(Nhist[Nhist<Nmin])>ij:
+        ii = np.where(Nhist<Nmin)[0][ij]
 #        print ii==0 or (ii!=len(Nhist)-1 and Nhist[ii+1]<Nhist[ii-1])
 #        print np.all(~(bins[ii+1] <= 1.01*hard_bins and bins[ii+1] >= 0.99*hard_bins))
         if (ii==0 or (ii!=len(Nhist)-1 and Nhist[ii+1]<Nhist[ii-1])) and np.all(~((bins[ii+1] <= 1.01*hard_bins) * (bins[ii+1] >= 0.99*hard_bins))):
@@ -2153,11 +2154,23 @@ def hist_Nmin(x, bins, Nmin, hard_bins=np.array([])):
             bins = np.delete(bins,ii)
         else:
             print 'hard_bins prevented gc.hist_Nmin() from enforcing Nmin.  Try using wider input bins.'
-            Nhist, bins = np.histogram(x, bins)
-            break
+            ij += 1
+#            Nhist, bins = np.histogram(x, bins)
+#            break
         Nhist, bins = np.histogram(x, bins)
-    if bins[0]<np.min(x): bins[0] = np.min(x)
-    if bins[-1]>np.max(x): bins[-1] = np.max(x)
+    if bins[0]<np.min(x): 
+        del_bins = np.where(bins<np.min(x))[0]
+        if len(del_bins)>1: 
+            bins = np.delete(bins, del_bins[1:])
+            Nhist, bins = np.histogram(x, bins)
+        bins[0] = 0.99*np.min(x)
+    if bins[-1]>np.max(x): 
+        del_bins = np.where(bins>np.max(x))[0]
+        if len(del_bins)>1: 
+            bins = np.delete(bins, del_bins[:-1])
+            Nhist, bins = np.histogram(x, bins)
+        bins[-1] = 1.01*np.max(x)
+
     return Nhist, bins
 
 def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xrange=None, yrange=None, Nmin=10, weights=None, hard_bins=np.array([]), outBins=False):
@@ -2177,7 +2190,7 @@ def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xran
     x_av, N = np.zeros(Nbins), np.zeros(Nbins)
     if addMean: y_mean = np.zeros(Nbins)
     for i in range(Nbins):
-        f = (x>=bins[i])*(x<bins[i+1])
+        f = (x>=bins[i])*(x<bins[i+1]) if i<Nbins-1 else (x>=bins[i])*(x<=bins[i+1])
         if len(f[f])>2:
             if weights is None:
                 [y_low[i], y_med[i], y_high[i]] = np.percentile(y[f], [100*low, 100*med, 100*high], interpolation='linear')
@@ -2187,6 +2200,11 @@ def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xran
             N[i] = len(x[f])
             if addMean: y_mean[i] = np.mean(y[f])
     fN = (N>0) if Nmin>0 else np.array([True]*Nbins)
+    if len(fN[~fN])>0:
+        print '\npercentiles: fN =', fN
+        print 'percentiles: bins =', bins
+        print 'percentiles: N =', N
+        print 'percentiles: max(x) =', np.max(x)
     if not addMean and not outBins:
         return x_av[fN], y_high[fN], y_med[fN], y_low[fN]
     elif not addMean and outBins:
