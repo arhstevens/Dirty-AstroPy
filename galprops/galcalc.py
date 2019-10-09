@@ -2494,6 +2494,9 @@ def hydrogen_decomp_exp_disc2(mass_gas, r_eff, mass_star, Z_gas, P_0=5.93e-13, c
 
 
 def rahmati2013_neutral_frac(redshift, nH, T, onlyA1=True,noCol = False,onlyCol = False,SSH_Thresh = 1,extrapolate=False,local=False, UVB='FG09-Dec11'):
+    """
+        WARNING: I DO NOT PERSONALLY CONDONE THE USE OF THIS FUNCTION.  IT IS HERE PRIMARILY AS A MEANS OF COMPARING MY OWN METHODOLOGY WITH THOSE USED IN PREVIOUS PUBLISHED WORKS.
+        """
     
 #; --------------------------------------------------------------------------------------------
 #;+
@@ -2688,7 +2691,8 @@ def rahmati2013_neutral_frac(redshift, nH, T, onlyA1=True,noCol = False,onlyCol 
     return f_neutral
 
 
-### WARNING: THE FOLLOWING FUNCTIONS WERE INHERETED AND IS NOT USED FOR SCIENCE.  ITS PRESENCE IS MERELY TO COMPARE TO OLDER METHODS.  SEE HI_H2_MASSES() BELOW FOR THE PROPER FUNCTION ###
+
+""" WARNING: THE FOLLOWING FUNCTIONS WERE INHERETED AND IS NOT USED FOR SCIENCE.  ITS PRESENCE IS MERELY TO COMPARE TO OLDER METHODS.  SEE HI_H2_MASSES() BELOW FOR THE PROPER FUNCTION """
 def fH2_Gnedin_ParticleBasis(SFR,m,Zgas,nH,Density_Tot,T,fneutral,redshift):
     #;Formalism described in Gnedin and Kravtsov (2011) to calculate H2-to-total H ratio applied to EAGLE.
     #
@@ -2766,7 +2770,7 @@ def fH2_Gnedin_ParticleBasis(SFR,m,Zgas,nH,Density_Tot,T,fneutral,redshift):
     return Fh2_SFR
 
 
-### WARNING: THE FOLLOWING FUNCTION WAS INHERETED AND IS NOT USED FOR SCIENCE.  ITS PRESENCE IS MERELY TO COMPARE TO OLDER METHODS
+""" WARNING: THE FOLLOWING FUNCTIONS WERE INHERETED AND IS NOT USED FOR SCIENCE.  ITS PRESENCE IS MERELY TO COMPARE TO OLDER METHODS.  SEE HI_H2_MASSES() BELOW FOR THE PROPER FUNCTION """
 def fH2_Krumholz_ParticleBasis(SFR,m,Zgas,nH,Density_Tot,T,fneutral,redshift):
     #;Formalism described in Krumholz (2013) to calculate H2-to-total H ratio applied to EAGLE.
     #

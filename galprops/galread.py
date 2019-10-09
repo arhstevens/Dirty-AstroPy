@@ -4593,8 +4593,10 @@ def Pearson_MS(h=0.6774):
 
 
 def TNG_gasprops(fname, highz=True):
-    # Read the data produced by z0_gasprops_fromFOF_v2.py OR zhigh_gasprops_fromFOF.py if highz=True and put into a dictionary
+    # Read the data produced by z0_gasprops_fromFOF_v2.py OR zhigh_gasprops_fromFOF.py if highz=True, and put into a dictionary
     dict = {}
+    
+    mainbox = 'L75n1820TNG' in fname
     
     f = open(fname, 'rb')
     Ngal = dict['Ngal'] = np.fromfile(f, 'i8', 1)[0]
@@ -4616,7 +4618,7 @@ def TNG_gasprops(fname, highz=True):
     dict['radii_2D_proj'] = np.fromfile(f, np.dtype(('f4',Nradii_2D_proj)), Ngal)
     dict['radii_cylinder'] = np.fromfile(f, np.dtype(('f4',Nradii_cylinder)), Ngal)
     dict['height_cylinder'] = np.fromfile(f, np.dtype(('f4',Nradii_cylinder)), Ngal)
-    if not highz: dict['mock_aperture'] = np.fromfile(f, np.dtype(('f4',Nradii_mock)), Ngal)
+    if not highz and Nradii_mock>0: dict['mock_aperture'] = np.fromfile(f, np.dtype(('f4',Nradii_mock)), Ngal)
 
     dict['mass_stars'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
     dict['mass_gas'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
@@ -4651,7 +4653,7 @@ def TNG_gasprops(fname, highz=True):
     dict['velstd_gas'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
     dict['velstd_baryon'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
     
-    if not highz: dict['Time_Since_Infall'] = np.fromfile(f, 'f4', Ngal)
+    if not highz and mainbox: dict['Time_Since_Infall'] = np.fromfile(f, 'f4', Ngal)
     dict['inclination'] = np.fromfile(f, 'f4', Ngal)
     
     dict['veldisp_HIz_grided'] = np.fromfile(f, np.dtype(('f4',Nradii_cylinder)), Ngal)
@@ -4662,15 +4664,16 @@ def TNG_gasprops(fname, highz=True):
     dict['positions_galaxies'] = np.fromfile(f, np.dtype(('f4',3)), Ngal)
     dict['velocities_galaxies'] = np.fromfile(f, np.dtype(('f4',3)), Ngal)
     
-    if not highz:
+    if not highz and mainbox:
         dict['redshifts_dA'] = np.fromfile(f, np.dtype(('f4',4)), Ngal)
         dict['redshifts_vel'] = np.fromfile(f, np.dtype(('f4',4)), Ngal)
 
     dict['SigmaHI_profiles'] = np.fromfile(f, np.dtype(('f4',Nbin_profiles)), Ngal)
 
-    if highz:
+    if highz or 'v1' not in fname:
         dict['SigmaH2_profiles'] = np.fromfile(f, np.dtype(('f4',Nbin_profiles)), Ngal)
 
+    if highz:
         if 'v1' not in fname and 'v2' not in fname: # applies for v3 and above
             dict['Hfrac_gas'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
             dict['Hfrac_neutral'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
@@ -4718,7 +4721,7 @@ def HIdatacube(file):
     return xedge, vedge, data_cube, beamSmeared_cube, noiseAdded_cube
 
 
-def TNG_HIlines(file):
+def TNG_HIlines(file, mainbox=True):
     dict = {}
     f = open(file, 'rb')
     Ngal = dict['Ngal'] = np.fromfile(f, 'i8', 1)[0]
@@ -4726,17 +4729,20 @@ def TNG_HIlines(file):
     dict['subhaloes'] = np.fromfile(f, 'i8', Ngal)
     dict['groupnr'] = np.fromfile(f, 'i8', Ngal)
     dict['mass_stars'] = np.fromfile(f, 'f4', Ngal)
-    dict['mass_stars_mock'] = np.fromfile(f, 'f4', Ngal)
-    dict['mass_HI'] = np.fromfile(f, 'f8', Ngal)
-    dict['mass_HI_mock'] = np.fromfile(f, 'f8', Ngal)
+    if mainbox: 
+        dict['mass_stars_mock'] = np.fromfile(f, 'f4', Ngal)
+        dict['mass_HI'] = np.fromfile(f, 'f8', Ngal)
+        dict['mass_HI_mock'] = np.fromfile(f, 'f8', Ngal)
+    else:
+        dict['mass_HI'] = np.fromfile(f, 'f4', Ngal)
     dict['mass_halo'] = np.fromfile(f, 'f4', Ngal)
-    dict['mass_halo_mock'] = np.fromfile(f, 'f4', Ngal)
+    if mainbox: dict['mass_halo_mock'] = np.fromfile(f, 'f4', Ngal)
     dict['SFR'] = np.fromfile(f, 'f4', Ngal)
-    dict['SFR_mock'] = np.fromfile(f, 'f4', Ngal)
+    if mainbox: dict['SFR_mock'] = np.fromfile(f, 'f4', Ngal)
     dict['vbins'] = np.fromfile(f, 'f4', Nchan+1)
     dict['HIline_true'] = np.fromfile(f, np.dtype(('f4',Nchan)), Ngal)
-    dict['HIline_mock'] = np.fromfile(f, np.dtype(('f4',Nchan)), Ngal)
+    if mainbox: dict['HIline_mock'] = np.fromfile(f, np.dtype(('f4',Nchan)), Ngal)
     dict['Type'] = np.fromfile(f, 'i2', Ngal) # -1 is isolated central, 0 is a central with satellite(s), 1 is a satellite
-    dict['Type_mock'] = np.fromfile(f, 'i2', Ngal)
+    if mainbox: dict['Type_mock'] = np.fromfile(f, 'i2', Ngal)
     f.close()
     return dict
