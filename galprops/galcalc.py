@@ -3100,24 +3100,24 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
             if mode=='u':
                 temp = u2temp(u, gamma, mu)
                 if calc_fneutral and not np.allclose(fneutral, fneutral_old, rtol=5e-3): fneutral = rahmati2013_neutral_frac(redshift, rho/denom, temp, UVB=UVB)
-                Sigma = np.sqrt(gamma * const_ratio * f_th * rho * temp / mu)
-                S = Sigma / rho * 0.01 if S_Jeans else (mass/rho)**(1./3) * 0.01 # Spatial scale: either the Jeans length or approx cell length (per 100 pc)
-                D_star = 0.17*(2.+S**5.)/(1.+S**5.)
-                U_star = 9.*D_star/S
-                g = np.sqrt(D_MW*D_MW + D_star*D_star)
-                G0 = np.maximum(ISRF_floor, f_esc * SFR / mass * Sigma / Sigma_SFR0) if UV_MW is None else 1.0*UV_MW # Instellar radiation field in units of MW's local field (assumed to be proportional to local SFR density).  Reduced from several lines in other methods.
-                alpha = 0.5 + 1./(1. + np.sqrt(G0*D_MW*D_MW/600.))
-                Sigma_R1 = 50./g * np.sqrt(0.001+0.1*G0) / (1. + 1.69*np.sqrt(0.001+0.1*G0)) # Note the erratum on the paper for this equation!
-                R = (Sigma * fneutral * X / Sigma_R1)**alpha
-                f_H2 = R / (R + 1.)
-                if np.allclose(f_H2[~fzero], f_H2_old[~fzero], rtol=5e-3): break
-                f_H2_old = 1.*f_H2
-                fneutral_old = 1.*fneutral
-            
-            mass_H2 = f_H2 * fneutral * X * mass
-            mass_HI = (1.-f_H2) * fneutral * X * mass
-            mass_H2[fzero] = 0.
-            mass_HI[fzero] = 0.
+            Sigma = np.sqrt(gamma * const_ratio * f_th * rho * temp / mu)
+            S = Sigma / rho * 0.01 if S_Jeans else (mass/rho)**(1./3) * 0.01 # Spatial scale: either the Jeans length or approx cell length (per 100 pc)
+            D_star = 0.17*(2.+S**5.)/(1.+S**5.)
+            U_star = 9.*D_star/S
+            g = np.sqrt(D_MW*D_MW + D_star*D_star)
+            G0 = np.maximum(ISRF_floor, f_esc * SFR / mass * Sigma / Sigma_SFR0) if UV_MW is None else 1.0*UV_MW # Instellar radiation field in units of MW's local field (assumed to be proportional to local SFR density).  Reduced from several lines in other methods.
+            alpha = 0.5 + 1./(1. + np.sqrt(G0*D_MW*D_MW/600.))
+            Sigma_R1 = 50./g * np.sqrt(0.001+0.1*G0) / (1. + 1.69*np.sqrt(0.001+0.1*G0)) # Note the erratum on the paper for this equation!
+            R = (Sigma * fneutral * X / Sigma_R1)**alpha
+            f_H2 = R / (R + 1.)
+            if np.allclose(f_H2[~fzero], f_H2_old[~fzero], rtol=5e-3): break
+            f_H2_old = 1.*f_H2
+            fneutral_old = 1.*fneutral
+        
+        mass_H2 = f_H2 * fneutral * X * mass
+        mass_HI = (1.-f_H2) * fneutral * X * mass
+        mass_H2[fzero] = 0.
+        mass_HI[fzero] = 0.
     
     if method==0:
         mHI_list += [mass_HI]
