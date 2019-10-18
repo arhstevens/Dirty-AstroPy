@@ -3590,3 +3590,12 @@ def fit_divide_SFMS(mass_stars, SFR, sSFR_init = 10**-10.5):
 
     # parameters for main sequence, red sequence, division line
     return p, p2, p3
+
+
+def reset_periodic_positions(pos, Lbox):
+    # Shift all particles in a periodic simuation so they are all contained within +/- half the box length
+    while len(pos[pos<-0.5*Lbox])>0:
+        pos[pos<-0.5*Lbox] += Lbox
+    while len(pos[pos>0.5*Lbox])>0:
+        pos[pos>0.5*Lbox] -= Lbox
+    return pos
