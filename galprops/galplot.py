@@ -140,35 +140,36 @@ def surfdensfit(r_vec,Sigma_fit,dsr,n):
 
 
 
-def circle(r,colour='white',centre=[0,0],lw=3,ls='-',half='f',inclination=0,fill=False,alpha=1,part=1,zorder=1):
-	# Plot a circle with radius r centred on coordinates "centre"
-	# "Half" indicates whether to do a full circle (f), or just the top (t) or bottom (b) halves
-	r = abs(r)
-	x = np.linspace(-r, r, 500)
-	y1 = np.sqrt(r**2 - x**2)
-	if inclination>0: y1 *= np.cos(inclination*np.pi/180.)
-	y1[0] = 0
-	y1[-1] = 0
-	y2 = -y1
-	x, y1, y2 = x + centre[0], y1 + centre[1], y2 + centre[1]
-	if half=='t': plot(x, y1, linewidth=lw, color=colour, linestyle=ls)
-	if half=='b': plot(x, y2, linewidth=lw, color=colour, linestyle=ls)
-	if half=='f':
-		arg = np.where(y1==np.max(y1))[0][0]
-		xp = np.concatenate((x[arg:], x[::-1], x[:arg]))
-		yp = np.concatenate((y1[arg:], y2[::-1], y1[:arg]))
-		if part<1 and part>0:
-			filt = (yp < np.max(yp) - (1-part)*(np.max(yp)-np.min(yp)))
-			xp, yp = xp[filt], yp[filt]
-			top = np.max(yp)
-		plot(xp, yp, linewidth=lw, color=colour, linestyle=ls, zorder=zorder)
-	if fill:
-		if part<1 and part>0:
-			filt = (y2<top)
-			x, y1, y2 = x[filt], y1[filt], y2[filt]
-			y1[y1>top] = top
-			print top
-		plt.fill_between(x, y1, y2, color=colour, alpha=alpha, zorder=zorder)
+def circle(r,colour='white',centre=[0,0],lw=3,ls='-',half='f',inclination=0,fill=False,alpha=1,part=1,zorder=1,ax=None):
+    # Plot a circle with radius r centred on coordinates "centre"
+    # "Half" indicates whether to do a full circle (f), or just the top (t) or bottom (b) halves
+    if ax==None: ax=plt.gca()
+    r = abs(r)
+    x = np.linspace(-r, r, 500)
+    y1 = np.sqrt(r**2 - x**2)
+    if inclination>0: y1 *= np.cos(inclination*np.pi/180.)
+    y1[0] = 0
+    y1[-1] = 0
+    y2 = -y1
+    x, y1, y2 = x + centre[0], y1 + centre[1], y2 + centre[1]
+    if half=='t': ax.plot(x, y1, linewidth=lw, color=colour, linestyle=ls)
+    if half=='b': ax.plot(x, y2, linewidth=lw, color=colour, linestyle=ls)
+    if half=='f':
+        arg = np.where(y1==np.max(y1))[0][0]
+        xp = np.concatenate((x[arg:], x[::-1], x[:arg]))
+        yp = np.concatenate((y1[arg:], y2[::-1], y1[:arg]))
+        if part<1 and part>0:
+            filt = (yp < np.max(yp) - (1-part)*(np.max(yp)-np.min(yp)))
+            xp, yp = xp[filt], yp[filt]
+            top = np.max(yp)
+        ax.plot(xp, yp, linewidth=lw, color=colour, linestyle=ls, zorder=zorder)
+    if fill:
+        if part<1 and part>0:
+            filt = (y2<top)
+            x, y1, y2 = x[filt], y1[filt], y2[filt]
+            y1[y1>top] = top
+            print top
+        ax.fill_between(x, y1, y2, color=colour, alpha=alpha, zorder=zorder)
 
 
 

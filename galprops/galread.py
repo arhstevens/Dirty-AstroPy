@@ -4721,7 +4721,7 @@ def HIdatacube(file):
     return xedge, vedge, data_cube, beamSmeared_cube, noiseAdded_cube
 
 
-def TNG_HIlines(file, mainbox=True):
+def TNG_HIlines(file, mainbox=True, extended=False):
     dict = {}
     f = open(file, 'rb')
     Ngal = dict['Ngal'] = np.fromfile(f, 'i8', 1)[0]
@@ -4744,5 +4744,8 @@ def TNG_HIlines(file, mainbox=True):
     if mainbox: dict['HIline_mock'] = np.fromfile(f, np.dtype(('f4',Nchan)), Ngal)
     dict['Type'] = np.fromfile(f, 'i2', Ngal) # -1 is isolated central, 0 is a central with satellite(s), 1 is a satellite
     if mainbox: dict['Type_mock'] = np.fromfile(f, 'i2', Ngal)
+    if extended:
+        dict['pos_rel'] = np.fromfile(f, dtype(('f4',3)), Ngal)
+        dict['vel_rel'] = np.fromfile(f, dtype(('f4',3)), Ngal)
     f.close()
     return dict
