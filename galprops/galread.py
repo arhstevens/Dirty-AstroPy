@@ -4745,7 +4745,7 @@ def TNG_HIlines(file, mainbox=True, extended=False):
     dict['Type'] = np.fromfile(f, 'i2', Ngal) # -1 is isolated central, 0 is a central with satellite(s), 1 is a satellite
     if mainbox: dict['Type_mock'] = np.fromfile(f, 'i2', Ngal)
     if extended:
-        dict['pos_rel'] = np.fromfile(f, dtype(('f4',3)), Ngal)
-        dict['vel_rel'] = np.fromfile(f, dtype(('f4',3)), Ngal)
+        dict['pos_rel'] = np.fromfile(f, np.dtype(('f4',3)), Ngal) # kpc
+        dict['vel_rel'] = np.fromfile(f, np.dtype(('f4',3)), Ngal) # km/s
     f.close()
     return dict
