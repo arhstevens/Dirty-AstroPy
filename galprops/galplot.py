@@ -1936,3 +1936,12 @@ def Kband_obs(Hubble_h=0.6777):
     plt.errorbar(Huang_Mag+5.0*np.log10(Hubble_h), Huang_Phi*Hubble_h*Hubble_h*Hubble_h, yerr=Huang_PhiErr*Hubble_h*Hubble_h*Hubble_h, color='g', lw=1.0, marker='o', ls='none', label='Huang et al. 2003')
 
 
+def bigax_labels(xlab, ylab, fig=plt.gcf()):
+    # Add "big axes" that give a common x- and y-label for all subplots
+    big_ax = fig.add_subplot(111)
+    big_ax.set_xlabel(xlab)
+    big_ax.set_ylabel(ylab)
+    big_ax.set_frame_on(False)
+    big_ax.set_ylim(-2,-1)
+    big_ax.tick_params(labelcolor='none', top='off', bottom='off', left='off', right='off')
+
