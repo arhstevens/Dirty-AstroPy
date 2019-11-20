@@ -1414,22 +1414,23 @@ def cleansample(var, val=0, mode='g'):
 
 
 def sphere2dk(R,Lbin,Nbin):
-	# Make a square 2d kernel of a collapsed sphere.  Very basic attempt.
-	"""
-		R = radius of the sphere
-		Lbin = length of the bins (in equivalent units)
-		Nbin = number of bins on a side of the square
-		"""
-	Nbin = int(Nbin) # Ensure an integer number of bins
-	k = np.zeros((Nbin,Nbin)) # k is the convolution kernel to be output
-	
-	for i in xrange(Nbin):
-		for j in xrange(Nbin):
-			r = Lbin*np.sqrt((i - (Nbin-1)/2)**2 + (j - (Nbin-1)/2)**2) # Average distance of the pixel from the centre
-			if r<R: k[i,j] = np.sqrt(R**2 - r**2)
+    # Make a square 2d kernel of a collapsed sphere.  Very basic attempt.
+    """
+    R = radius of the sphere
+    Lbin = length of the bins (in equivalent units)
+    Nbin = number of bins on a side of the square
+    """
+    Nbin = int(Nbin) # Ensure an integer number of bins
+    if Nbin%2==0: Nbin+=1 # make sure it's an odd number of bins
+    k = np.zeros((Nbin,Nbin)) # k is the convolution kernel to be output
 
-	k /= np.sum(k) # Make it normalised
-	return k
+    for i in xrange(Nbin):
+        for j in xrange(Nbin):
+            r = Lbin*np.sqrt((i - (Nbin-1)/2)**2 + (j - (Nbin-1)/2)**2) # Average distance of the pixel from the centre
+            if r<R: k[i,j] = np.sqrt(R**2 - r**2)
+
+    k /= np.sum(k) # Make it normalised
+    return k
 
 
 def recenbox(x,y,z):
@@ -3601,3 +3602,19 @@ def reset_periodic_positions(pos, Lbox):
     while len(pos[pos>0.5*Lbox])>0:
         pos[pos>0.5*Lbox] -= Lbox
     return pos
+
+
+def timestring(hours):
+    # convert a float of total hours into a string of 'hh:mm:ss'
+    int_hours = int(hours)
+    str_hours = str(int_hours)
+    if len(str_hours)==1: str_hours = '0'+str_hours
+    residual_minutes = (hours-int_hours)*60.
+    int_minutes = int(residual_minutes)
+    str_minutes = str(int_minutes)
+    if len(str_minutes)==1: str_minutes = '0'+str_minutes
+    residual_seconds = (residual_minutes-int_minutes)*60.
+    str_seconds = str(int(residual_seconds))
+    if len(str_seconds)==1: str_seconds = '0'+str_seconds
+    str_time = str_hours+':'+str_minutes+':'+str_seconds
+    return str_time
