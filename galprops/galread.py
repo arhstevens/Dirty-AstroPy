@@ -4405,9 +4405,9 @@ def xGASS_xCOLDGASS(indir=None, h=0.6774, extra=False, extra2=False):
 
         xGASS_r50 = np.zeros(Ngal, dtype=np.float32)
         xGASS_r50[arg2] = C['R50KPC']
-        xGASS_r50[arg1] = G['petrR50_r']/60.**2 * np.pi/180. * G['Dlum']*1e3
+        xGASS_r50[arg1] = np.tan(G['petrR50_r']/60.**2 * np.pi/180.) * G['Dlum']*1e3
         xGASS_r50[xGASS_r50>0] += np.log10(0.7/h)
-        
+
         return xGASS_ID, xGASS_logMstar, xGASS_logSFR, xGASS_logMHI, xGASS_HIdet, xGASS_Type, xGASS_logMhalo, xGASS_logRonRvir, xGASS_logMH2, xGASS_H2det, xGASS_logMH2_corr, xGASS_redshift, xGASS_logMuStar, xGASS_r50
 
     else:
@@ -4604,7 +4604,7 @@ def Pearson_MS(h=0.6774):
     return z_av, alpha, beta
 
 
-def TNG_gasprops(fname, highz=True):
+def TNG_gasprops(fname, highz=True, fname2=False, fmock=False):
     # Read the data produced by z0_gasprops_fromFOF_v2.py OR zhigh_gasprops_fromFOF.py if highz=True, and put into a dictionary
     dict = {}
     
@@ -4685,6 +4685,32 @@ def TNG_gasprops(fname, highz=True):
     if highz or 'v1' not in fname:
         dict['SigmaH2_profiles'] = np.fromfile(f, np.dtype(('f4',Nbin_profiles)), Ngal)
 
+    if not highz and fname2:
+        f2 = open(fname2, 'rb')
+        Ngal2 = np.fromfile(f2, 'i4', 1)[0]
+        assert Ngal2==Ngal
+        Nedge = 1+np.fromfile(f2, 'i4', 1)[0]
+        dict['Nbin_prof'] = Nedge-1
+        dict['RadArray'] = np.fromfile(f2, np.dtype(('f4',Nedge)), Ngal)
+        dict['HIProf_GK11'] = np.fromfile(f2, np.dtype(('f4',Nedge)), Ngal)
+        dict['HIProf_K13'] = np.fromfile(f2, np.dtype(('f4',Nedge)), Ngal)
+        dict['HIProf_GD14'] = np.fromfile(f2, np.dtype(('f4',Nedge)), Ngal)
+        dict['H2Prof_GK11'] = np.fromfile(f2, np.dtype(('f4',Nedge)), Ngal)
+        dict['H2Prof_K13'] = np.fromfile(f2, np.dtype(('f4',Nedge)), Ngal)
+        dict['H2Prof_GD14'] = np.fromfile(f2, np.dtype(('f4',Nedge)), Ngal)
+        f2.close()
+
+    if not highz and fmock:
+        f3 = open(fmock, 'rb')
+        Ngal3 = np.fromfile(f3, 'i8', 1)[0]
+        assert Ngal3==Ngal
+        dict['mass_halo_mock'] = np.fromfile(f3, 'f4', Ngal)
+        mass_stars_mock = np.fromfile(f3, 'f4', Ngal)
+        dict['mass_stars'] = np.append(dict['mass_stars'], mass_stars_mock[np.newaxis].T, axis=1)
+        dict['Type_mock'] = np.fromfile(f3, 'i2', Ngal)
+        f3.close()
+
+    
     if highz:
         if 'v1' not in fname and 'v2' not in fname: # applies for v3 and above
             dict['Hfrac_gas'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
