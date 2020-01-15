@@ -1412,7 +1412,6 @@ def cleansample(var, val=0, mode='g'):
 	return low # DON'T KNOW WHAT I WAS DOING WITH THIS ROUTINE!
 	"""
 
-
 def sphere2dk(R,Lbin,Nbin):
     # Make a square 2d kernel of a collapsed sphere.  Very basic attempt.
     """
@@ -1423,15 +1422,14 @@ def sphere2dk(R,Lbin,Nbin):
     Nbin = int(Nbin) # Ensure an integer number of bins
     if Nbin%2==0: Nbin+=1 # make sure it's an odd number of bins
     k = np.zeros((Nbin,Nbin)) # k is the convolution kernel to be output
-
-    for i in xrange(Nbin):
-        for j in xrange(Nbin):
-            r = Lbin*np.sqrt((i - (Nbin-1)/2)**2 + (j - (Nbin-1)/2)**2) # Average distance of the pixel from the centre
-            if r<R: k[i,j] = np.sqrt(R**2 - r**2)
+    ii = np.arange(Nbin)[np.newaxis].T * np.ones(Nbin)
+    jj = np.arange(Nbin) * np.ones(Nbin)[np.newaxis].T
+    rr = Lbin*np.sqrt((ii - 0.5*(Nbin-1))**2 + (jj - 0.5*(Nbin-1))**2)
+    inside = (rr<R)
+    k[inside] = np.sqrt(R**2 - rr[inside]**2)
 
     k /= np.sum(k) # Make it normalised
     return k
-
 
 def recenbox(x,y,z):
 	# Recentre the coordinates of particles in a simulation box, such that the centre is actually at the centre.
@@ -2176,7 +2174,7 @@ def hist_Nmin(x, bins, Nmin, hard_bins=np.array([])):
 
     return Nhist, bins
 
-def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xrange=None, yrange=None, Nmin=10, weights=None, hard_bins=np.array([]), outBins=False):
+def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xrange=None, yrange=None, Nmin=10, weights=None, hard_bins=np.array([]), outBins=False, bootstrap=False):
     # Given some values to go on x and y axes, bin them along x and return the percentile ranges
     f = np.isfinite(x)*np.isfinite(y)
     if xrange is not None: f = (x>=xrange[0])*(x<=xrange[1])*f
@@ -2190,6 +2188,7 @@ def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xran
         Nhist, bins = hist_Nmin(x, bins, Nmin, hard_bins)
     Nbins = len(bins)-1
     y_low, y_med, y_high = np.zeros(Nbins), np.zeros(Nbins), np.zeros(Nbins)
+    if bootstrap: y_low_wci, y_med_wci, y_high_wci = np.zeros((Nbins,3)), np.zeros((Nbins,3)), np.zeros((Nbins,3)) # wci means 'with confidence interval'
     x_av, N = np.zeros(Nbins), np.zeros(Nbins)
     if addMean: y_mean = np.zeros(Nbins)
     for i in range(Nbins):
@@ -2202,12 +2201,26 @@ def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xran
             x_av[i] = np.mean(x[f])
             N[i] = len(x[f])
             if addMean: y_mean[i] = np.mean(y[f])
+            if bootstrap:
+                pcile_pciles = bootstrap_percentiles(y[f])
+                y_low_wci[i,[0,2]] = pcile_pciles[:,0]
+                y_med_wci[i,[0,2]] = pcile_pciles[:,1]
+                y_high_wci[i,[0,2]] = pcile_pciles[:,2]
     fN = (N>0) if Nmin>0 else np.array([True]*Nbins)
     if len(fN[~fN])>0:
         print '\npercentiles: fN =', fN
         print 'percentiles: bins =', bins
         print 'percentiles: N =', N
         print 'percentiles: max(x) =', np.max(x)
+
+    if bootstrap:
+        y_low_wci[:,1] = 1.0*y_low
+        y_med_wci[:,1] = 1.0*y_med
+        y_high_wci[:,1] = 1.0*y_high
+        y_low = 1.0*y_low_wci # replace the original array to include the bootstrapped confidence intervals
+        y_med = 1.0*y_med_wci
+        y_high = 1.0*y_high_wci
+    
     if not addMean and not outBins:
         return x_av[fN], y_high[fN], y_med[fN], y_low[fN]
     elif not addMean and outBins:
@@ -3618,3 +3631,13 @@ def timestring(hours):
     if len(str_seconds)==1: str_seconds = '0'+str_seconds
     str_time = str_hours+':'+str_minutes+':'+str_seconds
     return str_time
+
+
+def bootstrap_percentiles(sample, Nboot=100000, sample_pciles=[16,50,84], boot_pciles=[16,84]):
+    # Calculate bootstrap uncertainties of specific percentiles (sample_pciles) of a sample of data.  The uncertainties will be the percentiles (boot_pciles) of the bootstrapped sample percentiles.
+    Nsample = len(sample)
+    resample_array = sample[np.random.randint(Nsample, size=(Nsample,Nboot))]
+    resampled_pciles = np.percentile(resample_array, sample_pciles, axis=0)
+    pcile_pciles = np.percentile(resampled_pciles, boot_pciles, axis=1) # columns refer to the sample percentile of interest.  Rows refer to the bootstrapped percentile of that percentile.
+    return pcile_pciles
+
