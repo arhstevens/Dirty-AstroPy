@@ -140,28 +140,50 @@ def surfdensfit(r_vec,Sigma_fit,dsr,n):
 
 
 
-def circle(r,colour='white',centre=[0,0],lw=3,ls='-',half='f',inclination=0,fill=False,alpha=1,part=1,zorder=1,ax=None):
+def circle(r,colour='white',centre=[0,0],lw=3,ls='-',half='f',inclination=0.,fill=False,alpha=1,part=1,zorder=1,ax=None,rotation=0.):
     # Plot a circle with radius r centred on coordinates "centre"
     # "Half" indicates whether to do a full circle (f), or just the top (t) or bottom (b) halves
+    # Rotation changes the angle that an inclined disc is plotted, going in degrees clockwise
     if ax==None: ax=plt.gca()
     r = abs(r)
     x = np.linspace(-r, r, 500)
     y1 = np.sqrt(r**2 - x**2)
-    if inclination>0: y1 *= np.cos(inclination*np.pi/180.)
+    if inclination>0: 
+        y1 *= np.cos(inclination*np.pi/180.)
     y1[0] = 0
     y1[-1] = 0
     y2 = -y1
-    x, y1, y2 = x + centre[0], y1 + centre[1], y2 + centre[1]
-    if half=='t': ax.plot(x, y1, linewidth=lw, color=colour, linestyle=ls)
-    if half=='b': ax.plot(x, y2, linewidth=lw, color=colour, linestyle=ls)
+
+    if half=='t':
+        if rotation!=0 and inclination>0:
+            r = np.sqrt(x*x + y1*y1)
+            theta = np.arctan(y1/x) - rotation*np.pi/180.
+            x = r*np.cos(theta)
+            y1 = r*np.sin(theta)
+        x, y1 = x + centre[0], y1 + centre[1]
+        ax.plot(x, y1, linewidth=lw, color=colour, linestyle=ls)
+    if half=='b':
+        if rotation!=0 and inclination>0:
+            r = np.sqrt(x*x + y2*y2)
+            theta = np.arctan(y2/x) - rotation*np.pi/180.
+            x = r*np.cos(theta)
+            y2 = r*np.sin(theta)
+        x, y2 = x + centre[0], y2 + centre[1]
+        ax.plot(x, y2, linewidth=lw, color=colour, linestyle=ls)
     if half=='f':
         arg = np.where(y1==np.max(y1))[0][0]
         xp = np.concatenate((x[arg:], x[::-1], x[:arg]))
         yp = np.concatenate((y1[arg:], y2[::-1], y1[:arg]))
-        if part<1 and part>0:
+        if part<1 and part>0 and rotation==0:
             filt = (yp < np.max(yp) - (1-part)*(np.max(yp)-np.min(yp)))
             xp, yp = xp[filt], yp[filt]
             top = np.max(yp)
+        if rotation!=0 and inclination>0:
+            r = np.sqrt(xp*xp + yp*yp)
+            theta = np.arctan2(yp, xp) - rotation*np.pi/180.
+            xp = r*np.cos(theta)
+            yp = r*np.sin(theta)
+        xp, yp = xp + centre[0], yp + centre[1]
         ax.plot(xp, yp, linewidth=lw, color=colour, linestyle=ls, zorder=zorder)
     if fill:
         if part<1 and part>0:
