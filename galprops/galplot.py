@@ -1,4 +1,4 @@
-# Adam Stevens, 2013-2018
+# Adam Stevens, 2013-2020
 # Plotting tools for galaxies
 
 from pylab import *

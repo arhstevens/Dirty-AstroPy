@@ -1,4 +1,4 @@
-# Adam Stevens, 2013-2018
+# Adam Stevens, 2013-2020
 # Functions for reading in data files from simulations and models
 
 import numpy as np
@@ -4606,84 +4606,124 @@ def Pearson_MS(h=0.6774):
 
 def TNG_gasprops(fname, highz=True, fname2=False, fmock=False):
     # Read the data produced by z0_gasprops_fromFOF_v2.py OR zhigh_gasprops_fromFOF.py if highz=True, and put into a dictionary
-    dict = {}
-    
-    mainbox = 'L75n1820TNG' in fname
-    
-    f = open(fname, 'rb')
-    Ngal = dict['Ngal'] = np.fromfile(f, 'i8', 1)[0]
-    Nradii_3D = dict['Nradii_3D'] = np.fromfile(f, 'i4', 1)[0]
-    Nradii_2D = dict['Nradii_2D'] = np.fromfile(f, 'i4', 1)[0]
-    Nradii_2D_proj = dict['Nradii_2D_proj'] = np.fromfile(f, 'i4', 1)[0]
-    Nradii_cylinder = dict['Nradii_cylinder'] = np.fromfile(f, 'i4', 1)[0]
-    Nradii = dict['Nradii'] = Nradii_3D + Nradii_2D + Nradii_2D_proj + 2*Nradii_cylinder
-    Nradii_mock = dict['Nradii_mock'] = np.fromfile(f, 'i4', 1)[0]
-    Nbin_profiles = dict['Nbin_profiles'] = np.fromfile(f, 'i4', 1)[0]
-
-    dict['subhaloes'] = np.fromfile(f, 'i8', Ngal)
-    dict['groupnr'] = np.fromfile(f, 'i8', Ngal)
-    dict['Type'] = np.fromfile(f, 'i2', Ngal)
-    dict['mass_halo'] = np.fromfile(f, 'f8', Ngal)
-    
-    dict['radii_3D'] = np.fromfile(f, np.dtype(('f4',Nradii_3D)), Ngal)
-    dict['radii_2D'] = np.fromfile(f, np.dtype(('f4',Nradii_2D)), Ngal)
-    dict['radii_2D_proj'] = np.fromfile(f, np.dtype(('f4',Nradii_2D_proj)), Ngal)
-    dict['radii_cylinder'] = np.fromfile(f, np.dtype(('f4',Nradii_cylinder)), Ngal)
-    dict['height_cylinder'] = np.fromfile(f, np.dtype(('f4',Nradii_cylinder)), Ngal)
-    if not highz and Nradii_mock>0: dict['mock_aperture'] = np.fromfile(f, np.dtype(('f4',Nradii_mock)), Ngal)
-
-    dict['mass_stars'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-    dict['mass_gas'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-    dict['mass_dm'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-    dict['SFR'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-    
-    dict['j_stars'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-    dict['j_gas'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-    
-    dict['mass_neutral'] = np.fromfile(f, np.dtype(('f4',Nradii+Nradii_mock)), Ngal)
-    dict['mass_HI_GK11'] = np.fromfile(f, np.dtype(('f4',Nradii+Nradii_mock)), Ngal)
-    dict['mass_H2_GK11'] = np.fromfile(f, np.dtype(('f4',Nradii+Nradii_mock)), Ngal)
-    dict['mass_HI_K13'] = np.fromfile(f, np.dtype(('f4',Nradii+Nradii_mock)), Ngal)
-    dict['mass_H2_K13'] = np.fromfile(f, np.dtype(('f4',Nradii+Nradii_mock)), Ngal)
-    dict['mass_HI_GD14'] = np.fromfile(f, np.dtype(('f4',Nradii+Nradii_mock)), Ngal)
-    dict['mass_H2_GD14'] = np.fromfile(f, np.dtype(('f4',Nradii+Nradii_mock)), Ngal)
-
-    if highz:
-        dict['metallicity_gas'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-        dict['metallicity_neutral'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+    if fname[-4:]=='.pkl': # reading a pickle file
+        import cPickle as pickle
+        with open(fname, 'rb') as f: dict = pickle.load(f)
+        Ngal = dict['Ngal']
+        Nradii = dict['Nradii']
+    else: # reading a raw binary file with specific structure
+        dict = {}
         
-    dict['j_neutral'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-    dict['j_HI_GK11'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-    dict['j_H2_GK11'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-    dict['j_HI_K13'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-    dict['j_H2_K13'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-    dict['j_HI_GD14'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-    dict['j_H2_GD14'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-    
-    dict['veldisp_neutral'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-    dict['veldisp_baryon'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-    dict['velstd_gas'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-    dict['velstd_baryon'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-    
-    if not highz and mainbox: dict['Time_Since_Infall'] = np.fromfile(f, 'f4', Ngal)
-    dict['inclination'] = np.fromfile(f, 'f4', Ngal)
-    
-    dict['veldisp_HIz_grided'] = np.fromfile(f, np.dtype(('f4',Nradii_cylinder)), Ngal)
-    dict['veldisp_HIr_grided'] = np.fromfile(f, np.dtype(('f4',Nradii_cylinder)), Ngal)
-    dict['veldisp_HIz_thermal_grided'] = np.fromfile(f, np.dtype(('f4',Nradii_cylinder)), Ngal)
-    dict['veldisp_HIr_thermal_grided'] = np.fromfile(f, np.dtype(('f4',Nradii_cylinder)), Ngal)
-    
-    dict['positions_galaxies'] = np.fromfile(f, np.dtype(('f4',3)), Ngal)
-    dict['velocities_galaxies'] = np.fromfile(f, np.dtype(('f4',3)), Ngal)
-    
-    if not highz and mainbox:
-        dict['redshifts_dA'] = np.fromfile(f, np.dtype(('f4',4)), Ngal)
-        dict['redshifts_vel'] = np.fromfile(f, np.dtype(('f4',4)), Ngal)
+        mainbox = 'L75n1820TNG' in fname
+        
+        f = open(fname, 'rb')
+        Ngal = dict['Ngal'] = np.fromfile(f, 'i8', 1)[0]
+        Nradii_3D = dict['Nradii_3D'] = np.fromfile(f, 'i4', 1)[0]
+        Nradii_2D = dict['Nradii_2D'] = np.fromfile(f, 'i4', 1)[0]
+        Nradii_2D_proj = dict['Nradii_2D_proj'] = np.fromfile(f, 'i4', 1)[0]
+        Nradii_cylinder = dict['Nradii_cylinder'] = np.fromfile(f, 'i4', 1)[0]
+        Nradii = dict['Nradii'] = Nradii_3D + Nradii_2D + Nradii_2D_proj + 2*Nradii_cylinder
+        Nradii_mock = dict['Nradii_mock'] = np.fromfile(f, 'i4', 1)[0]
+        Nbin_profiles = dict['Nbin_profiles'] = np.fromfile(f, 'i4', 1)[0]
 
-    dict['SigmaHI_profiles'] = np.fromfile(f, np.dtype(('f4',Nbin_profiles)), Ngal)
+        dict['subhaloes'] = np.fromfile(f, 'i8', Ngal)
+        dict['groupnr'] = np.fromfile(f, 'i8', Ngal)
+        dict['Type'] = np.fromfile(f, 'i2', Ngal)
+        dict['mass_halo'] = np.fromfile(f, 'f8', Ngal)
+        
+        dict['radii_3D'] = np.fromfile(f, np.dtype(('f4',Nradii_3D)), Ngal)
+        dict['radii_2D'] = np.fromfile(f, np.dtype(('f4',Nradii_2D)), Ngal)
+        dict['radii_2D_proj'] = np.fromfile(f, np.dtype(('f4',Nradii_2D_proj)), Ngal)
+        dict['radii_cylinder'] = np.fromfile(f, np.dtype(('f4',Nradii_cylinder)), Ngal)
+        dict['height_cylinder'] = np.fromfile(f, np.dtype(('f4',Nradii_cylinder)), Ngal)
+        if not highz and Nradii_mock>0: dict['mock_aperture'] = np.fromfile(f, np.dtype(('f4',Nradii_mock)), Ngal)
 
-    if highz or 'v1' not in fname:
-        dict['SigmaH2_profiles'] = np.fromfile(f, np.dtype(('f4',Nbin_profiles)), Ngal)
+        dict['mass_stars'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+        dict['mass_gas'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+        dict['mass_dm'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+        dict['SFR'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+        
+        dict['j_stars'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+        dict['j_gas'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+        
+        dict['mass_neutral'] = np.fromfile(f, np.dtype(('f4',Nradii+Nradii_mock)), Ngal)
+        dict['mass_HI_GK11'] = np.fromfile(f, np.dtype(('f4',Nradii+Nradii_mock)), Ngal)
+        dict['mass_H2_GK11'] = np.fromfile(f, np.dtype(('f4',Nradii+Nradii_mock)), Ngal)
+        dict['mass_HI_K13'] = np.fromfile(f, np.dtype(('f4',Nradii+Nradii_mock)), Ngal)
+        dict['mass_H2_K13'] = np.fromfile(f, np.dtype(('f4',Nradii+Nradii_mock)), Ngal)
+        dict['mass_HI_GD14'] = np.fromfile(f, np.dtype(('f4',Nradii+Nradii_mock)), Ngal)
+        dict['mass_H2_GD14'] = np.fromfile(f, np.dtype(('f4',Nradii+Nradii_mock)), Ngal)
+
+        if highz:
+            dict['metallicity_gas'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+            dict['metallicity_neutral'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+            
+        dict['j_neutral'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+        dict['j_HI_GK11'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+        dict['j_H2_GK11'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+        dict['j_HI_K13'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+        dict['j_H2_K13'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+        dict['j_HI_GD14'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+        dict['j_H2_GD14'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+        
+        dict['veldisp_neutral'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+        dict['veldisp_baryon'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+        dict['velstd_gas'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+        dict['velstd_baryon'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+        
+        if not highz and mainbox: dict['Time_Since_Infall'] = np.fromfile(f, 'f4', Ngal)
+        dict['inclination'] = np.fromfile(f, 'f4', Ngal)
+        if not highz and 'v1' not in fname and 'v2' not in fname and 'v3' not in fname: 
+            dict['inclination_axis'] = np.fromfile(f, np.dtype(('f4',3)), Ngal)
+        
+        dict['veldisp_HIz_grided'] = np.fromfile(f, np.dtype(('f4',Nradii_cylinder)), Ngal)
+        dict['veldisp_HIr_grided'] = np.fromfile(f, np.dtype(('f4',Nradii_cylinder)), Ngal)
+        dict['veldisp_HIz_thermal_grided'] = np.fromfile(f, np.dtype(('f4',Nradii_cylinder)), Ngal)
+        dict['veldisp_HIr_thermal_grided'] = np.fromfile(f, np.dtype(('f4',Nradii_cylinder)), Ngal)
+        
+        dict['positions_galaxies'] = np.fromfile(f, np.dtype(('f4',3)), Ngal)
+        dict['velocities_galaxies'] = np.fromfile(f, np.dtype(('f4',3)), Ngal)
+        
+        if not highz and mainbox:
+            dict['redshifts_dA'] = np.fromfile(f, np.dtype(('f4',4)), Ngal)
+            dict['redshifts_vel'] = np.fromfile(f, np.dtype(('f4',4)), Ngal)
+
+        dict['SigmaHI_profiles'] = np.fromfile(f, np.dtype(('f4',Nbin_profiles)), Ngal)
+
+        if highz or 'v1' not in fname:
+            dict['SigmaH2_profiles'] = np.fromfile(f, np.dtype(('f4',Nbin_profiles)), Ngal)
+
+        if highz:
+            if 'v1' not in fname and 'v2' not in fname: # applies for v3 and above
+                dict['Hfrac_gas'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+                dict['Hfrac_neutral'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+        
+                dict['Cfrac_gas'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+                dict['Cfrac_neutral'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+                
+                dict['Ofrac_gas'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+                dict['Ofrac_neutral'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+                
+                dict['SFR_short'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+                dict['SFR_long'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+            
+                if 'v3' not in fname: # applies for v4 and above
+                    dict['metallicity_molecular_GK11'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+                    dict['metallicity_molecular_K13'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+                    dict['metallicity_molecular_GD14'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+                    
+                    dict['Hfrac_molecular_GK11'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+                    dict['Hfrac_molecular_K13'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+                    dict['Hfrac_molecular_GD14'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+                    
+                    dict['Cfrac_molecular_GK11'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+                    dict['Cfrac_molecular_K13'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+                    dict['Cfrac_molecular_GD14'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+                    
+                    dict['Ofrac_molecular_GK11'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+                    dict['Ofrac_molecular_K13'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+                    dict['Ofrac_molecular_GD14'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
+
 
     if not highz and fname2:
         f2 = open(fname2, 'rb')
@@ -4703,44 +4743,15 @@ def TNG_gasprops(fname, highz=True, fname2=False, fmock=False):
     if not highz and fmock:
         f3 = open(fmock, 'rb')
         Ngal3 = np.fromfile(f3, 'i8', 1)[0]
+        if not Ngal3==Ngal: print Ngal, Ngal3
         assert Ngal3==Ngal
         dict['mass_halo_mock'] = np.fromfile(f3, 'f4', Ngal)
-        mass_stars_mock = np.fromfile(f3, 'f4', Ngal)
-        dict['mass_stars'] = np.append(dict['mass_stars'], mass_stars_mock[np.newaxis].T, axis=1)
+        dict['mass_stars_mock'] = np.fromfile(f3, 'f4', Ngal)
+        dict['mass_stars'] = np.append(dict['mass_stars'], dict['mass_stars_mock'][np.newaxis].T, axis=1)
         dict['Type_mock'] = np.fromfile(f3, 'i2', Ngal)
         f3.close()
 
     
-    if highz:
-        if 'v1' not in fname and 'v2' not in fname: # applies for v3 and above
-            dict['Hfrac_gas'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-            dict['Hfrac_neutral'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-            
-            dict['Cfrac_gas'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-            dict['Cfrac_neutral'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-            
-            dict['Ofrac_gas'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-            dict['Ofrac_neutral'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-        
-            dict['SFR_short'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-            dict['SFR_long'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-
-            if 'v3' not in fname: # applies for v4 and above
-                dict['metallicity_molecular_GK11'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-                dict['metallicity_molecular_K13'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-                dict['metallicity_molecular_GD14'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-
-                dict['Hfrac_molecular_GK11'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-                dict['Hfrac_molecular_K13'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-                dict['Hfrac_molecular_GD14'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-
-                dict['Cfrac_molecular_GK11'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-                dict['Cfrac_molecular_K13'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-                dict['Cfrac_molecular_GD14'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-
-                dict['Ofrac_molecular_GK11'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-                dict['Ofrac_molecular_K13'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
-                dict['Ofrac_molecular_GD14'] = np.fromfile(f, np.dtype(('f4',Nradii)), Ngal)
 
     f.close()
     return dict

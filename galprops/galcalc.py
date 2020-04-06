@@ -1,4 +1,4 @@
-# Adam Stevens, 2013-2018
+# Adam Stevens, 2013-2020
 # Functions for calculating properties of galaxies in a general, pipelined manner.
 
 import numpy as np
