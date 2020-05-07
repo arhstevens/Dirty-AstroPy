@@ -4604,7 +4604,7 @@ def Pearson_MS(h=0.6774):
     return z_av, alpha, beta
 
 
-def TNG_gasprops(fname, highz=True, fname2=False, fmock=False):
+def TNG_gasprops(fname, highz=True, fname2=False, fmock=False, fmock_sfr=False):
     # Read the data produced by z0_gasprops_fromFOF_v2.py OR zhigh_gasprops_fromFOF.py if highz=True, and put into a dictionary
     if fname[-4:]=='.pkl': # reading a pickle file
         import cPickle as pickle
@@ -4750,8 +4750,24 @@ def TNG_gasprops(fname, highz=True, fname2=False, fmock=False):
         dict['mass_stars'] = np.append(dict['mass_stars'], dict['mass_stars_mock'][np.newaxis].T, axis=1)
         dict['Type_mock'] = np.fromfile(f3, 'i2', Ngal)
         f3.close()
+        
+    if not highz and fmock_sfr:
+        # Wants fmock_ssfr to be a list of 2 files
+        f4 = open(fmock_sfr[0], 'rb')
+        Ngal4 = np.fromfile(f4, 'i8', 1)[0]
+        if not Ngal4==Ngal: print Ngal, Ngal4
+        assert Ngal4==Ngal
+        dict['SFR_recent'] = np.fromfile(f4, 'f4', Ngal)
+        f4.close()
+        
+        f4 = open(fmock_sfr[1], 'rb')
+        Ngal4 = np.fromfile(f4, 'i8', 1)[0]
+        if not Ngal4==Ngal: print Ngal, Ngal4
+        assert Ngal4==Ngal
+        dict['SFR_old'] = np.fromfile(f4, 'f4', Ngal)
+        f4.close()
+            
 
-    
 
     f.close()
     return dict

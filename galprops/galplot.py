@@ -30,8 +30,8 @@ def contour(x,y,Nbins=None,weights=None,range=None,Nlevels=25,c='k',ls='-',lw=2,
     xd, yd = xedges[1]-xedges[0], yedges[1]-yedges[0]
     xp, yp = xedges[1:]-xd, yedges[1:]-yd
 
-    #k = gc.sphere2dk(3, 1, 7)
-    #im = ss.convolve2d(im,k,mode='same') # Smooth the image for cleaner contours
+#    k = gc.sphere2dk(3, 1, 7)
+#    im = ss.convolve2d(im,k,mode='same') # Smooth the image for cleaner contours
 
     if pcs is not None: # Passing pcs trumps Nlevels, where Nlevels now essentially becomes len(pcs)
         print 'pcs is not None and len(x)=', len(x)

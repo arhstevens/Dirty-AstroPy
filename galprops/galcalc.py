@@ -3245,7 +3245,10 @@ def neutralFraction_SFcells(u, n_H, n_H_th=0.13, T_cold=1000, T_SN=5.73e7, A0=57
     u_4 = temp2u(1e4, mu=4./(8.-5*(1-f_H)))
     A = A0 * (n_H / n_H_th)**-0.8
     u_hot = u_SN / (1.+A) + u_cold
-    return (u_hot - u) / (u_hot - u_cold)
+    fneutral = (u_hot - u) / (u_hot - u_cold)
+    fneutral[fneutral>1.0] = 1.0 # numerical errors could give answer just above 1.0 otherwise
+    fneutral[fneutral<0.0] = 0.0
+    return fneutral
 
 def neutralFraction_SFcells_SH03(u, n_H, beta=0.1, T_c=1000, T_SN=1e8, A0=1e3, f_H=0.76, tstar0=2.1, Lambda_tab=None):
     # As above, but properly going through the Springel & Hernquist (2003) methodology.
@@ -3255,13 +3258,16 @@ def neutralFraction_SFcells_SH03(u, n_H, beta=0.1, T_c=1000, T_SN=1e8, A0=1e3, f
     u_4 = temp2u(1e4, mu=4./(8.-5*(1-f_H)))
     x_th = 1. + (A0+1.)*(u_c-u_4)/u_SN
     T_cool = u2temp(u_SN/A0, mu=4./(8.-5*(1-f_H)))
-    Lambda = -np.interp(T_cool, Lambda_tab[:,0], Lambda_tab[:,1]) * (f_H**2)  # The f_H^2 factor takes care of the convention in Katz+96, which is where the Lambda table comes from.  Proton mass also converts this 
+    Lambda = -np.interp(T_cool, Lambda_tab[:,0], Lambda_tab[:,1]) * (f_H**2)  # The f_H^2 factor takes care of the convention in Katz+96, which is where the Lambda table comes from. 
     tstar0 *= (1e9 * 60*60*24*365.25) # input units are Gyr.  Convert to s.
     n_H_th = x_th/(1.-x_th)**2. * (beta*u_SN - (1-beta)*u_c)/(tstar0*Lambda/1.6726219e-24) * 1e4 # factor 1e4 for energy conversion to cgs.  Proton mass used here to go from cgs density to [m_p cm^-3]
 #    print 'SH03 critical density', n_H_th, 'm_proton / cm^3'
     A = A0 * (n_H / n_H_th)**-0.8
     u_h = u_SN / (1.+A) + u_c
-    return (u_h - u) / (u_h - u_c)
+    fneutral = (u_h - u) / (u_h - u_c)
+    fneutral[fneutral>1.0] = 1.0 # numerical errors could give answer just above 1.0 otherwise
+    fneutral[fneutral<0.0] = 0.0
+    return fneutral
 
 def neutralFraction_from_electronFraction(u, EA, SFR):
     """
@@ -3640,4 +3646,5 @@ def bootstrap_percentiles(sample, Nboot=100000, sample_pciles=[16,50,84], boot_p
     resampled_pciles = np.percentile(resample_array, sample_pciles, axis=0)
     pcile_pciles = np.percentile(resampled_pciles, boot_pciles, axis=1) # columns refer to the sample percentile of interest.  Rows refer to the bootstrapped percentile of that percentile.
     return pcile_pciles
+
 
