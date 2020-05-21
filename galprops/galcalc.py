@@ -2217,6 +2217,17 @@ def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xran
         y_low_wci[:,1] = 1.0*y_low
         y_med_wci[:,1] = 1.0*y_med
         y_high_wci[:,1] = 1.0*y_high
+        
+        if weights is not None: # bootstrapped percentiles don't properly account for possibility of weights.  This is the simplest way to deal with it -- just extend the confidence intervals to encompass the 'true' weighted percentile if need be
+            y_low_wci[:,0] = np.min(y_low_wci[:,:2], axis=1)
+            y_med_wci[:,0] = np.min(y_med_wci[:,:2], axis=1)
+            y_high_wci[:,0] = np.min(y_high_wci[:,:2], axis=1)
+            
+            y_low_wci[:,2] = np.max(y_low_wci[:,1:], axis=1)
+            y_med_wci[:,2] = np.max(y_med_wci[:,1:], axis=1)
+            y_high_wci[:,2] = np.max(y_high_wci[:,1:], axis=1)
+
+                
         y_low = 1.0*y_low_wci # replace the original array to include the bootstrapped confidence intervals
         y_med = 1.0*y_med_wci
         y_high = 1.0*y_high_wci
@@ -3317,25 +3328,25 @@ def comoving_distance(z, H_0=67.74, Omega_R=0, Omega_M=0.3089, Omega_L=0.6911):
     integral = np.sum(0.5*(integrand[1:]+integrand[:-1])*np.diff(zprime))
     c = 299792.458
     return c/H_0 * integral
-
-
+    
+    
 def survey_volume(RA, dec, z, H_0=67.74, Omega_R=0, Omega_M=0.3089, Omega_L=0.6911):
     # calculate comoving survey volume from RA, dec, z ranges.  Each input is a list with 2 entries.
     dmin = comoving_distance(z[0], H_0, Omega_R, Omega_M ,Omega_L) * (1+z[0])**2
     dmax = comoving_distance(z[1], H_0, Omega_R, Omega_M ,Omega_L) * (1+z[0])**2
     vol = 1./3. * abs(RA[1]-RA[0])*np.pi/180 * abs(np.sin(dec[1]*np.pi/180)-np.sin(dec[0]*np.pi/180)) * abs(dmax**3 - dmin**3)
     return vol
-
+    
 def Mvir2Rvir(mass, crit_fac=200., z=0, H_0=67.74, Omega_R=0, Omega_M=0.3089, Omega_L=0.6911):
     # convert virial mass [Msun] to virial radius [kpc]
     vol = mass / critdens(z,H_0,Omega_R,Omega_M,Omega_L) / crit_fac
     return (3.*vol/4./np.pi)**(1./3.) * 1e-3
-
+    
 def Mvir2Vvir(mass, crit_fac=200., z=0, H_0=67.74, Omega_R=0, Omega_M=0.3089, Omega_L=0.6911):
     # convert virial mass [Msun] to virial velocity [km/s]
     Rvir = Mvir2Rvir(mass, crit_fac, z, H_0, Omega_R, Omega_M, Omega_L)
     return np.sqrt(6.67408e-11 * mass*1.989e30 / (Rvir*3.0857e19))*1e-3
-
+    
 def integrand_HIprof_model1(r_norm, rb, Sigma_0):
     # These HI profiles refer to my size--mass paper of 2019
     Sigma_c = 1.0 # Msun/pc^2
@@ -3344,7 +3355,7 @@ def integrand_HIprof_model1(r_norm, rb, Sigma_0):
     fexp = np.where(r_norm>rb)[0]
     Sigma_HI[fexp] *= np.exp(-(r_norm[fexp]-rb)/rs)
     return r_norm * Sigma_HI
-
+    
 def integrand_HIprof_model2(r_norm, rb, Sigma_0):
     Sigma_c = 1.0 # Msun/pc^2
     Sigma_HI = np.ones(len(r_norm))*Sigma_0
@@ -3352,7 +3363,6 @@ def integrand_HIprof_model2(r_norm, rb, Sigma_0):
     fexp = np.where(r_norm>rb)[0]
     Sigma_HI[fexp] *= np.exp(-((r_norm[fexp]-rb)/rS)**2)
     return r_norm * Sigma_HI
-
 
 def logHIprof_model3(r_norm, rd, delta_logSigma):
     rd, delta_logSigma = limits_model3(rd, delta_logSigma)
@@ -3378,7 +3388,7 @@ def limits_model3(rd_in, delta_logSigma_in):
 #        print '\ndelta_logSigma changed from', delta_logSigma_in, 'to', delta_logSigma
 #        print 'rd_in, rd, exp(-1/rd) =', rd_in, rd, np.exp(-1./rd)
     return rd, delta_logSigma
-
+    
 def mHI_model1(rb, Sigma_0, rHI, Sigma_c=1.):
     rs =  (1-rb) / np.log(Sigma_0/Sigma_c)
     if type(rs)==np.ndarray: rs[rb==1] = 0
@@ -3416,7 +3426,7 @@ def mHI_model3(rd, deltaLogSigma_0, rHI):
         hyper = mm.hyper([a1,a2,a3],[b1,b2],c)
     
     return 1.60769 * np.pi * Sigma_0 * rd**2 * hyper * rHI**2
-
+    
 def interp_2Darray(xval, xarr, yarr, rising=True):
     # Linearly interpolate across each row of a 2D array with a corresponding 2D array for the same value
     # Currently assumes the function is always increasing at the point where it is to be interpolated
@@ -3429,8 +3439,8 @@ def interp_2Darray(xval, xarr, yarr, rising=True):
     gradient = (yarr[row,col+1]-yarr[row,col]) / (xarr[row,col+1]-xarr[row,col])
     yout[row] = yarr[row,col] + gradient * (xval - xarr[row,col])
     return yout
-
-
+    
+    
 def alpha_CO(logOH, logSFR, logMstar, z, h):
     # Calcuate the conversion factor for CO(1-0) luminosity to H2 mass, based on Accurso et al. (2017, eq 25).  Uncertainty introduced is 0.165 dex.
     
@@ -3442,8 +3452,8 @@ def alpha_CO(logOH, logSFR, logMstar, z, h):
     log_alphaCO = 14.752 - 1.623*logOH + 0.062*delta_MS
     alphaCO = 10**log_alphaCO * 0.76 # get rid of helium contribution
     return alphaCO
-
-
+    
+    
 def H2_from_CO(LCO, logSFR, logMstar, z, h, uncerts_logLCO=[0,0], uncerts_logMstar=[0,0]):
     # covert CO luminosity to H2 mass, provided other properties are supplied.  Assumes LCO is for the 1->0 transition and is in units of K*km*pc^2/s.  Uses gas fraction and redshift to approximate metallicity using IllustrisTNG, then applies the conversion factor of Accurso et al. (2017, eq 25).  Uncerts should be lists of 2 arrays/values.
     
@@ -3565,8 +3575,8 @@ def H2_from_CO(LCO, logSFR, logMstar, z, h, uncerts_logLCO=[0,0], uncerts_logMst
         return log_MH2, logOH
     except ValueError or AssertionError:
         return log_MH2, logOH, log_MH2_uncerts
-
-
+        
+        
 def fit_divide_SFMS(mass_stars, SFR, sSFR_init = 10**-10.5):
     # Find and fit a star-forming main sequence, then find a dividing line for star-forming and quiescent galaxies
     logSM = np.log10(mass_stars)
@@ -3612,8 +3622,7 @@ def fit_divide_SFMS(mass_stars, SFR, sSFR_init = 10**-10.5):
 
     # parameters for main sequence, red sequence, division line
     return p, p2, p3
-
-
+    
 def reset_periodic_positions(pos, Lbox):
     # Shift all particles in a periodic simuation so they are all contained within +/- half the box length
     while len(pos[pos<-0.5*Lbox])>0:
@@ -3621,8 +3630,8 @@ def reset_periodic_positions(pos, Lbox):
     while len(pos[pos>0.5*Lbox])>0:
         pos[pos>0.5*Lbox] -= Lbox
     return pos
-
-
+    
+    
 def timestring(hours):
     # convert a float of total hours into a string of 'hh:mm:ss'
     int_hours = int(hours)
@@ -3637,8 +3646,8 @@ def timestring(hours):
     if len(str_seconds)==1: str_seconds = '0'+str_seconds
     str_time = str_hours+':'+str_minutes+':'+str_seconds
     return str_time
-
-
+    
+    
 def bootstrap_percentiles(sample, Nboot=100000, sample_pciles=[16,50,84], boot_pciles=[16,84]):
     # Calculate bootstrap uncertainties of specific percentiles (sample_pciles) of a sample of data.  The uncertainties will be the percentiles (boot_pciles) of the bootstrapped sample percentiles.
     Nsample = len(sample)
