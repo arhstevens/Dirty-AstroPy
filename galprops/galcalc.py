@@ -2200,7 +2200,7 @@ def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xran
                 [y_low[i], y_med[i], y_high[i]] = weighted_percentile(y[f], [low, med, high], weights[f])
             x_av[i] = np.mean(x[f])
             N[i] = len(x[f])
-            if addMean: y_mean[i] = np.mean(y[f])
+            if addMean: y_mean[i] = np.mean(y[f]) if weights is None else np.sum(y[f]*weights[f])/np.sum(weights[f])
             if bootstrap:
                 pcile_pciles = bootstrap_percentiles(y[f])
                 y_low_wci[i,[0,2]] = pcile_pciles[:,0]
