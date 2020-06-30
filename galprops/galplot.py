@@ -1967,3 +1967,68 @@ def bigax_labels(xlab, ylab, fig=plt.gcf()):
     big_ax.set_ylim(-2,-1)
     big_ax.tick_params(labelcolor='none', top='off', bottom='off', left='off', right='off')
 
+
+def build_gas_image_array(x, y, mass, vol, Npix=2000, boundary=None):
+    # Build a 2D array for direct imaging of a galaxy from particle/cell (hereafter 'element') data.  Assumes each element has its own volume and is spherical.  Should be directly imagable with plt.imshow() afterward.  For galaxies, it usually makes sense to show the log of this, and to assume some nominal negligible value for the zeroes.
+    """
+    Input:
+    x = x-coordinate of element [kpc]
+    y = y-coordinate of element [kpc]
+    mass = mass of element [Msun]
+    vol = volume of element [kpc^3]
+    Npix = number of pixels in each dimension of image
+    boundary = half the width and height of the image, i.e. image goes from -boundary to +boundary in each direction [kpc]
+    
+    Output:
+    Image = 2D array of surface density values [Msun/kpc^2]
+    """
+
+    if boundary==None: # default boundary that includes all possible elements
+        boundary = max(np.max(abs(x)), np.max(abs(y)))
+
+    rad = np.cbrt(vol * 0.75 / np.pi) # convert volume into a spherical radius
+    pixel_size = 2.0*boundary/Npix
+    xedge = np.linspace(-boundary, boundary, Npix+1)
+
+    # figure out which element will actually contribute to the image and which cell they nominally sit in
+    f_main = (abs(x)+rad<boundary) *  (abs(y)+rad<boundary)
+    plist_main = np.where(f_main)[0] # these are fully in the bounds
+    plist_part = np.where(~f_main * (abs(x)-rad<boundary) * (abs(y)-rad<boundary))[0] # only part of the cell's flux will contribute to the image
+    ii = ((x+boundary)/pixel_size).astype(np.int32)
+    ii[x+boundary<0] -= 1 # Any float in (-1,1) will be cast to 0 when converted to int, which is not what we want.
+    ij = ((y+boundary)/pixel_size).astype(np.int32)
+    ij[y+boundary<0] -= 1
+
+    # Initialise image array
+    Image = np.zeros((Npix,Npix), dtype=np.float32)
+
+    # Build the image contribution from the "safe" elements
+    print 'Number of clean cells to process', len(plist_main)
+    for p in plist_main:
+        kernel = mass[p] * gc.sphere2dk(rad[p], pixel_size, 2*rad[p]/pixel_size)
+        Nk = (len(kernel)-1)/2
+        ii_min, ii_max = ii[p]-Nk, ii[p]+Nk+1 # figure out the extreme pixels that this element will occupy
+        ij_min, ij_max = ij[p]-Nk, ij[p]+Nk+1
+        Image[ii_min:ii_max, ij_min:ij_max] += kernel
+
+    # Build the contribution from the elements near the image boundary
+    print 'Number of boundary cells to process', len(plist_part)
+    for p in plist_part:
+        kernel = mass[p] * gc.sphere2dk(rad[p], pixel_size, 2*rad[p]/pixel_size)
+        Nkf = len(kernel)
+        Nk = (Nkf-1)/2    
+        ii_min, ii_max = ii[p]-Nk, ii[p]+Nk+1 # figure out the extreme pixels that this element will occupy
+        ij_min, ij_max = ij[p]-Nk, ij[p]+Nk+1
+        
+        ki_min, kj_min = max(0, -ii_min), max(0, -ij_min) # figure out the parts of the kernel that will go into the image
+        ki_max, kj_max = min(Nkf-(ii_max-Npix), Nkf), min(Nkf-(ij_max-Npix), Nkf)
+
+        ii_min, ij_min = max(0, ii_min), max(0, ij_min)
+        ii_max, ij_max = min(ii_max, Npix), min(ij_max, Npix)
+
+        Image[ii_min:ii_max, ij_min:ij_max] += kernel[ki_min:ki_max, kj_min:kj_max]
+
+    pixel_area = pixel_size**2
+    Image = Image.T[::-1,:] / pixel_area # reorient and normalise by area
+
+    return Image
