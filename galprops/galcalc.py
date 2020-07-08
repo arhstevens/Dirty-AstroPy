@@ -1001,61 +1001,66 @@ def virrad(mass,x,y,z,rho_crit,r_max=400000.,it_max=400,densfac=200.):
     r = np.sqrt(x**2+y**2+z**2) # Actual radii of the particles
     return virial_radius(mass,r,rho_crit,r_max,it_max,densfac)
 
+def z2tL(z, h=0.6774, Omega_M=0.3089, Omega_Lambda=0.6911, Omega_R=0, nele=100000):
+    # Convert redshift z to look-backtime time tL.
+    # nele is the number if elements used in the numerical integration
+
+    if z<=0: return 0. # not designed for blueshifts!
+
+    H_0 = 100*h
+    Omega_k = 1. - Omega_R - Omega_M - Omega_Lambda # Curvature density as found from the radiation, matter and dark energy energy densities.
+    Mpc_km = 3.08567758e19 # Number of km in 1 Mpc
+    yr_s = 60*60*24*365.24 # Number of seconds in a year
+
+    # Create the z-array that is to be integrated over and matching integrand
+    zprime = np.linspace(0, z, nele)
+    integrand = 1./((1+zprime)*np.sqrt(Omega_R*(1+zprime)**4 + Omega_M*(1+zprime)**3 + Omega_k*(1+zprime)**2 + Omega_Lambda))
+
+    # Numerically integrate trapezoidally
+    integrated = 0.5 * np.sum(np.diff(zprime)*(integrand[:-1] + integrand[1:]))
+    tL = np.divide(integrated*Mpc_km, H_0*yr_s*1e9)
+
+    return tL # Gives look-back time in Gyr
 
 
-def z2t(z,H_0=67.74,Omega_R=0,Omega_M=0.3089,Omega_Lambda=0.6911):
+def z2t(z, H_0=67.74, Omega_R=0, Omega_M=0.3089, Omega_Lambda=0.6911, nele=100000):
 	# Convert redshift z to cosmic time t.  See ztlookup for other parameter definitions.
-	
-	Omega_k = 1 - Omega_R - Omega_M - Omega_Lambda # Curvature density as found from the radiation, matter and dark energy energy densities.
-	Mpc_km = 3.08567758e19 # Number of km in 1 Mpc
-	yr_s = 60*60*24*365.24 # Number of seconds in a year
-	
-	# Create the z-array that is to be integrated over and matching integrand
-	zprime = np.array( list(z+np.arange(200)/200.) + list(z+1+np.arange(100)/100.) + list(z+2+np.arange(50)/50.) + list(z+3+np.arange(40)/20.) + list(z+5+np.arange(200)/10.) + list(z+25+np.arange(1000)) + list(z+1025+np.arange(900)/0.1) )
-	integrand = 1./((1+zprime)*np.sqrt(Omega_R*(1+zprime)**4 + Omega_M*(1+zprime)**3 + Omega_k*(1+zprime)**2 + Omega_Lambda))
-	
-	# Numerically integrate trapezoidally
-	dzprime = np.diff(zprime)
-	integrated = np.sum(integrand[:-1]*dzprime + 0.5*np.diff(integrand)*dzprime)
-	t = divide(integrated*Mpc_km, H_0*yr_s*1e9)
-	
-	return t # Gives cosmic time in Gyr
+	return z2tL(2000, H_0, Omega_R, Omega_M, Omega_Lambda) - z2tL(z, H_0, Omega_R, Omega_M, Omega_Lambda, nele)
 
 
-def z2dA(z,H_0=67.74,Omega_R=0,Omega_M=0.3089,Omega_Lambda=0.6911):
+def z2dA(z, H_0=67.74, Omega_R=0, Omega_M=0.3089, Omega_Lambda=0.6911, nele=100000):
 	# Convert redshift to an angular-diameter distance
 	c = 299792.458 # Speed of light in km/s
-	Omega_k = 1 - Omega_R - Omega_M - Omega_Lambda
-	zprime = np.linspace(0,z,1e4)
-	dz = np.diff(zprime)
+	Omega_k = 1. - Omega_R - Omega_M - Omega_Lambda
+	zprime = np.linspace(0,z,nele)
 	integrand = 1./np.sqrt(Omega_R*(1+zprime)**4 + Omega_M*(1+zprime)**3 + Omega_k*(1+zprime)**2 + Omega_Lambda)
-	intval = np.sum(integrand[:-1]*dz + np.diff(integrand)*dz)
+	intval = 0.5*np.sum(np.diff(zprime)*(integrand[:-1] + integrand[1:]))
 	d_A = 1e6*c*intval / (H_0*(1+z)) # Angular-diameter distance in pc
 	return d_A
 
 
-def ztlookup(zmin=-0.5,zmax=8,H_0=67.74,Omega_R=0,Omega_M=0.3089,Omega_Lambda=0.6911):
+def ztlookup(zmin=0, zmax=8, H_0=67.74, Omega_R=0, Omega_M=0.3089, Omega_Lambda=0.6911, nele=100000):
 	# Produce a look-up table for converting cosmic time to redshift in spaces of 0.001 in redshift
-	
-	###  INPUTS ###
-	# zmax = Maximum redshift to convert to time
-	# Omega_R = Density parameter for radiation at z=0
-	# Omega_M = Density parameter for mass at z=0
-	# Omega_Lambda = Denisty parameter for dark energy at z=0
-	# H_0 = Hubble parameter at z=0
-	
-	### OUTPUT  ###
-	# tarr = Array of time values corresponding to increments in z of 0.001 from 0 to zmax
-	
-	if type(zmax) is not 'int':
-		zmax = int(zmax+1) # Round zmax up to the nearest integer
-	
-	tarr = np.zeros((zmax-zmin)*1000) # Produce empty array for time
-	zarr = np.arange(zmin,zmax,0.001)
-	for i in xrange(len(zarr)):
-		tarr[i] = z2t(zarr[i], H_0, Omega_R, Omega_M, Omega_Lambda)
-	
-	return tarr, zarr
+
+    ###  INPUTS ###
+    # zmax = Maximum redshift to convert to time
+    # Omega_R = Density parameter for radiation at z=0
+    # Omega_M = Density parameter for mass at z=0
+    # Omega_Lambda = Denisty parameter for dark energy at z=0
+    # H_0 = Hubble parameter at z=0
+
+    ### OUTPUT  ###
+    # tarr = Array of time values corresponding to increments in z of 0.001 from 0 to zmax
+
+    if type(zmax) is not 'int':
+        zmax = int(zmax+1) # Round zmax up to the nearest integer
+
+    tarr = np.zeros((zmax-zmin)*1000) # Produce empty array for time
+    zarr = np.arange(zmin,zmax,0.001)
+    for i in xrange(len(zarr)):
+        tarr[i] = z2tL(zarr[i], H_0, Omega_R, Omega_M, Omega_Lambda, nele)
+    tarr = z2tL(2000, H_0, Omega_R, Omega_M, Omega_Lambda) - tarr
+    return tarr, zarr
 
 
 
