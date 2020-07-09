@@ -1025,7 +1025,7 @@ def z2tL(z, h=0.6774, Omega_M=0.3089, Omega_Lambda=0.6911, Omega_R=0, nele=10000
 
 def z2t(z, H_0=67.74, Omega_R=0, Omega_M=0.3089, Omega_Lambda=0.6911, nele=100000):
 	# Convert redshift z to cosmic time t.  See ztlookup for other parameter definitions.
-	return z2tL(2000, H_0, Omega_R, Omega_M, Omega_Lambda) - z2tL(z, H_0, Omega_R, Omega_M, Omega_Lambda, nele)
+	return z2tL(2000, H_0*0.01, Omega_M, Omega_Lambda, Omega_R) - z2tL(z, H_0*0.01, Omega_M, Omega_Lambda, Omega_R, nele)
 
 
 def z2dA(z, H_0=67.74, Omega_R=0, Omega_M=0.3089, Omega_Lambda=0.6911, nele=100000):
