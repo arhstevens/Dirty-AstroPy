@@ -1058,8 +1058,8 @@ def ztlookup(zmin=0, zmax=8, H_0=67.74, Omega_R=0, Omega_M=0.3089, Omega_Lambda=
     tarr = np.zeros((zmax-zmin)*1000) # Produce empty array for time
     zarr = np.arange(zmin,zmax,0.001)
     for i in xrange(len(zarr)):
-        tarr[i] = z2tL(zarr[i], H_0, Omega_R, Omega_M, Omega_Lambda, nele)
-    tarr = z2tL(2000, H_0, Omega_R, Omega_M, Omega_Lambda) - tarr
+        tarr[i] = z2tL(zarr[i], H_0*0.01, Omega_M, Omega_Lambda, Omega_R, nele)
+    tarr = z2tL(2000, H_0*0.01, Omega_M, Omega_Lambda, Omega_R) - tarr
     return tarr, zarr
 
 
