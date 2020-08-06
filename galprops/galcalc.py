@@ -1078,7 +1078,7 @@ def t2z(t,tarr,zarr='None'):
 	return z
 
 
-def Hubble(z,h=0.673,Omega_R=0,Omega_M=0.315,Omega_Lambda=0.685):
+def Hubble(z,h=0.6774,Omega_R=0,Omega_M=0.3089,Omega_Lambda=0.6911):
 	H_0 = 100*h
 	return H_0*np.sqrt(Omega_R*(1+z)**4 + Omega_M*(1+z)**3 + Omega_Lambda)
 
@@ -1100,7 +1100,7 @@ def critdens(z,H_0=67.3,Omega_R=0,Omega_M=0.315,Omega_Lambda=0.685):
 
 
 
-def critmatterdens(z,H_0=67.3,Omega_R=0,Omega_M=0.315,Omega_Lambda=0.685):
+def critmatterdens(z,H_0=67.74,Omega_R=0,Omega_M=0.3089,Omega_Lambda=0.6911):
 	# Same as critdens except find the critical value specifically for matter (assuming a universe where radiation density is negligible)
 	# Now of the opinion this isn't particularly useful
 	rho_crit = critdens(z,H_0=H_0,Omega_M=Omega_M,Omega_Lambda=Omega_Lambda)
@@ -3351,6 +3351,10 @@ def Mvir2Vvir(mass, crit_fac=200., z=0, H_0=67.74, Omega_R=0, Omega_M=0.3089, Om
     # convert virial mass [Msun] to virial velocity [km/s]
     Rvir = Mvir2Rvir(mass, crit_fac, z, H_0, Omega_R, Omega_M, Omega_L)
     return np.sqrt(6.67408e-11 * mass*1.989e30 / (Rvir*3.0857e19))*1e-3
+    
+def Mvir2tdyn(mass, crit_fac=200., z=0, H_0=67.74, Omega_R=0, Omega_M=0.3089, Omega_L=0.6911):
+    # convert virial mass [Msun] to dynamical time [Gyr]
+    t = Mvir2Rvir(mass, crit_fac, z, H_0, Omega_R, Omega_M, Omega_L) * 3.0857e16 / Mvir2Vvir(mass, crit_fac, z, H_0, Omega_R, Omega_M, Omega_L) / (60**2 * 24 * 365.24 * 1e9)
     
 def integrand_HIprof_model1(r_norm, rb, Sigma_0):
     # These HI profiles refer to my size--mass paper of 2019

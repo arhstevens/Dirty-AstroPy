@@ -4332,7 +4332,7 @@ def OG14(h, disconly=False):
     return BTT, logM_star, logM_HIH2, logj_star, logj_HIH2
 
 
-def xGASS_xCOLDGASS(indir=None, h=0.6774, extra=False, extra2=False):
+def xGASS_xCOLDGASS(indir=None, h=0.6774, extra=False, extra2=False, Omega_L=0.6911, Omega_M=0.3089):
     if indir is None: indir = '/Users/adam/xGASS/'
     keys = ['GASS', 'lgMstar', 'SFR_best', 'lgMHI', 'HIsrc', 'env_code_B', 'logMh_Mst_B', 'lvir_ratB', 'zSDSS', 'lgmust', 'petrR50_r', 'Dlum']
     key_dtypes = [np.int32, np.float32, np.float32, np.float32, np.uint16, np.int16, np.float32, np.float32, np.float32, np.float32, np.float32, np.float32]
@@ -4347,19 +4347,30 @@ def xGASS_xCOLDGASS(indir=None, h=0.6774, extra=False, extra2=False):
     arg1 = np.searchsorted(xGASS_ID, G['GASS'])
     arg2 = np.searchsorted(xGASS_ID, C['ID'])
     
+    xGASS_redshift = np.zeros(Ngal, dtype=np.float32)
+    xGASS_redshift[arg2] = C['Z_SDSS']
+    xGASS_redshift[arg1] = G['zSDSS']
+    
+    xGASS_LumDist = np.zeros(Ngal, dtype=np.float32)
+    xGASS_LumDist[arg2] = C['LUMDIST']
+    xGASS_LumDist[arg1] = G['Dlum']
+#    assert np.allclose(xGASS_LumDist, np.array([gc.z2dA(z, H_0=70.0, Omega_Lambda=0.7, Omega_M=0.3) for z in xGASS_redshift]) * (1+xGASS_redshift)**2 * 1e-6, atol=0.01, rtol=1e-3) # checking consistency of luminosity distance in the file with what I would calculate from their assumed cosmology
+    Dlum = np.array([gc.z2dA(z, H_0=100*h, Omega_Lambda=Omega_L, Omega_M=Omega_M) for z in xGASS_redshift]) * (1+xGASS_redshift)**2 * 1e-6 # luminosity distance based on desired cosmology
+    logDfac = np.log10(Dlum / xGASS_LumDist)
+    
     xGASS_logMstar = np.zeros(Ngal, dtype=np.float32)
     xGASS_logMstar[arg2] = C['LOGMSTAR']
     xGASS_logMstar[arg1] = G['lgMstar']
-    xGASS_logMstar[xGASS_logMstar!=0] += 2*np.log10(0.7/h)
+    xGASS_logMstar[xGASS_logMstar!=0] += 2*logDfac[xGASS_logMstar!=0]
 
     xGASS_logSFR = np.zeros(Ngal, dtype=np.float32)
     xGASS_logSFR[arg2] = C['LOGSFR_BEST']
     xGASS_logSFR[arg1] = np.log10(G['SFR_best'])
-    xGASS_logSFR[xGASS_logSFR!=0] += 2*np.log10(0.7/h)
+    xGASS_logSFR[xGASS_logSFR!=0] += 2*logDfac[xGASS_logSFR!=0]
 
     xGASS_logMHI = np.zeros(Ngal, dtype=np.float32) # If 0, no measurement has been made at all
     xGASS_logMHI[arg1] = G['lgMHI']
-    xGASS_logMHI[xGASS_logMHI!=0] += 2*np.log10(0.7/h)
+    xGASS_logMHI[xGASS_logMHI!=0] += 2*logDfac[xGASS_logMHI!=0]
 
     xGASS_HIdet = np.zeros(Ngal, dtype=bool) # Non-detections have their upper limit provided as their mass entry
     xGASS_HIdet[arg1[G['HIsrc']<=3]] = True
@@ -4370,26 +4381,23 @@ def xGASS_xCOLDGASS(indir=None, h=0.6774, extra=False, extra2=False):
 
     xGASS_logMhalo = np.zeros(Ngal, dtype=np.float32)
     xGASS_logMhalo[arg1] = G['logMh_Mst_B']
-    xGASS_logMhalo[xGASS_logMhalo!=0] += 2*np.log10(0.7/h)
+    xGASS_logMhalo[xGASS_logMhalo!=0] += 2*logDfac[xGASS_logMhalo!=0]
 
     xGASS_logRonRvir = np.zeros(Ngal, dtype=np.float32)
     xGASS_logRonRvir[arg1] = G['lvir_ratB']
 
     xGASS_logMH2 = np.zeros(Ngal, dtype=np.float32) # If 0, no measurement has been made at all
     xGASS_logMH2[arg2] = np.log10(C['XCO_A17']*C['LCO'])
-    xGASS_logMH2[xGASS_logMH2!=0] += (2*np.log10(0.7/h) - np.log10(1.36)) # 1.36 is the "helium contribution" to the conversion factor (wut)
+    xGASS_logMH2[xGASS_logMH2!=0] += (2*logDfac[xGASS_logMH2!=0] - np.log10(1.36)) # 1.36 is the "helium contribution" to the conversion factor (wut)
 
     xGASS_logMH2_corr = np.zeros(Ngal, dtype=np.float32) # _corr means the aperture correction has been applied
     xGASS_logMH2_corr[arg2[C['FLAG_CO']==1]] = C['LOGMH2'][C['FLAG_CO']==1]
     xGASS_logMH2_corr[arg2[C['FLAG_CO']==2]] = C['LIM_LOGMH2'][C['FLAG_CO']==2]
-    xGASS_logMH2_corr[xGASS_logMH2_corr!=0] += (2*np.log10(0.7/h) - np.log10(1.36))
+    xGASS_logMH2_corr[xGASS_logMH2_corr!=0] += (2*logDfac[xGASS_logMH2_corr!=0] - np.log10(1.36))
 
     xGASS_H2det = np.zeros(Ngal, dtype=bool)
     xGASS_H2det[arg2[C['FLAG_CO']==1]] = True
     
-    xGASS_redshift = np.zeros(Ngal, dtype=np.float32)
-    xGASS_redshift[arg2] = C['Z_SDSS']
-    xGASS_redshift[arg1] = G['zSDSS']
     if extra:
         xGASS_LCO_corr = np.zeros(Ngal, dtype=np.float32)
         xGASS_LCO_corr[arg2] = C['LCO_COR']
@@ -4409,7 +4417,7 @@ def xGASS_xCOLDGASS(indir=None, h=0.6774, extra=False, extra2=False):
         xGASS_r50 = np.zeros(Ngal, dtype=np.float32)
         xGASS_r50[arg2] = C['R50KPC']
         xGASS_r50[arg1] = np.tan(G['petrR50_r']/60.**2 * np.pi/180.) * G['Dlum']*1e3
-        xGASS_r50[xGASS_r50>0] += np.log10(0.7/h)
+        xGASS_r50[xGASS_r50>0] += logDfac[xGASS_r50>0]
 
         return xGASS_ID, xGASS_logMstar, xGASS_logSFR, xGASS_logMHI, xGASS_HIdet, xGASS_Type, xGASS_logMhalo, xGASS_logRonRvir, xGASS_logMH2, xGASS_H2det, xGASS_logMH2_corr, xGASS_redshift, xGASS_logMuStar, xGASS_r50
 
