@@ -2251,16 +2251,8 @@ def weighted_percentile(data, percentile, weights):
     data = data[arg]
     weights = weights[arg]
     weights /= np.sum(weights)
-    wsum = np.append(0, np.cumsum(weights))
-    if type(percentile)==float:
-        w = np.searchsorted(wsum, percentile)-1
-        return data[w]
-    else:
-        out = []
-        for p in percentile:
-            w = np.searchsorted(wsum, p)-1
-            out += [data[w]]
-        return out
+    wsum = np.cumsum(weights)
+    return np.interp(percentile, wsum, data)
 
 
 def meantrend(x, y, bins=20, xrange=None, yrange=None):
