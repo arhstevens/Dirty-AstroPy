@@ -3658,3 +3658,17 @@ def bootstrap_percentiles(sample, Nboot=100000, sample_pciles=[16,50,84], boot_p
     return pcile_pciles
 
 
+def ks_weighted(data1, data2, wei1, wei2):
+    # Shamelessly copied from https://stackoverflow.com/questions/40044375/how-to-calculate-the-kolmogorov-smirnov-statistic-between-two-weighted-samples
+    ix1 = np.argsort(data1)
+    ix2 = np.argsort(data2)
+    data1 = data1[ix1]
+    data2 = data2[ix2]
+    wei1 = wei1[ix1]
+    wei2 = wei2[ix2]
+    data = np.concatenate([data1, data2])
+    cwei1 = np.hstack([0, np.cumsum(wei1)/sum(wei1)])
+    cwei2 = np.hstack([0, np.cumsum(wei2)/sum(wei2)])
+    cdf1we = cwei1[[np.searchsorted(data1, data, side='right')]]
+    cdf2we = cwei2[[np.searchsorted(data2, data, side='right')]]
+    return np.max(np.abs(cdf1we - cdf2we))
