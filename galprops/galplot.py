@@ -1968,9 +1968,9 @@ def bigax_labels(xlab, ylab, fig=plt.gcf()):
     big_ax.tick_params(labelcolor='none', top='off', bottom='off', left='off', right='off')
 
 
-def build_gas_image_array(x, y, mass, vol, Npix=2000, boundary=None):
-    # Build a 2D array for direct imaging of a galaxy from particle/cell (hereafter 'element') data.  Assumes each element has its own volume and is spherical.  Should be directly imagable with plt.imshow() afterward.  For galaxies, it usually makes sense to show the log of this, and to assume some nominal negligible value for the zeroes.
+def build_gas_image_array(x, y, mass, vol, Npix=2000, boundary=None, vol_mode='v', log_out=False):
     """
+    # Build a 2D array for direct imaging of a galaxy from particle/cell (hereafter 'element') data.  Assumes each element has its own volume and is spherical.  Should be directly imagable with plt.imshow() afterward.  For galaxies, it usually makes sense to show the log of this, and to assume some nominal negligible value for the zeroes.
     Input:
     x = x-coordinate of element [kpc]
     y = y-coordinate of element [kpc]
@@ -1978,6 +1978,8 @@ def build_gas_image_array(x, y, mass, vol, Npix=2000, boundary=None):
     vol = volume of element [kpc^3]
     Npix = number of pixels in each dimension of image
     boundary = half the width and height of the image, i.e. image goes from -boundary to +boundary in each direction [kpc]
+    vol_mode = when 'v', interprets 'vol' as a volume; when 'r', instead interprets 'vol' as radius
+    log_out = when True, takes log10 of the image before returning, setting zeros to a nominally tiny value
     
     Output:
     Image = 2D array of surface density values [Msun/kpc^2]
@@ -1986,7 +1988,12 @@ def build_gas_image_array(x, y, mass, vol, Npix=2000, boundary=None):
     if boundary==None: # default boundary that includes all possible elements
         boundary = max(np.max(abs(x)), np.max(abs(y)))
 
-    rad = np.cbrt(vol * 0.75 / np.pi) # convert volume into a spherical radius
+    if vol_mode=='r':
+        rad = 1.0*vol
+    else:
+        rad = np.cbrt(vol * 0.75 / np.pi) # convert volume into a spherical radius
+        if not vol_mode=='v': print 'Invalid vol_mode provided -- assuming the default of v'
+        
     pixel_size = 2.0*boundary/Npix
     xedge = np.linspace(-boundary, boundary, Npix+1)
 
@@ -2030,5 +2037,29 @@ def build_gas_image_array(x, y, mass, vol, Npix=2000, boundary=None):
 
     pixel_area = pixel_size**2
     Image = Image.T[::-1,:] / pixel_area # reorient and normalise by area
+    
+    if log_out:
+        Image[Image<=0] = np.min(Image[Image>0]) * 1e-20
+        Image = np.log10(Image)
 
     return Image
+
+
+def build_particle_image_array(x, y, mass, radius, Npix=2000, boundary=None, log_out=False):
+    # See above -- much simpler version for particles that are all nominally the same size
+
+    if boundary==None: # default boundary that includes all possible elements
+        boundary = max(np.max(abs(x)), np.max(abs(y)))
+
+    pixel_size = 2.0*boundary/Npix
+
+    im, xedges, yedges = np.histogram2d(x, y, bins=Npix, weights=mass, range=[[-boundary,boundary],[-boundary,boundary]])
+    k = gc.sphere2dk(radius, pixel_size, 2*radius/pixel_size)
+    im = ss.convolve2d(im, k, mode='same') / pixel_size**2
+    im = im.T[::-1,:]
+    
+    if log_out:
+        im[im<=0] = np.min(im[im>0]) * 1e-20
+        im = np.log10(im)
+
+    return im
