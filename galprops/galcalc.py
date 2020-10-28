@@ -3348,6 +3348,17 @@ def Mvir2tdyn(mass, crit_fac=200., z=0, H_0=67.74, Omega_R=0, Omega_M=0.3089, Om
     # convert virial mass [Msun] to dynamical time [Gyr]
     t = Mvir2Rvir(mass, crit_fac, z, H_0, Omega_R, Omega_M, Omega_L) * 3.0857e16 / Mvir2Vvir(mass, crit_fac, z, H_0, Omega_R, Omega_M, Omega_L) / (60**2 * 24 * 365.24 * 1e9)
     
+def Rvir2Mvir(R, crit_fac=200., z=0, H_0=67.74, Omega_R=0, Omega_M=0.3089, Omega_L=0.6911):
+    # converts virial radius [kpc] to virial mass [Msun]
+    vol = 4./3. * np.pi * R*R*R
+    density = critdens(z,H_0,Omega_R,Omega_M,Omega_L)*1e9 * crit_fac
+    return density * vol
+    
+def Rvir2Vvir(R, crit_fac=200., z=0, H_0=67.74, Omega_R=0, Omega_M=0.3089, Omega_L=0.6911):
+    # converts virial radius [kpc] to virial velocity [km/s]
+    Mvir = Rvir2Mvir(R, crit_fac, z, H_0, Omega_R, Omega_M, Omega_L)
+    return np.sqrt(6.67408e-11 * Mvir*1.989e30 / (R*3.0857e19))*1e-3
+
 def integrand_HIprof_model1(r_norm, rb, Sigma_0):
     # These HI profiles refer to my size--mass paper of 2019
     Sigma_c = 1.0 # Msun/pc^2
@@ -3672,3 +3683,15 @@ def ks_weighted(data1, data2, wei1, wei2):
     cdf1we = cwei1[[np.searchsorted(data1, data, side='right')]]
     cdf2we = cwei2[[np.searchsorted(data2, data, side='right')]]
     return np.max(np.abs(cdf1we - cdf2we))
+
+
+def cross_product(a, b):
+    # Perform a cross product on a row-by-row basis for arrays a and b.  E.g. an array of Nx3 positions and Nx3 velocities (reprenting N particles) could be fed as a and b to return the specific angular momentum in each dimension of each particle.
+    Npart = len(a)
+    assert a.shape == (Npart, 3)
+    assert b.shape == (Npart, 3)
+    cross = np.zeros((Npart,3))
+    cross[:,0] = a[:,1]*b[:,2] - a[:,2]-b[:,1]
+    cross[:,1] = a[:,2]*b[:,0] - a[:,0]-b[:,2]
+    cross[:,2] = a[:,0]*b[:,1] - a[:,1]-b[:,0]
+    return cross
