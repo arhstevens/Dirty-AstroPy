@@ -1968,7 +1968,7 @@ def bigax_labels(xlab, ylab, fig=plt.gcf()):
     big_ax.tick_params(labelcolor='none', top='off', bottom='off', left='off', right='off')
 
 
-def build_gas_image_array(x, y, mass, vol, Npix=2000, boundary=None, vol_mode='v', log_out=False):
+def build_gas_image_array(x, y, mass, vol, Npix=2000, boundary=None, vol_mode='v', log_out=False, floor=False):
     """
     # Build a 2D array for direct imaging of a galaxy from particle/cell (hereafter 'element') data.  Assumes each element has its own volume and is spherical.  Should be directly imagable with plt.imshow() afterward.  For galaxies, it usually makes sense to show the log of this, and to assume some nominal negligible value for the zeroes.
     Input:
@@ -1980,6 +1980,7 @@ def build_gas_image_array(x, y, mass, vol, Npix=2000, boundary=None, vol_mode='v
     boundary = half the width and height of the image, i.e. image goes from -boundary to +boundary in each direction [kpc]
     vol_mode = when 'v', interprets 'vol' as a volume; when 'r', instead interprets 'vol' as radius
     log_out = when True, takes log10 of the image before returning, setting zeros to a nominally tiny value
+    floor = when True, sets any zeros to a nominally tiny non-zero finite value.  Useful when log_out is True to avoid NaNs/Infs.  Can feed a float here to set the relative value for this floor
     
     Output:
     Image = 2D array of surface density values [Msun/kpc^2]
@@ -2038,14 +2039,14 @@ def build_gas_image_array(x, y, mass, vol, Npix=2000, boundary=None, vol_mode='v
     pixel_area = pixel_size**2
     Image = Image.T[::-1,:] / pixel_area # reorient and normalise by area
     
-    if log_out:
-        Image[Image<=0] = np.min(Image[Image>0]) * 1e-20
-        Image = np.log10(Image)
+    floor_fac = floor if type(floor)==float else 1e-20
+    if floor: Image[Image<=0] = np.min(Image[Image>0]) * floor_fac
+    if log_out: Image = np.log10(Image)
 
     return Image
 
 
-def build_particle_image_array(x, y, mass, radius, Npix=2000, boundary=None, log_out=False):
+def build_particle_image_array(x, y, mass, radius, Npix=2000, boundary=None, log_out=False, floor=False):
     # See above -- much simpler version for particles that are all nominally the same size
 
     if boundary==None: # default boundary that includes all possible elements
@@ -2058,8 +2059,9 @@ def build_particle_image_array(x, y, mass, radius, Npix=2000, boundary=None, log
     im = ss.convolve2d(im, k, mode='same') / pixel_size**2
     im = im.T[::-1,:]
     
-    if log_out:
-        im[im<=0] = np.min(im[im>0]) * 1e-20
-        im = np.log10(im)
+    
+    floor_fac = floor if type(floor)==float else 1e-20
+    if floor: im[im<=0] = np.min(im[im>0]) * floor_fac
+    if log_out: im = np.log10(im)
 
     return im
