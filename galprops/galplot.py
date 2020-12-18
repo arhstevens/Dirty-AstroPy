@@ -4,6 +4,7 @@
 from pylab import *
 from scipy import signal as ss
 from scipy import stats
+import scipy.interpolate as si
 import galcalc as gc
 import galread as gr
 from random import sample
@@ -1995,20 +1996,25 @@ def build_gas_image_array(x, y, mass, vol, Npix=2000, boundary=None, vol_mode='v
         rad = np.cbrt(vol * 0.75 / np.pi) # convert volume into a spherical radius
         if not vol_mode=='v': print 'Invalid vol_mode provided -- assuming the default of v'
         
-    pixel_size = 2.0*boundary/Npix
+    pixel_halfsize = boundary/Npix
+    pixel_size = 2.0*pixel_halfsize
     xedge = np.linspace(-boundary, boundary, Npix+1)
 
-    # figure out which element will actually contribute to the image and which cell they nominally sit in
-    f_main = (abs(x)+rad<boundary) *  (abs(y)+rad<boundary)
-    plist_main = np.where(f_main)[0] # these are fully in the bounds
-    plist_part = np.where(~f_main * (abs(x)-rad<boundary) * (abs(y)-rad<boundary))[0] # only part of the cell's flux will contribute to the image
+    # Cell indices that each element will end up in
     ii = ((x+boundary)/pixel_size).astype(np.int32)
     ii[x+boundary<0] -= 1 # Any float in (-1,1) will be cast to 0 when converted to int, which is not what we want.
     ij = ((y+boundary)/pixel_size).astype(np.int32)
     ij[y+boundary<0] -= 1
 
-    # Initialise image array
-    Image = np.zeros((Npix,Npix), dtype=np.float32)
+    # figure out which elements will actually contribute to the image and how
+    f_singular = (rad < pixel_halfsize)
+    f_main = (abs(x)+rad<boundary) *  (abs(y)+rad<boundary) * ~f_singular
+    plist_main = np.where(f_main)[0] # these are fully in the bounds and fill multiple pixels
+    plist_part = np.where(~f_main * ~f_singular * (abs(x)-rad<boundary) * (abs(y)-rad<boundary))[0] # only part of the cell's flux will contribute to the image
+
+    # Initialise image array with elements that entirely fit into one pixel each
+    print 'Number of singular-pixel cells to histogram', len(x[f_singular])
+    Image, _, _ = np.histogram2d(x[f_singular], y[f_singular], bins=Npix, weights=mass[f_singular], range=[[-boundary,boundary],[-boundary,boundary]])
 
     # Build the image contribution from the "safe" elements
     print 'Number of clean cells to process', len(plist_main)
@@ -2065,3 +2071,62 @@ def build_particle_image_array(x, y, mass, radius, Npix=2000, boundary=None, log
     if log_out: im = np.log10(im)
 
     return im
+
+
+def build_voronoi_image_array(x, y, z, rho, Npix=2000, boundary=None, log_out=False):
+    #  THIS DOESN'T DO WHAT I WANT IT TO YET AND IS A WORK IN PROGRESS. I DO NOT RECOMMEND ANYONE USES THIS FUNCTION.
+    """
+    # Alternative to build_gas_image_array.  This builds a 3D gridded volume, does nearest interpolation for density (hence "Voronoi") then collapses into a 2D.  Is flexible in use but designed for visualising simulations that already use a Voronoi mesh.
+    
+    Input:
+    x = x-coordinate of element [kpc]
+    y = y-coordinate of element [kpc]
+    z = z-coordinate of element -- this is the dimension that will be collapsed [kpc]
+    rho = density of element [Msun/kpc^3]
+    Npix = number of pixels in each dimension of image
+    boundary = half the width and height of the image, i.e. image goes from -boundary to +boundary in each direction [kpc]
+    log_out = when True, takes log10 of the image before returning
+    
+    Output:
+    im_2D = 2D array of surface density values [Msun/kpc^2]
+    """
+
+    if boundary==None: # default boundary that includes all possible elements
+        boundary = max(np.max(abs(x)), np.max(abs(y)))
+        
+#    boundary_z = np.max(abs(z))
+    pixel_halfsize = boundary/Npix
+    pixel_size = 2*pixel_halfsize
+#    Npix_z_init = boundary_z/pixel_halfsize # this will be a float, but we want it to be an int
+#    Npix_z = int(Npix_z_init+1)
+#    print 'Need', Npix_z, 'voxels in z-direction'
+#    boundary_z *= Npix_z / Npix_z_init # now the z direction will now be an integer mutliple of the pixel length (i.e. voxels are cubic with voxel length = pixel length)
+
+    x_grid = np.linspace(-boundary+pixel_halfsize, boundary-pixel_halfsize, Npix) # same for y
+#    z_grid = np.linspace(-boundary_z+pixel_halfsize, boundary_z-pixel_halfsize, Npix_z)
+#    X_grid, Y_grid, Z_grid = np.meshgrid(x_grid, x_grid, z_grid)
+#    XYZ = np.array([X_grid.ravel(), Y_grid.ravel(), Z_grid.ravel()]).T
+#    mesh_3D = si.griddata(np.array([x,y,z]).T, rho, XYZ, method='nearest')
+#    im_2D = np.sum(mesh_3D, axis=2) * pixel_size
+
+
+    X_grid, Y_grid = np.meshgrid(x_grid, x_grid)
+#    X_grid, Y_grid = X_grid.ravel(), Y_grid.ravel()
+    XY = np.array([X_grid.ravel(), Y_grid.ravel()]).T
+    
+#    im_2D = np.zeros((Npix,Npix))
+#    Npix_sq = Npix*Npix
+#    pos = np.array([x,y,z]).T
+#    
+#    for zg in z_grid:
+#        XYZ = np.array([X_grid, Y_grid, np.ones(Npix_sq)*zg]).T
+#        out = si.griddata(pos, rho, XYZ, method='nearest')
+#        im_2D += out.reshape(Npix,Npix)
+
+    pos = np.array([x,y]).T
+    out = si.griddata(pos, rho, XY, method='nearest')
+    im_2D = out.reshape(Npix,Npix)
+
+    if log_out: im_2D = np.log10(im_2D)
+    im_2D = im_2D[::-1,:].T
+    return im_2D
