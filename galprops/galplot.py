@@ -1994,7 +1994,7 @@ def build_gas_image_array(x, y, mass, vol, Npix=2000, boundary=None, vol_mode='v
         rad = 1.0*vol
     else:
         rad = np.cbrt(vol * 0.75 / np.pi) # convert volume into a spherical radius
-        if not vol_mode=='v': print 'Invalid vol_mode provided -- assuming the default of v'
+        if not vol_mode=='v': print 'gp.build_gas_image_array(): Invalid vol_mode provided -- assuming the default of v'
         
     pixel_halfsize = boundary/Npix
     pixel_size = 2.0*pixel_halfsize
@@ -2013,11 +2013,11 @@ def build_gas_image_array(x, y, mass, vol, Npix=2000, boundary=None, vol_mode='v
     plist_part = np.where(~f_main * ~f_singular * (abs(x)-rad<boundary) * (abs(y)-rad<boundary))[0] # only part of the cell's flux will contribute to the image
 
     # Initialise image array with elements that entirely fit into one pixel each
-    print 'Number of singular-pixel cells to histogram', len(x[f_singular])
+    print 'gp.build_gas_image_array(): Number of singular-pixel cells to histogram', len(x[f_singular])
     Image, _, _ = np.histogram2d(x[f_singular], y[f_singular], bins=Npix, weights=mass[f_singular], range=[[-boundary,boundary],[-boundary,boundary]])
 
     # Build the image contribution from the "safe" elements
-    print 'Number of clean cells to process', len(plist_main)
+    print 'gp.build_gas_image_array(): Number of clean cells to process', len(plist_main)
     for p in plist_main:
         kernel = mass[p] * gc.sphere2dk(rad[p], pixel_size, 2*rad[p]/pixel_size)
         Nk = (len(kernel)-1)/2
@@ -2026,7 +2026,7 @@ def build_gas_image_array(x, y, mass, vol, Npix=2000, boundary=None, vol_mode='v
         Image[ii_min:ii_max, ij_min:ij_max] += kernel
 
     # Build the contribution from the elements near the image boundary
-    print 'Number of boundary cells to process', len(plist_part)
+    print 'gp.build_gas_image_array(): Number of boundary cells to process', len(plist_part)
     for p in plist_part:
         kernel = mass[p] * gc.sphere2dk(rad[p], pixel_size, 2*rad[p]/pixel_size)
         Nkf = len(kernel)

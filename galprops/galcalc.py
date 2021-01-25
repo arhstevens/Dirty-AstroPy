@@ -3695,3 +3695,128 @@ def cross_product(a, b):
     cross[:,1] = a[:,2]*b[:,0] - a[:,0]-b[:,2]
     cross[:,2] = a[:,0]*b[:,1] - a[:,1]-b[:,0]
     return cross
+
+
+def build_data_cube(x, y, vz, m, rad, vtherm, xmax, vmax, pixel_size, vel_res, beam=0., Nstd=3):
+    """
+    # Build a data cube from simulation particle data
+    
+    Inputs:
+    x = array of particle x-coordinates
+    y = array of particle y-coordinates
+    vz = array of particle velocities in the z-direction
+    m = array of particle masses
+    rad = radius of each particle
+    vtherm = thermal velocity of each particle
+    xmax = cube will cover x and y space from -xmax to +xmax
+    vmax = cube will cover vz space from -vmax to +vmax
+    pixel_size = square xy dimensions of each spaxel
+    vel_res = velocity channel width in vz dimension
+    beam = beam size to further smooth cube (optional), can be a list of 2 numbers for different smoothing in each x and y dimension) -- STANDARD DEVIATION, NOT FWHM
+    Nstd = number of standard deviations where smoothing Gaussians are truncated
+    """
+    
+    from scipy.ndimage import gaussian_filter
+    
+    # make sure 'beam' is a length-2 list (or equivalent)
+    try:
+        len(beam)
+    except TypeError:
+        if beam>0:
+            beam = [beam, beam]
+            
+    xedge = np.arange(-xmax, xmax+pixel_size, pixel_size)
+    vedge = np.arange(-vmax, vmax+vel_res, vel_res)
+    Nchan = len(vedge)-1 # number of velocity channels
+    Npix = len(xedge)-1 # number of pixels in each dimension
+
+    # Initialise data cube
+    data_cube = np.zeros((Npix,Npix,Nchan))
+    
+    # Filter out any particles that definitely won't contribute to the cube
+    f = (abs(x) - rad - Nstd*beam[0] < xmax) * (abs(y) - rad - Nstd*beam[1] < xmax) * (abs(vz) - Nstd*vtherm < vmax) * (m>0)
+    x = x[f]
+    y = y[f]
+    vz = vz[f]
+    m = m[f]
+    rad = rad[f]
+    vtherm = vtherm[f]
+    
+    # Cell indices that each element will end up in
+    ii = ((x+xmax)/pixel_size).astype(np.int32)
+    ii[x+xmax<0] -= 1 # Any float in (-1,1) will be cast to 0 when converted to int, which is not what we want.
+    ij = ((y+xmax)/pixel_size).astype(np.int32)
+    ij[y+xmax<0] -= 1
+    ik = ((vz+vmax)/vel_res).astype(np.int32)
+    ik[vz+vmax<0] -= 1
+
+    # Particles whose entirety is within the cube boundaries
+    f_main = (abs(x) + rad + Nstd*beam[0] < xmax) * (abs(y) + rad + Nstd*beam[1] < xmax) * (abs(vz) + Nstd*vtherm < vmax)
+    plist_main = np.where(f_main)[0]
+    
+    # Particles whose mass is partially within and partially outside the cube boundaries
+    plist_part = np.where(~f_main)[0]
+    print 'gc.build_data_cube(): Number of clean cells to process', len(plist_main)
+    print 'gc.build_data_cube(): Number of boundary cells to process', len(plist_part)
+    
+    beam_in_pix = [beam[0]/pixel_size, beam[1]/pixel_size]
+    
+    # Processing the "main" particles first
+    for p in plist_main:
+        TwoD = np.zeros((Npix,Npix)) # Spatial distribution
+        OneD = np.zeros(Nchan) # Velocity distribution
+        i, j, k = ii[p], ij[p], ik[p] # get the indices where the particle ended up in the cube
+        
+        OneD[k] = 1.0
+        OneD = gaussian_filter(OneD, vtherm[p]/vel_res, truncate=Nstd)
+        
+        kernel = sphere2dk(rad[p], pixel_size, 2*rad[p]/pixel_size)
+        kr = (len(kernel)-1)/2 # kernel "radius" in pixels
+
+        TwoD[i-kr:i+kr+1, j-kr:j+kr+1] = m[p] * kernel
+        TwoD = gaussian_filter(TwoD, beam_in_pix, truncate=Nstd) # add beam-smearing
+        
+        single_cube = (OneD[np.newaxis][np.newaxis].T * TwoD.T).T
+        data_cube += single_cube
+
+    for p in plist_part:
+        # guaranteed odd number of pixels in each dimension for cublet
+        xcen = int((rad[p] + Nstd*beam[0])/pixel_size)
+        ycen = int((rad[p] + Nstd*beam[1])/pixel_size)
+        vcen = int(Nstd*vtherm[p]/vel_res)
+        xpix = 2*xcen + 1
+        ypix = 2*ycen + 1
+        vpix = 2*vcen + 1
+        
+        TwoD = np.zeros((xpix,ypix)) # Spatial distribution
+        OneD = np.zeros(vpix) # Velocity distribution
+        
+        OneD[vcen] = 1.0
+        OneD = gaussian_filter(OneD, vtherm[p]/vel_res, truncate=Nstd)
+        
+        kernel = sphere2dk(rad[p], pixel_size, 2*rad[p]/pixel_size)
+        kr = (len(kernel)-1)/2 # kernel "radius" in pixels
+        
+        TwoD[xcen-kr:xcen+kr+1, ycen-kr:ycen+kr+1] = m[p] * kernel
+        TwoD = gaussian_filter(TwoD, beam_in_pix, truncate=Nstd) # add beam-smearing
+        
+        cubelet = (OneD[np.newaxis][np.newaxis].T * TwoD.T).T
+        
+        # which elements in the full cube does this particle contribute to?
+        i, j, k = ii[p], ij[p], ik[p]
+        ii_min, ii_max = i-xcen, i+xcen+1
+        ij_min, ij_max = j-ycen, j+ycen+1
+        ik_min, ik_max = k-vcen, k+vcen+1
+        
+        # which elements in the cubelet get passed into the full cube?
+        ki_min, kj_min, kk_min = max(0, -ii_min), max(0, -ij_min), max(0, -ik_min)
+        ki_max, kj_max, kk_max = min(xpix-(ii_max-Npix), xpix), min(ypix-(ij_max-Npix), ypix), min(vpix-(ik_max-Nchan), vpix)
+
+        # close logic
+        ii_min, ii_max = max(0, ii_min), min(Npix, ii_max)
+        ij_min, ij_max = max(0, ij_min), min(Npix, ij_max)
+        ik_min, ik_max = max(0, ik_min), min(Nchan, ik_max)
+
+        data_cube[ii_min:ii_max, ij_min:ij_max, ik_min:ik_max] += cubelet[ki_min:ki_max, kj_min:kj_max, kk_min:kk_max] # note, not normalised by area or channel width!
+        
+        return data_cube
