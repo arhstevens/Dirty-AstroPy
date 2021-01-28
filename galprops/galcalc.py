@@ -3819,4 +3819,4 @@ def build_data_cube(x, y, vz, m, rad, vtherm, xmax, vmax, pixel_size, vel_res, b
 
         data_cube[ii_min:ii_max, ij_min:ij_max, ik_min:ik_max] += cubelet[ki_min:ki_max, kj_min:kj_max, kk_min:kk_max] # note, not normalised by area or channel width!
         
-        return data_cube
+    return data_cube
