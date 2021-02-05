@@ -196,7 +196,7 @@ def circle(r,colour='white',centre=[0,0],lw=3,ls='-',half='f',inclination=0.,fil
 
 
 
-def savepng(filename,xpix=2560,ypix=1440,ss=27,xpixplot=1024,ypixplot=None,fsize=28,addpdf=False,transparent=False, fig=None, facecolor=None):
+def savepng(filename,xpix=2560,ypix=1440,ss=27,xpixplot=1024,ypixplot=None,fsize=28,addpdf=False,transparent=False, fig=None, facecolor=None, compact=False):
     # Save a plotted image a png file in the working directory with optimized resolution
 
     ###  INPUTS ###
@@ -222,6 +222,7 @@ def savepng(filename,xpix=2560,ypix=1440,ss=27,xpixplot=1024,ypixplot=None,fsize
     fig.set_size_inches(xinplot,yinplot)
     fig.set_dpi(mydpi)
     if facecolor is None: facecolor = fig.get_facecolor()
+    if compact: fig.subplots_adjust(hspace=0, wspace=0, left=0, bottom=0, right=1.0, top=1.0)
 
     filename = str(filename)
     if filename[-4:] != '.png':

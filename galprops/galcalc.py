@@ -3820,3 +3820,38 @@ def build_data_cube(x, y, vz, m, rad, vtherm, xmax, vmax, pixel_size, vel_res, b
         data_cube[ii_min:ii_max, ij_min:ij_max, ik_min:ik_max] += cubelet[ki_min:ki_max, kj_min:kj_max, kk_min:kk_max] # note, not normalised by area or channel width!
         
     return data_cube
+
+
+def integrate(x, integrand, xmin, xmax):
+    # numerically integrate integrand as a function of x over the range xmin and xmax
+    if xmin<np.min(x):
+        xmin = np.min(x)
+        print 'gc.integrate(): xmin too small, reseting to', np.min(x)
+    if xmax>np.max(x):
+        xmax = np.max(x)
+        print 'gc.integrate(): xmax too large, reseting to', np.max(x)
+   
+    wmin = np.where(x==xmin)[0]
+    if len(wmin)>0: 
+        wmin = wmin[0]
+        x = x[wmin:]
+    else:
+        integrand_min = np.interp(xmin, x, integrand)
+        wmin = np.where(x>xmin)[0][0]
+        x = np.append(xmin, x[wmin:])
+        integrand = np.append(integrand_min, integrand[wmin:])
+        
+    wmax = np.where(x==xmax)[0]
+    if len(wmax)>0: 
+        wmax = wmax[0]
+        x = x[:wmax+1]
+    else:
+        integrand_max = np.interp(xmax, x, integrand)
+        wmax = np.where(x<xmax)[0][-1]
+        x = np.append(x[:wmax+1], xmax)
+        integrand = np.append(integrand[:wmax+1], integrand_max)
+        
+    dx = np.diff(x)
+    return 0.5 * np.sum((integrand[1:] + integrand[:-1]) * dx)
+
+
