@@ -1037,11 +1037,11 @@ def galdtype_adam(Nannuli=30):
                     ('MetalsIntraClusterStars'      , floattype),
                     ('DiscGasMetals'                , (floattype, Nannuli)),
                     ('DiscStarsMetals'              , (floattype, Nannuli)),
-                    ('SfrDisk'                      , floattype), #--# Removed run 554
-                    ('SfrBulge'                     , floattype), #--#
-#                    ('SfrFromH2'                    , floattype), #----# Added run 554
-#                    ('SfrInstab'                    , floattype), #----# 
-#                    ('SfrMergeBurst'                , floattype), #----# 
+#                    ('SfrDisk'                      , floattype), #--# Removed run 554
+#                    ('SfrBulge'                     , floattype), #--#
+                    ('SfrFromH2'                    , floattype), #----# Added run 554
+                    ('SfrInstab'                    , floattype), #----# 
+                    ('SfrMergeBurst'                , floattype), #----# 
                     ('SfrDiskZ'                     , floattype),
                     ('SfrBulgeZ'                    , floattype),
                     ('DiskScaleRadius'              , floattype),
@@ -1481,6 +1481,52 @@ def sagesnap(fpre, firstfile=0, lastfile=7, dir='./', suff='', disc=False, publi
         G[sum(Ngal[:j]):sum(Ngal[:j+1])] = Glist[j][0:Ngal[j]].copy()
     G = G.view(np.recarray)
     return G
+
+
+def reduced_DarkSage2016_catalogue(indir):
+    min_num_list = [0,50,100,150,200]
+    max_num_list = [49,99,149,199,255]
+    G = {}
+
+    fields_and_dtype = [
+    'GalaxyIndex', 'i8',
+    'Len', 'i4',
+    'StellarMass', 'f4', # all masses are in [10^10 h^-1 M_sun]
+    'StellarDiscMass', 'f4',
+    'ColdGas',  'f4',
+    'HotGas',  'f4',
+    'HIMass',  'f4',
+    'H2Mass',  'f4',
+    'Type', 'i1',
+    'StellarHalfMassRadius',  'f4', # all sizes and positions are in [h^-1 Mpc]
+    'Stellar90PercentRadius',  'f4',
+    'SFR',  'f4',
+    'TimeSinceLastMajorMerger',  'f4',
+    'j_stars',  'f4', # disc specific angular momenta in [kpc km s^-1]
+    'j_HI',  'f4',
+    'Mvir',  'f4',
+    'Rvir',  'f4',
+    'Vvir',  'f4',
+    'jX_halo',  'f4', # halo specific angular momenta components [h^-1 Mpc km s^-1]
+    'jY_halo',  'f4',
+    'jZ_halo',  'f4',
+    'X',  'f4',
+    'Y',  'f4',
+    'Z', 'f4']
+    fields = fields_and_dtype[0::2]
+    dtypes = fields_and_dtype[1::2]
+    
+    for field, dt in zip(fields, dtypes): G[field] = np.array([], dtype=dt)
+
+    for minfileno, maxfileno in zip(min_num_list, max_num_list):
+        f = open(indir+'DarkSage2016_z0_reduced_'+str(minfileno)+'_'+str(maxfileno)+'.bin', 'rb')
+        Ngal = np.fromfile(f, 'i8', 1)[0]
+        for field, dt in zip(fields, dtypes): G[field] = np.append(G[field], np.fromfile(f, dt, Ngal))
+        f.close()
+        
+    return G
+    
+
 
 def zlistmm():
 	# Call the list of strings which correspond to the redshift values of the output of the mini millennium files (i.e. so one can call to read the files in a list).  This is specific to details of how SAGE was run (i.e. in the desired_outputsnaps file)
