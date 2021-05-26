@@ -2179,7 +2179,7 @@ def hist_Nmin(x, bins, Nmin, hard_bins=np.array([])):
 
     return Nhist, bins
 
-def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xrange=None, yrange=None, Nmin=10, weights=None, hard_bins=np.array([]), outBins=False, bootstrap=False):
+def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xrange=None, yrange=None, Nmin=10, weights=None, hard_bins=np.array([]), outBins=False, bootstrap=False, logout=False):
     # Given some values to go on x and y axes, bin them along x and return the percentile ranges
     f = np.isfinite(x)*np.isfinite(y)
     if xrange is not None: f = (x>=xrange[0])*(x<=xrange[1])*f
@@ -2237,6 +2237,10 @@ def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xran
         y_med = 1.0*y_med_wci
         y_high = 1.0*y_high_wci
     
+    if logout:
+        x_av, y_high, y_med, y_low = np.log10(x_av), np.log10(y_high), np.log10(y_med), np.log10(y_low)
+        if addMean: y_mean = np.log10(y_mean)
+    
     if not addMean and not outBins:
         return x_av[fN], y_high[fN], y_med[fN], y_low[fN]
     elif not addMean and outBins:
@@ -2247,6 +2251,7 @@ def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xran
         return x_av[fN], y_high[fN], y_med[fN], y_low[fN], y_mean[fN], bins
 
 def weighted_percentile(data, percentile, weights):
+    if len(data)==0: return 0
     arg = np.argsort(data)
     data = data[arg]
     weights = weights[arg]
@@ -3855,3 +3860,10 @@ def integrate(x, integrand, xmin, xmax):
     return 0.5 * np.sum((integrand[1:] + integrand[:-1]) * dx)
 
 
+def Bardeen_radiative_efficiency(a):
+    # calculate the radiative efficiency for a black spin with spin a
+    Z1 = 1 + np.cbrt(1-a*a) * (np.cbrt(1+a) + np.cbrt(1-a))
+    Z2 = np.sqrt(3*a*a + Z1*Z1)
+    term = np.sqrt( (3 - Z1) * (3 + Z1 + 2*Z2) )
+    rrat = 3 + Z2 - term if a>=0 else 3 + Z2 + term
+    return 1 - np.sqrt(1 - 2./(3*rrat))

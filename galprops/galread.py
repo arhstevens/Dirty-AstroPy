@@ -1037,11 +1037,11 @@ def galdtype_adam(Nannuli=30):
                     ('MetalsIntraClusterStars'      , floattype),
                     ('DiscGasMetals'                , (floattype, Nannuli)),
                     ('DiscStarsMetals'              , (floattype, Nannuli)),
-#                    ('SfrDisk'                      , floattype), #--# Removed run 554
-#                    ('SfrBulge'                     , floattype), #--#
-                    ('SfrFromH2'                    , floattype), #----# Added run 554
-                    ('SfrInstab'                    , floattype), #----# 
-                    ('SfrMergeBurst'                , floattype), #----# 
+                    ('SfrDisk'                      , floattype), #--# Removed run 554
+                    ('SfrBulge'                     , floattype), #--#
+#                    ('SfrFromH2'                    , floattype), #----# Added run 554
+#                    ('SfrInstab'                    , floattype), #----# 
+#                    ('SfrMergeBurst'                , floattype), #----# 
                     ('SfrDiskZ'                     , floattype),
                     ('SfrBulgeZ'                    , floattype),
                     ('DiskScaleRadius'              , floattype),
@@ -3815,7 +3815,7 @@ def fr13data(h=0.678):
         #FR13y =  np.log10(1.01) + 1.3*(FR13y - 3) + 3
 	return FR13x, FR13y
 
-def md14data(h=0.678):
+def md14data(h=0.678, Omega_R=0, Omega_M=0.3089, Omega_L=0.6911):
     # Data from Madau & Dickinson (2014)
     data = np.array([[0.01, 0.1, -1.82, 0.09, 0.02],
                      [0.2, 0.4, -1.50, 0.05, 0.05],
@@ -3867,14 +3867,56 @@ def md14data(h=0.678):
                      [2, 2.5, -0.91, 0.09, 0.12],
                      [2.5, 3, -0.86, 0.15, 0.23],
                      [3, 4.2, -1.36, 0.23, 0.5]])
+                     
+    my_cosmo = [100*h, Omega_R, Omega_M, Omega_L]
+    MD_cosmo = [70.0, 0., 0.3, 0.7]
 
     z = (data[:,0]+data[:,1])/2
     z_err = (data[:,1]-data[:,0])/2
-    SFRD = data[:,2] - 0.2 + np.log10(h/0.7) # converts from Salpeter to Chabrier
+    SFRD = data[:,2] - 0.2 # converts from Salpeter to Chabrier
+    for i in xrange(len(z)):
+        SFRD[i] += np.log10( gc.z2dA(z[i], *my_cosmo) / gc.z2dA(z[i], *MD_cosmo) )**2 # adjust for assumed-cosmology influence on SFR calculations
+    w = np.where(z_err>0)[0]
+    for i in w:
+        SFRD[i] += np.log10( (gc.comoving_distance(data[i,1], *MD_cosmo)**3 - gc.comoving_distance(data[i,0], *MD_cosmo)**3) / (gc.comoving_distance(data[i,1], *my_cosmo)**3 - gc.comoving_distance(data[i,0], *my_cosmo)**3) )# adjust for assumed-cosmology influence on comoving volume calculation
     SFRD_err_high = data[:,3]
     SFRD_err_low = data[:,4]
     return z, z_err, SFRD, SFRD_err_high, SFRD_err_low
 
+
+def Driver18_data(h=0.678, Omega_R=0, Omega_M=0.3089, Omega_L=0.6911):
+    data = np.array([[0.85, 0.02, 0.08, -1.95, 0.03, 0.00, 0.07, 0.00],
+                  [1.52, 0.06, 0.14, -1.82, 0.03, 0.01, 0.05, 0.01],
+                  [2.16, 0.14, 0.20, -1.90, 0.02, 0.00, 0.04, 0.00],
+                  [2.90, 0.20, 0.28, -1.77, 0.01, 0.00, 0.05, 0.00],
+                  [3.65, 0.28, 0.36, -1.75, 0.01, 0.00, 0.06, 0.01],
+                  [4.35, 0.36, 0.45, -1.79, 0.01, 0.01, 0.06, 0.01],
+                  [5.11, 0.45, 0.56, -1.73, 0.04, 0.01, 0.09, 0.03],
+                  [5.86, 0.56, 0.68, -1.56, 0.05, 0.00, 0.07, 0.02],
+                  [6.59, 0.68, 0.82, -1.42, 0.06, 0.01, 0.06, 0.04],
+                  [7.36, 0.82, 1.00, -1.29, 0.05, 0.00, 0.07, 0.01],
+                  [8.11, 1.00, 1.20, -1.31, 0.04, 0.00, 0.05, 0.01],
+                  [8.82, 1.20, 1.45, -1.27, 0.03, 0.00, 0.06, 0.02],
+                  [9.50, 1.45, 1.75, -1.17, 0.02, 0.00, 0.06, 0.03],
+                  [10.21, 1.75, 2.20, -1.30, 0.04, 0.01, 0.07, 0.06],
+                  [10.78, 2.20, 2.60, -1.29, 0.04, 0.01, 0.04, 0.09],
+                  [11.29, 2.60, 3.25, -1.28, 0.04, 0.01, 0.04, 0.11],
+                  [11.69, 3.25, 3.75, -1.33, 0.03, 0.01, 0.03, 0.08],
+                  [11.95, 3.75, 4.25, -1.42, 0.04, 0.04, 0.05, 0.02],
+                  [12.19, 4.25, 5.00, -1.45, 0.03, 0.04, 0.04, 0.04]])
+                  
+    my_cosmo = [100*h, Omega_R, Omega_M, Omega_L]
+    D18_cosmo = [70.0, 0., 0.3, 0.7]
+    
+    z = 0.5*(data[:,1] + data[:,2])
+    dz = data[:,2] - data[:,1]
+    SFRD = data[:,3]
+    for i in xrange(len(z)):
+        SFRD[i] += np.log10( gc.z2dA(z[i], *my_cosmo) / gc.z2dA(z[i], *D18_cosmo) )**2 # adjust for assumed-cosmology influence on SFR calculations
+        SFRD[i] += np.log10( (gc.comoving_distance(data[i,2], *D18_cosmo)**3 - gc.comoving_distance(data[i,1], *D18_cosmo)**3) / (gc.comoving_distance(data[i,2], *my_cosmo)**3 - gc.comoving_distance(data[i,1], *my_cosmo)**3) )# adjust for assumed-cosmology influence on comoving volume
+    SFRD_err = np.sum(data[:,5:],axis=1)
+
+    return [z, dz, SFRD, SFRD_err]
 
 def cooltables(dir=None):
     if dir==None: dir = '/Users/astevens/Dropbox/Swinburne Not Shared/SAGE/extra/CoolFunctions/'
