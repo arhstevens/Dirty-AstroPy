@@ -3456,7 +3456,15 @@ def interp_2Darray(xval, xarr, yarr, rising=True):
     gradient = (yarr[row,col+1]-yarr[row,col]) / (xarr[row,col+1]-xarr[row,col])
     yout[row] = yarr[row,col] + gradient * (xval - xarr[row,col])
     return yout
-    
+
+
+def interp_2Darray_with_1Darray(xinterp, xarr, yarr, rising=True):
+    # as interp_2Darray but feeding in an array of x values to interpolate, rather than just 1
+    (nrow, ncol) = xarr.shape
+    yout = np.zeros(( nrow, len(xinterp) ))
+    for i, xval in enumerate(xinterp):
+        yout[:,i] = interp_2Darray(xval, xarr, yarr, rising=rising)
+    return yout
     
 def alpha_CO(logOH, logSFR, logMstar, z, h):
     # Calcuate the conversion factor for CO(1-0) luminosity to H2 mass, based on Accurso et al. (2017, eq 25).  Uncertainty introduced is 0.165 dex.
