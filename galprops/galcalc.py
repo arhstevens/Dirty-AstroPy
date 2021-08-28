@@ -2239,8 +2239,17 @@ def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xran
     
     if logout:
         x_av, y_high, y_med, y_low = np.log10(x_av), np.log10(y_high), np.log10(y_med), np.log10(y_low)
-        if addMean: y_mean = np.log10(y_mean)
-    
+        try:
+            floor = np.min(y_low[np.isfinite(y_low)]) - 10
+        except ValueError:
+            floor = np.min(y_med[np.isfinite(y_med)]) - 10
+        y_low[~np.isfinite(y_low)] = floor
+        y_med[~np.isfinite(y_med)] = floor
+        y_high[~np.isfinite(y_high)] = floor
+        if addMean: 
+            y_mean = np.log10(y_mean)
+            y_mean[~np.isfinite(y_mean)] = floor
+
     if not addMean and not outBins:
         return x_av[fN], y_high[fN], y_med[fN], y_low[fN]
     elif not addMean and outBins:
