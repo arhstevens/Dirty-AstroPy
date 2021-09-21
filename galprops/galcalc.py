@@ -235,7 +235,7 @@ def totstellarmassalt(x,y,z,mass,r_max=40000.,Nbins=512):
 	r_lim = r_vec[Sigma > np.max(Sigma)*1e-4] # Radius vector for values where surface density is above the relative limit.
 	dr = np.diff(r_lim) # Check difference between each value in r_lim.  Want to eliminate any part where the surface density rises again.
 	Sigma_lim = Sigma[Sigma > np.max(Sigma)*1e-4] # Values of Sigma above the prescribed limit
-	for i in xrange(len(dr)):
+	for i in range(len(dr)):
 		if dr[i] > 1.01*r_max/Nbins: # Check the difference.  Factor of 1.01 for safety given we're dealing with floats, and the minimum difference greater than a factor of 1 is 2.
 			r_lim = r_lim[:i] # Truncate radius vector where necessary
 			Sigma_lim = Sigma_lim[:i] # Keep r_lim and Sigma_lim corresponding
@@ -574,7 +574,7 @@ def recentregalall(x,y,z,vx,vy,vz,massl):
 #		x[j], y[j], z[j], vx[j], vy[j], vz[j] = recentre(x[j], y[j], z[j], vx[j], vy[j], vz[j], mass, 90000.)
 #		x[j], y[j], z[j], vx[j], vy[j], vz[j] = recentre(x[j], y[j], z[j], vx[j], vy[j], vz[j], mass, 80000.)
 		x[j], y[j], z[j], vx[j], vy[j], vz[j] = recentregal(x[j],y[j],z[j],vx[j],vy[j],vz[j],mass)
-		for i in xrange(len(x)):
+		for i in range(len(x)):
 			if len(x[i])>0 and i!=j: # Can't do transformations to empty arrays
 				x[i], y[i], z[i], vx[i], vy[i], vz[i] = x[i]+x[j][0]-x0[0], y[i]+y[j][0]-y0[0], z[i]+z[j][0]-z0[0], vx[i]+vx[j][0]-vx0[0], vy[i]+vy[j][0]-vy0[0], vz[i]+vz[j][0]-vz0[0]
 		return x,y,z,vx,vy,vz
@@ -582,7 +582,7 @@ def recentregalall(x,y,z,vx,vy,vz,massl):
 		xcat, ycat, zcat = np.array([]), np.array([]), np.array([])
 		vxcat, vycat, vzcat, mcat = np.array([]), np.array([]), np.array([]), np.array([])
 		li = np.array([],dtype=np.int32)
-		for i in xrange(len(x)):
+		for i in range(len(x)):
 			xcat = np.append(xcat, x[i])
 			ycat = np.append(ycat, y[i])
 			zcat = np.append(zcat, z[i])
@@ -594,7 +594,7 @@ def recentregalall(x,y,z,vx,vy,vz,massl):
 		xcat, ycat, zcat, vxcat, vycat, vzcat = recentre(xcat, ycat, zcat, vxcat, vycat, vzcat, mcat)
 		xl, yl, zl = [], [], []
 		vxl, vyl, vzl = [], [], []
-		for i in xrange(len(x)):
+		for i in range(len(x)):
 			xl += [xcat[li==i]]
 			yl += [ycat[li==i]]
 			zl += [zcat[li==i]]
@@ -624,7 +624,7 @@ def rotategalall(x,y,z,vx,vy,vz,m,r=25000.,extra=False):
 	try:
 		axis, angle = compute_rotation_to_z(x[j][filt],y[j][filt],z[j][filt],vx[j][filt],vy[j][filt],vz[j][filt],m[j][filt]) # Calculate angle to rotate coordinates
 		if (max(axis)>=0 or max(axis)<0) and (angle>=0 or angle<0): # Should catch the NaNs!
-			for i in xrange(len(x)):
+			for i in range(len(x)):
 				if len(x[i])>0: # Can't do transformations to empty arrays
 					x[i],y[i],z[i] = rotate(x[i],y[i],z[i],axis,angle)
 					vx[i],vy[i],vz[i] = rotate(vx[i],vy[i],vz[i],axis,angle)
@@ -652,7 +652,7 @@ def recenrotgalall(x,y,z,vx,vy,vz,massl,r=25e3):
 
 def recenrotgalall2(pos,vel,m,r=25e3):
     x,y,z,vx,vy,vz = [],[],[],[],[],[]
-    for i in xrange(len(m)):
+    for i in range(len(m)):
         x += [pos[i][:,0]]
         y += [pos[i][:,1]]
         z += [pos[i][:,2]]
@@ -666,7 +666,7 @@ def recenrotgalall2(pos,vel,m,r=25e3):
 
 def recentregalall2(pos,vel,m):
     x,y,z,vx,vy,vz = [],[],[],[],[],[]
-    for i in xrange(len(m)):
+    for i in range(len(m)):
         x += [pos[i][:,0]]
         y += [pos[i][:,1]]
         z += [pos[i][:,2]]
@@ -687,7 +687,7 @@ def recentregal_coord(pos,vel,m):
 
 def rotategalall2(pos,vel,m,r=25e3):
     x,y,z,vx,vy,vz = [],[],[],[],[],[]
-    for i in xrange(len(m)):
+    for i in range(len(m)):
         x += [pos[i][:,0]]
         y += [pos[i][:,1]]
         z += [pos[i][:,2]]
@@ -907,7 +907,7 @@ def histogram3d(x,y,z, bins=10,weights=None,minwidth=None,normed=False, xmin=Non
 		xstep, ystep, zstep = (xmax-xmin)/bins[0], (ymax-ymin)/bins[1], (zmax-zmin)/bins[2] # Recalculate the bin widths
 	#print bins
 	bindata = np.zeros((bins[0],bins[1],bins[2])) # Create empty array to fill
-	for i in xrange(bins[2]):
+	for i in range(bins[2]):
 		#if i/10.==int(i/10): print 'loop', i
 		zfilt = (z >= zmin + zstep*i)*(z < zmin + zstep*(i+1))
 		bindata[:,:,i], xedges, yedges = np.histogram2d(x[zfilt], y[zfilt], bins=[bins[0],bins[1]], weights=weights[zfilt], range=[[xmin,xmax],[ymin,ymax]])
@@ -982,7 +982,7 @@ def virial_radius(mass,r,rho_crit,r_max=400000.,it_max=400,densfac=200.):
 	left = 0. # Left bound for selecting new radius
 	right = r_max # Right bound for selecting new radius in pc.  Will try radius in between the bounds
 	
-	for i in xrange(it_max):
+	for i in range(it_max):
 		r_try = (left+right)/2. # Try this radius
 		dif = rho_av(r_try)/(rho_crit*densfac) - 1 # Difference between the average density internal of r_try and the value sought.
 		if abs(dif)<=tol:
@@ -1057,7 +1057,7 @@ def ztlookup(zmin=0, zmax=8, H_0=67.74, Omega_R=0, Omega_M=0.3089, Omega_Lambda=
 
     tarr = np.zeros((zmax-zmin)*1000) # Produce empty array for time
     zarr = np.arange(zmin,zmax,0.001)
-    for i in xrange(len(zarr)):
+    for i in range(len(zarr)):
         tarr[i] = z2tL(zarr[i], H_0*0.01, Omega_M, Omega_Lambda, Omega_R, nele)
     tarr = z2tL(2000, H_0*0.01, Omega_M, Omega_Lambda, Omega_R) - tarr
     return tarr, zarr
@@ -1245,8 +1245,8 @@ def lumfiltarray(L,wl,filt_resp,filt_wl):
 	dim1, dim2, dim3 = len(L[:,0,0]), len(L[0,:,0]), len(L[0,0,:])
 	L_filt = np.zeros((dim1,dim3))
 	
-	for i in xrange(dim1):
-		for j in xrange(dim3):
+	for i in range(dim1):
+		for j in range(dim3):
 			L_filt[i,j] = lumfilt(L[i,:,j],wl,filt_resp,filt_wl)
 
 	return L_filt
@@ -1261,8 +1261,8 @@ def bollum(L,wl):
 	L_bol = np.zeros((dim1,dim3))
 	dwl = np.diff(wl) # Differential of wavelength
 	
-	for i in xrange(dim1):
-		for j in xrange(dim3):
+	for i in range(dim1):
+		for j in range(dim3):
 			L_bol[i,j] = np.sum(L[i,:-1,j]*dwl + 0.5*np.diff(L[i,:,j])*dwl) # Numerically integrate
 
 	return L_bol
@@ -1286,7 +1286,7 @@ def mass2lum(mass,birth,time,met=None,band=None,starpopmodel=None):
 	if band is not None:
 		if type(band)==str: band = [band] # turn into list form for next steps
 		L_filt = [] # Initialise
-		for i in xrange(len(band)):
+		for i in range(len(band)):
 			filt_wl, filt_resp = gr.readfilter(band[i]) # Read in filter
 			Larr_filt = lumfiltarray(Larr,wl,filt_resp,filt_wl) # Get the luminosity array for the filter
 			if met==None: # If metallicities aren't specified, assume one of the columns
@@ -1371,7 +1371,7 @@ def cleansample(var, val=0, mode='g'):
 		
 		out = [] # Initialize output
 		
-		for i in xrange(len(var)):
+		for i in range(len(var)):
 			arr = var[i] # Extract array from the list
 			if mode=='g':
 				arr = arr[arr>val] # Remove all values of zero or less
@@ -1450,7 +1450,7 @@ def recenbox(x,y,z):
 	
 	if type(x)==list:
 		xr, yr, zr = np.array([]), np.array([]), np.array([])
-		for i in xrange(n-1): # doing n-1 now because BHs can be annoying, so put those last
+		for i in range(n-1): # doing n-1 now because BHs can be annoying, so put those last
 			xr = np.append(xr,x[i])
 			yr = np.append(yr,y[i])
 			zr = np.append(zr,z[i])
@@ -1463,7 +1463,7 @@ def recenbox(x,y,z):
 
 	if type(x)==list:
 		#xout, yout, zout = [np.array([])]*len(x), [np.array([])]*len(y), [np.array([])]*len(z) # Initialise
-		for i in xrange(n):
+		for i in range(n):
 			x[i] -= xc # Subtract off the value at the centre so coords are recentred
 			y[i] -= yc
 			z[i] -= zc
@@ -1497,10 +1497,10 @@ def bhmf2(phistar,Mstar,alpha,beta,perr,Merr,aerr,berr):
 	b = [beta-berr, beta, beta+berr]
 	PA = np.zeros((200,3**4))
 	i = 0
-	for q in xrange(3):
-		for w in xrange(3):
-			for r in xrange(3):
-				for t in xrange(3):
+	for q in range(3):
+		for w in range(3):
+			for r in range(3):
+				for t in range(3):
 					PA[:,i], logM = bhmf(p[w],Ms[q],a[r],b[t])
 					i += 1
 	Phi_min = np.array([min(PA[j,:]) for j in range(200)])
@@ -1527,9 +1527,9 @@ def schechter2(phistar, Mstar, alpha, perr, Merr, aerr, Mlog=False):
 	a = [alpha-aerr[0], alpha, alpha+aerr[1]] if type(aerr)==list else [alpha-aerr, alpha, alpha+aerr]
 	PA = np.zeros((2000,3**3))
 	i=0
-	for q in xrange(3):
-		for w in xrange(3):
-			for r in xrange(3):
+	for q in range(3):
+		for w in range(3):
+			for r in range(3):
 				PA[:,i], logM = schechter(p[w],Ms[q],a[r],Mlog)
 				i += 1
 	Phi_min = np.min(PA, axis=1)
@@ -1557,11 +1557,11 @@ def doubleschechter2(Mstar,phistar1,alpha1,phistar2,alpha2,Merr,p1err,a1err,p2er
 	a2 = [alpha2-a2err, alpha2, alpha2+a2err]
 	PA = np.zeros((200,243)) # Initialise Phi Array
 	i = 0
-	for q in xrange(3):
-		for w in xrange(3):
-			for r in xrange(3):
-				for t in xrange(3):
-					for y in xrange(3):
+	for q in range(3):
+		for w in range(3):
+			for r in range(3):
+				for t in range(3):
+					for y in range(3):
 						PA[:,i], logM = doubleschechter(Ms[q],p1[w],a1[r],p2[t],a2[y],h=h)
 						i += 1
 	Phi_min = np.array([min(PA[j,:]) for j in range(200)])
@@ -1609,9 +1609,9 @@ def groupparticles(x,y,z,mass,soft, Nbins=100,xmax=None,ymax=None,zmax=None,r2ma
 	zid[np.argwhere(zid==Nbins[2])] = Nbins[2]-1
 	
 	maxima = [] # Initialise list containing lists of coordinates for the cells that are local maxima
-	for xi in xrange(Nbins[0]):
-		for yi in xrange(Nbins[1]):
-			for zi in xrange(Nbins[2]):
+	for xi in range(Nbins[0]):
+		for yi in range(Nbins[1]):
+			for zi in range(Nbins[2]):
 				cellmass = binmass[xi,yi,zi] # Mass of the cell considered
 				adj = [] # Initialise object that holds mass of adjacent cells
 				adj += [binmass[xi-1,yi,zi]] if xi!=0 else [0] # If at an edge, count the cell that would be there are zero
@@ -1627,8 +1627,8 @@ def groupparticles(x,y,z,mass,soft, Nbins=100,xmax=None,ymax=None,zmax=None,r2ma
 	k = 0 # Just an index
 	maxid = -np.ones(Nmax)
 	# Determine which maxima should be considered the same group (if any)
-	for i in xrange(Nmax):
-		for j in xrange(Nmax):
+	for i in range(Nmax):
+		for j in range(Nmax):
 			if j>i:
 				sep = np.sqrt( ((maxima[i][0]-maxima[j][0])*step[0])**2 + ((maxima[i][1]-maxima[j][1])*step[1])**2 + ((maxima[i][2]-maxima[j][2])*step[2])**2 )
 				if sep < 3*max(step): # Let thrice the bin width be the maximum separation for maxima to be considered the same group
@@ -1646,12 +1646,12 @@ def groupparticles(x,y,z,mass,soft, Nbins=100,xmax=None,ymax=None,zmax=None,r2ma
 	Ngroup = k # Total number of groups
 
 	binid = -np.ones((Nbins[0],Nbins[1],Nbins[2])) # Initialise arrays that will give the IDs for particles inside each bin (number indicates which local maximum they end up at)
-	for i in xrange(Nmax): binid[maxima[i]] = maxid[i] # Set the IDs at the maxima in the 3d mass field
+	for i in range(Nmax): binid[maxima[i]] = maxid[i] # Set the IDs at the maxima in the 3d mass field
 
 
-	for i in xrange(Nbins[0]):
-		for j in xrange(Nbins[1]):
-			for k in xrange(Nbins[2]):
+	for i in range(Nbins[0]):
+		for j in range(Nbins[1]):
+			for k in range(Nbins[2]):
 				
 				xi, yi, zi = i, j, k # Indices for each dimension
 				inlist = [] # Initialise index list
@@ -1695,11 +1695,11 @@ def groupparticles(x,y,z,mass,soft, Nbins=100,xmax=None,ymax=None,zmax=None,r2ma
 						"""
 					idcell = binid[xi,yi,zi] # When this is not -1, the loop will be broken and all cells considered will be given the same ID as this cell
 					print('Moving to cell', [xi,yi,zi])
-				for m in xrange(len(inlist)): binid[inlist[m]] = idcell # Add the appropriate ID to each cell in the sequence
+				for m in range(len(inlist)): binid[inlist[m]] = idcell # Add the appropriate ID to each cell in the sequence
 
 	groupid[fi] = binid[xid,yid,zid]
 	group_Nparts = np.zeros(Ngroup)
-	for i in xrange(Ngroup): group_Nparts[i] = len(groupid[groupid==i]) # Give the number of particles in each group
+	for i in range(Ngroup): group_Nparts[i] = len(groupid[groupid==i]) # Give the number of particles in each group
 	return Ngroup, groupid, group_Nparts, maxima, maxid, step
 
 
@@ -1938,7 +1938,7 @@ def partdensMBII(x,y,z,mass,h=0.702):
 	massarr[zargs[:,0],zargs[:,1]] = np.max(massarr)
 	minargs = massarr.argmin(axis=0) # Arguments for mass minima for each particle
 
-	#for i in xrange(6): masslist[i][np.argwhere(masslist[i]==0)] = np.max(masslist[i])
+	#for i in range(6): masslist[i][np.argwhere(masslist[i]==0)] = np.max(masslist[i])
 	#print np.array(masslist)
 
 	# Create a mask to know which of the 6 densites to use for each particle
@@ -2313,7 +2313,7 @@ def percentiles2(data, low=0.16, med=0.5, high=0.84, del0=False):
         return data[i_low,:], data[i_med,:], data[i_high,:]
     else:
         alow, amed, ahigh = np.zeros(col), np.zeros(col), np.zeros(col)
-        for i in xrange(col):
+        for i in range(col):
             alow[i], amed[i], ahigh[i] = percentiles1(data[:,i],low,med,high,True)
         return alow, amed, ahigh
 
@@ -2357,7 +2357,7 @@ def softbins(r, soft, Nbins, Nmin=1):
     # Find bins where there are an almost equal no. of particles in them, while respecting a minimum separation
     rsort = np.sort(r)
     bins = np.zeros(Nbins+1)
-    for b in xrange(Nbins):
+    for b in range(Nbins):
         Ninbin = int(round((1.0*len(rsort))/(Nbins-b)))
         if Ninbin<Nmin:
             Ninbin=Nmin if len(rsort)>Nmin else len(rsort)
@@ -3037,7 +3037,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
     fneutral_old = np.zeros(len(mass))
     
     if method==1: # GK11, eq6
-        for it in xrange(it_max):
+        for it in range(it_max):
             if it==it_max-1: print('iterations hit maximum for GK11, eq6 in HI_H2_masses()')
             f_mol = X*fneutral*f_H2_old /  (X+Y)
             if gamma_fixed is None: gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
@@ -3066,7 +3066,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
         mass_HI[fzero] = 0.
 
     if method==2 or method==0: # GK11, eq10 (entry 0 for method==0)
-        for it in xrange(it_max):
+        for it in range(it_max):
             if it==it_max-1: print('iterations hit maximum for GK11, eq11 in HI_H2_masses()')
             f_mol = X*fneutral*f_H2_old /  (X+Y)
             if gamma_fixed is None: gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
@@ -3100,7 +3100,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
         mH2_list += [mass_H2]
 
     if method==3: # GD14, eq6
-        for it in xrange(it_max):
+        for it in range(it_max):
             if it==it_max-1: print('iterations hit maximum for GD14, eq6 in HI_H2_masses()')
             f_mol = X*fneutral*f_H2_old /  (X+Y)
             if gamma_fixed is None: gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
@@ -3130,7 +3130,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
 
     if method==5 or method==0: # GD14, eq8 (entry 1 for method==0)
         # This has now replaced eq6 for the same output position when method=0
-        for it in xrange(it_max):
+        for it in range(it_max):
             if it==it_max-1: print('iterations hit maximum for GD14, eq8 in HI_H2_masses()')
             f_mol = X*fneutral*f_H2_old /  (X+Y)
             if gamma_fixed is None: gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
@@ -3168,7 +3168,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
         zeta_d = 0.33
         f_w = 0.5
         c_w = 8e3 / m_per_pc * s_per_yr # sound speed of warm medium -- could calculate this better
-        for it in xrange(it_max):
+        for it in range(it_max):
             if it==it_max-1: print('iterations hit maximum for K13, eq10 in HI_H2_masses()')
             f_mol = X*fneutral*f_H2_old /  (X+Y)
             if gamma_fixed is None: gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
@@ -3325,7 +3325,7 @@ def interp_polytonic(x, xp, yp):
 def histogram(x, bins, weights=None):
     Nbin = len(bins)-1
     hist = np.zeros(Nbin, dtype=np.int32) if weights==None else np.zeros(Nbin, dtype=np.float32)
-    for i in xrange(Nbin):
+    for i in range(Nbin):
         f = (x>=bins[i]) * (x<bins[i]) if i!=Nbin-1 else (x>=bins[i]) * (x<=bins[i])
         hist[i] = len(x[f]) if weights==None else np.sum(weights[f])
     return hist
@@ -3434,17 +3434,17 @@ def mHI_model3(rd, deltaLogSigma_0, rHI):
     b1, b2 = 1.625, 1.625
     if type(rd)==np.ndarray and type(Sigma_0)==np.ndarray:
         hyper = np.zeros(len(rd))
-        for i in xrange(len(rd)):
+        for i in range(len(rd)):
             c = np.exp(1.6/rd[i]) - Sigma_0[i]*np.exp(0.6/rd[i])
             if np.isfinite(c): hyper[i] = mm.hyper([a1,a2,a3],[b1,b2],c)
     elif type(rd)==np.ndarray:
         hyper = np.zeros(len(rd))
-        for i in xrange(len(rd)):
+        for i in range(len(rd)):
             c = np.exp(1.6/rd[i]) - Sigma_0*np.exp(0.6/rd[i])
             if np.isfinite(c): hyper[i] = mm.hyper([a1,a2,a3],[b1,b2],c)
     elif type(Sigma_0)==np.ndarray:
         hyper = np.zeros(len(Sigma_0))
-        for i in xrange(len(Sigma_0)):
+        for i in range(len(Sigma_0)):
             c = np.exp(1.6/rd) - Sigma_0[i]*np.exp(0.6/rd)
             if np.isfinite(c): hyper[i] = mm.hyper([a1,a2,a3],[b1,b2],c)
     else:
@@ -3632,7 +3632,7 @@ def fit_divide_SFMS(mass_stars, SFR, sSFR_init = 10**-10.5):
         its += 1
         p3_old = p3
         minima = -40*np.ones(nbins)
-        for i in xrange(nbins):
+        for i in range(nbins):
             f = (mass_stars>=10**bins[i]) * (mass_stars<10**bins[i+1]) * (np.log10(SFR)<= p[0]*np.log10(mass_stars)+p[1]) * (np.log10(SFR)>= p2[0]*np.log10(mass_stars)+p2[1])
             counts, edges = np.histogram(np.log10(SFR[f]), bins=12)
             grad = abs(np.diff(counts))

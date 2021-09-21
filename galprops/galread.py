@@ -128,7 +128,7 @@ def halomarie():
 def starmasses():
 	# This is specifically to just read in stellar masses at various times as measured from my routines on Marie's sims, so I can quickly overplot with initial SAGE run on Mini Millennium.
 	SM = np.array([[1.36500000e-03, 1.89225000e-01, 2.46090000e-01, 2.95305000e-01,5.24860500e+00, 7.61194500e+00, 1.14788250e+01, 1.26047400e+01, 1.36371000e+01, 1.43198100e+01, 1.57353750e+01, 1.59327450e+01, 1.66953000e+01, 1.82805150e+01, 2.19048900e+01, 2.26825800e+01, 2.35719300e+01, 2.58971550e+01, 2.85720000e+01, 2.98312350e+01, 3.10293300e+01, 3.18434850e+01, 3.32736750e+01, 3.49259850e+01, 3.68909850e+01, 3.85485750e+01, 3.98652300e+01, 4.01841150e+01, 4.14936750e+01, 4.20164400e+01, 4.24074600e+01, 4.34534850e+01, 4.40414100e+01, 4.44820950e+01], [1.29000000e-03, 0.00000000e+00, 5.16000000e-03, 1.41060000e-01, 2.23618500e+00, 4.07304000e+00, 1.08771150e+01, 1.24934400e+01, 1.35673350e+01, 1.42357200e+01, 1.56500400e+01, 1.58961000e+01, 1.65738450e+01, 1.82425350e+01, 2.18853300e+01, 2.26221150e+01, 2.34948900e+01, 2.57975850e+01, 2.85128250e+01, 2.97637050e+01, 3.09915300e+01, 3.18215550e+01, 3.32608800e+01, 3.49132800e+01, 3.68909850e+01, 3.86000550e+01, 3.98652300e+01, 4.01990250e+01, 4.15089300e+01, 4.20449850e+01, 4.25214450e+01, 4.35375450e+01, 4.42990800e+01, 4.45722150e+01], [1.44000000e-03, 2.39565000e-01, 3.01650000e-01, 5.58420000e-01, 5.43420000e+00, 8.04978000e+00, 1.20752700e+01, 1.37830800e+01, 1.47596850e+01, 1.83183900e+01, 1.95954450e+01, 1.73804550e+01, 2.12935200e+01, 2.29672050e+01, 2.35707750e+01, 2.40619950e+01, 2.51572950e+01, 2.72990850e+01, 2.91978750e+01, 3.08887800e+01, 3.21947400e+01, 3.31042950e+01, 3.45831300e+01, 3.56451900e+01, 3.85461000e+01, 3.97102800e+01, 4.03403550e+01, 4.09227450e+01, 4.22874450e+01, 4.25019000e+01, 4.32506100e+01, 4.46540250e+01, 4.46887050e+01, 4.49325300e+01], [1.36500000e-03, 9.59250000e-02, 1.37520000e-01, 4.26435000e-01, 5.23101000e+00, 7.84557000e+00, 1.14476700e+01, 1.35689400e+01, 1.39885800e+01, 1.76025600e+01, 1.61974800e+01, 1.65515850e+01, 2.04745200e+01, 2.20443450e+01, 2.24232450e+01, 2.36921550e+01, 2.41521900e+01, 2.64525300e+01, 2.88824850e+01, 3.02156700e+01, 3.13375950e+01, 3.24053400e+01, 3.35921550e+01, 3.52225050e+01, 3.70274250e+01, 3.85284750e+01, 3.98384100e+01, 4.00103850e+01, 4.13353950e+01, 4.19574750e+01, 4.21932000e+01, 4.31654550e+01, 4.38831900e+01, 4.38709950e+01]])
-	t = np.array([1.368+0.375*i for i in xrange(33)]+[13.7055]) # Values of time at each step
+	t = np.array([1.368+0.375*i for i in range(33)]+[13.7055]) # Values of time at each step
 	return np.transpose(SM), t
 
 
@@ -369,7 +369,7 @@ def ahfhaloid(fpre, ids):
     accum = 1 # Value used to keep track of reading the AHF file
     pid, hid = np.array([],dtype='i8'), np.array([],dtype='i8') # Initialise particle and halo ID arrays
         
-    for i in xrange(len(Npart)):
+    for i in range(len(Npart)):
         hid = np.append(hid, np.ones(Npart[i], dtype='i8')*i)
         
         args = np.arange(Npart[i]) + accum # Arguments for the halo's particle IDs
@@ -380,7 +380,7 @@ def ahfhaloid(fpre, ids):
         
     if type(ids)==list: # Put/ensure all input IDs in one array
         idarr = np.array([])
-        for i in xrange(len(ids)): idarr = np.append(idarr,ids[i])
+        for i in range(len(ids)): idarr = np.append(idarr,ids[i])
     else:
         idarr = np.array(ids)
     
@@ -396,7 +396,7 @@ def ahfhaloid(fpre, ids):
     if type(ids)==list:
         acc = 0
         listout = []
-        for i in xrange(len(ids)):
+        for i in range(len(ids)):
             #print len(ids[i])
             listout += [hid_out[acc:acc+len(ids[i])]]
             acc += len(ids[i])
@@ -737,7 +737,7 @@ def starpopmodel_Kroupa():
 		age_first = np.float64(ds[0]) # First age considered
 		init = np.argwhere(ages==age_first)[0][0]
 		
-		for j in xrange(67-init):
+		for j in range(67-init):
 			k = j+init
 			L[k,:,i] = np.array(ds[j*4*1221:(j+1)*4*1221][3::4], dtype='f8')
 
@@ -880,8 +880,8 @@ def galdtype():
                     ('infallVvir'                   , np.float32),
                     ('infallVmax'                   , np.float32)
                     ]
-	names = [Galdesc_full[i][0] for i in xrange(len(Galdesc_full))]
-	formats = [Galdesc_full[i][1] for i in xrange(len(Galdesc_full))]
+	names = [Galdesc_full[i][0] for i in range(len(Galdesc_full))]
+	formats = [Galdesc_full[i][1] for i in range(len(Galdesc_full))]
 	Galdesc = np.dtype({'names':names, 'formats':formats}, align=True)
 	return Galdesc
 
@@ -964,8 +964,8 @@ def galdtype_DarkSage2016():
                     ('infallVvir'                   , floattype),
                     ('infallVmax'                   , floattype)
                     ]
-    names = [Galdesc_full[i][0] for i in xrange(len(Galdesc_full))]
-    formats = [Galdesc_full[i][1] for i in xrange(len(Galdesc_full))]
+    names = [Galdesc_full[i][0] for i in range(len(Galdesc_full))]
+    formats = [Galdesc_full[i][1] for i in range(len(Galdesc_full))]
     Galdesc = np.dtype({'names':names, 'formats':formats}, align=True)
     return Galdesc
 
@@ -1058,8 +1058,8 @@ def galdtype_adam(Nannuli=30):
                     ('infallVvir'                   , floattype),
                     ('infallVmax'                   , floattype)
                     ]
-	names = [Galdesc_full[i][0] for i in xrange(len(Galdesc_full))]
-	formats = [Galdesc_full[i][1] for i in xrange(len(Galdesc_full))]
+	names = [Galdesc_full[i][0] for i in range(len(Galdesc_full))]
+	formats = [Galdesc_full[i][1] for i in range(len(Galdesc_full))]
 	Galdesc = np.dtype({'names':names, 'formats':formats}, align=True)
 	return Galdesc
 
@@ -1115,8 +1115,8 @@ def galdtype_public():
                 ('infallVvir'                   , np.float32),
                 ('infallVmax'                   , np.float32)
                 ]
-    names = [Galdesc_full[i][0] for i in xrange(len(Galdesc_full))]
-    formats = [Galdesc_full[i][1] for i in xrange(len(Galdesc_full))]
+    names = [Galdesc_full[i][0] for i in range(len(Galdesc_full))]
+    formats = [Galdesc_full[i][1] for i in range(len(Galdesc_full))]
     Galdesc = np.dtype({'names':names, 'formats':formats}, align=True)
     return Galdesc
 
@@ -1169,8 +1169,8 @@ def galdtype_public_old0():
                 ('infallVvir'                   , np.float32),
                 ('infallVmax'                   , np.float32)
                 ]
-    names = [Galdesc_full[i][0] for i in xrange(len(Galdesc_full))]
-    formats = [Galdesc_full[i][1] for i in xrange(len(Galdesc_full))]
+    names = [Galdesc_full[i][0] for i in range(len(Galdesc_full))]
+    formats = [Galdesc_full[i][1] for i in range(len(Galdesc_full))]
     Galdesc = np.dtype({'names':names, 'formats':formats}, align=True)
     return Galdesc
 
@@ -1226,8 +1226,8 @@ def galdtype_public_old1(fof64=False):
 	            ('infallVvir'                   , np.float32),
 	            ('infallVmax'                   , np.float32)
 	            ]
-	names = [Galdesc_full[i][0] for i in xrange(len(Galdesc_full))]
-	formats = [Galdesc_full[i][1] for i in xrange(len(Galdesc_full))]
+	names = [Galdesc_full[i][0] for i in range(len(Galdesc_full))]
+	formats = [Galdesc_full[i][1] for i in range(len(Galdesc_full))]
 	Galdesc = np.dtype({'names':names, 'formats':formats}, align=True)
 	return Galdesc
 
@@ -1283,8 +1283,8 @@ def galdtype_public_old2():
 	            ('infallVvir'                   , np.float32),
 	            ('infallVmax'                   , np.float32)
 	            ]
-	names = [Galdesc_full[i][0] for i in xrange(len(Galdesc_full))]
-	formats = [Galdesc_full[i][1] for i in xrange(len(Galdesc_full))]
+	names = [Galdesc_full[i][0] for i in range(len(Galdesc_full))]
+	formats = [Galdesc_full[i][1] for i in range(len(Galdesc_full))]
 	Galdesc = np.dtype({'names':names, 'formats':formats}, align=True)
 	return Galdesc
 
@@ -1339,8 +1339,8 @@ def galdtype_carnage_workshop():
                     ('infallVvir'                   , np.float32),
                     ('infallVmax'                   , np.float32)
                     ]
-    names = [Galdesc_full[i][0] for i in xrange(len(Galdesc_full))]
-    formats = [Galdesc_full[i][1] for i in xrange(len(Galdesc_full))]
+    names = [Galdesc_full[i][0] for i in range(len(Galdesc_full))]
+    formats = [Galdesc_full[i][1] for i in range(len(Galdesc_full))]
     Galdesc = np.dtype({'names':names, 'formats':formats}, align=True)
     return Galdesc
 
@@ -1397,8 +1397,8 @@ def galdtype_multidark():
                     ('infallVvir'                   , np.float32),
                     ('infallVmax'                   , np.float32)
                     ]
-    names = [Galdesc_full[i][0] for i in xrange(len(Galdesc_full))]
-    formats = [Galdesc_full[i][1] for i in xrange(len(Galdesc_full))]
+    names = [Galdesc_full[i][0] for i in range(len(Galdesc_full))]
+    formats = [Galdesc_full[i][1] for i in range(len(Galdesc_full))]
     Galdesc = np.dtype({'names':names, 'formats':formats}, align=True)
     return Galdesc
 
@@ -1618,7 +1618,7 @@ def e5snapids(fpre, dir=0):
 	
 	Naccum = np.zeros(6) # Accumulative vector for N
 	
-	for i in xrange(Nfiles):
+	for i in range(Nfiles):
 		fname = fpre + '.' + str(i)
 		f = open(dir+fname, 'rb')
 		Nbytes = np.fromfile(f, 'i4', 1)[0] # Number of bytes for seeking
@@ -1757,7 +1757,7 @@ def e5snapfile(fname, dir=0, t=1366, n=0):
 	# Format the masses
 	newmass = [] # Initialize new mass variable which will house the masses of each particle
 	N_vm = np.zeros(6) # Same as N but will have entries for zero where mass_pt is non-zero.  It hence lists the number of each particle type with variable mass.
-	for i in xrange(6):
+	for i in range(6):
 		if mass_pt[i]==0:
 			N_vm[i] = N[i]
 			ent = sum(N_vm[:i]) # Entry for where to find masses
@@ -1802,7 +1802,7 @@ def e5snapfullold(fpre, dir=0):
 	# Initialize variables
 	x_g, y_g, z_g, x_dm, y_dm, z_dm, x_s, y_s, z_s, vx_g, vy_g, vz_g, vx_dm, vy_dm, vz_dm, vx_s, vy_s, vz_s, id_g, id_dm, id_s, mass_g, mass_dm, mass_s, met_g, met_s, sml, rho, U, sfr, birth_z = [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []
 	
-	for i in xrange(Nfiles):
+	for i in range(Nfiles):
 		fname = fpre + '.' + str(i)
 		
 		print('\nReading in snapfile ', i, ' t=', time()-start, ' s')
@@ -1903,7 +1903,7 @@ def e5snapfull(fpre=None, dir=0, t=1366, haloids=True):
     Naccum = np.zeros(6) # Accumulative vector for N
 
     print('reading', Nfiles, 'files for snapshot')
-    for i in xrange(Nfiles):
+    for i in range(Nfiles):
         fname = fpre + '.' + str(i) if Nfiles>1 else fpre
 
         print('\nReading in snapfile ', i, ' t=', time()-start, ' s')
@@ -2016,7 +2016,7 @@ def e5snapfullalt(fpre,dir=0,haloids=True):
     print('Initializing black hole variables, t=', time()-start, ' s')
     x_bh, y_bh, z_bh, vx_bh, vy_bh, vz_bh, id_bh, mass_bh, amass_bh, amdot_bh = np.array([]), np.array([]), np.array([]), np.array([]), np.array([]), np.array([]), np.zeros(Ntot[5],dtype='u8'), np.array([]), np.array([]), np.array([])
     
-    for i in xrange(Nfiles):
+    for i in range(Nfiles):
         fname = fpre + '.' + str(i)
 
         print('\nReading in snapfile ', i, ' t=', time()-start, ' s')
@@ -2128,7 +2128,7 @@ def e5snappmi(t,dir=0):
 	
 	Naccum = np.zeros(6)
 	
-	for i in xrange(8):
+	for i in range(8):
 		print('Starting snapfile', i, 'at', time()-start, 's')
 		Nbytes = 0 # Number of bytes to skip to get to data wanted
 		fname = fpre + '.' + str(i)
@@ -2140,7 +2140,7 @@ def e5snappmi(t,dir=0):
 		mass_pt = np.fromfile(f, 'f8', 6)
 		
 		# Safety net in case the standard particle masses aren't what I expect them to be.
-		for j in xrange(6):
+		for j in range(6):
 			if j==1:
 				if mass_pt[j]==0:
 					print('DM PARTICLE MASSES ARE NOT THE SAME. ALTER e5snappmi CODE')
@@ -2235,7 +2235,7 @@ def e5haloidfull(fpre, dir=0):
 	
 	IDs = np.zeros(Ntot,dtype='u8') # Initialize the full ID list
 	
-	for i in xrange(Nfiles):
+	for i in range(Nfiles):
 		fname = fpre + '.' + str(i) # Set the filename for this loop
 		Nprevsum, N, IDpart = e5haloidfile(fname, dir) # Read in IDs for each file
 		IDs[Nprevsum:Nprevsum+N] = IDpart # Add to the array
@@ -2352,7 +2352,7 @@ def e5halotabfull(fpre=None, dir=0, t=1366):
 	
 	NgroupPrev, NsubgroupPrev = 0, 0 # Initialize the variables that will remember where to slot in the next file's info to the appropriate arrays
 	
-	for i in xrange(Nfiles):
+	for i in range(Nfiles):
 		fname = fpre + '.' + str(i) # Set the filename for this loop
 		Ngroups, Nsubgroups, length, nhalo, halolen, halomass, halogroup, halopartmass, haloid, halovmax, halovmaxrad = e5halotabfile(fname, dir)
 		
@@ -2418,7 +2418,7 @@ def e5loadhalo(id1, t, idarr=None, dir=0):
 	mass_g, mass_dm, mass_s, mass_bh = np.zeros(Nptot[0]), np.zeros(Nptot[1]), np.zeros(Nptot[4]), np.zeros(Nptot[5])
 	u, rho, sfr = np.zeros(Nptot[0]), np.zeros(Nptot[0]), np.zeros(Nptot[0])
 	
-	for fno in xrange(Nfiles): # fno is file number
+	for fno in range(Nfiles): # fno is file number
 		Nbytes = [] # Initialize list that will contain information on the block sizes in each file
 		f = open(dir+'snapshot_'+t+'.'+str(fno), 'rb')
 		Nbytes += list(np.fromfile(f, 'i4', 1))
@@ -2455,7 +2455,7 @@ def e5loadhalo(id1, t, idarr=None, dir=0):
 		Nparts = np.array([ len(g_args), len(dm_args), 0, 0, len(s_args), len(bh_args) ])
 		
 		Nmass_pt = np.zeros(6,dtype='u4')
-		for i in xrange(6):
+		for i in range(6):
 			if mass_pt[i]==0: Nmass_pt[i] = N[i]
 		
 		## Extract positions
@@ -2589,7 +2589,7 @@ def e5loadhalo(id1, t, idarr=None, dir=0):
 	idtype = 'u8'
 	
 	if np.max(idarr) == NtotSubgroups-1: # Determine if the code is getting a group or subhalo
-		for i in xrange(Nfiles):
+		for i in range(Nfiles):
 			f = open(dir+'subhalo_tab_'+t+'.'+str(i))
 			Ngroups = np.fromfile(f, 'i4', 1)[0] # Number of groups in this file
 			f.seek(24)
@@ -2620,7 +2620,7 @@ def e5loadhalo(id1, t, idarr=None, dir=0):
 			Naccum += Nsubgroups
 	
 	elif np.max(idarr) == Ntotgroups-1:
-		for i in xrange(Nfiles):
+		for i in range(Nfiles):
 			f = open(dir+'subhalo_tab_'+t+'.'+str(i))
 			Ngroups = np.fromfile(f, 'i4', 1)[0] # Number of groups in this file
 			
@@ -2705,7 +2705,7 @@ def e5v10out(t=1366,run=2):
 	# Read in first part
 	[Radii, SM, CGM, HGM, DMM, BHM, nBH, SFR, shid] = e5v10outfile(t, 1, run)
 
-	for i in xrange(19):
+	for i in range(19):
 		fd = e5v10outfile(t, i+2, run) # File data
 		Radii = np.append(Radii, fd[0], 0)
 		SM = np.append(SM, fd[1], 0)
@@ -2945,7 +2945,7 @@ def MBIIheader(sno='085',dir=None):
 	fs = fr.split()
 	f.close()
 
-	for i in xrange(len(fs)):
+	for i in range(len(fs)):
 		if fs[i]=='OmegaL(header)': Omega_L = float(fs[i+2])
 		if fs[i]=='OmegaM(header)':Omega_M = float(fs[i+2])
 		if fs[i]=='h(header)':h = float(fs[i+2]) # Hubble little h
@@ -3013,7 +3013,7 @@ def MBIIgroupparticledata(gno, sno='085', shtd=None, sh_groupid=None, sh_lenbyty
 	"""
 	
 	shid_g = []
-	for i in xrange(Nsh): shid_g += ([shid[i]]*sh_lenbytype[i,0])
+	for i in range(Nsh): shid_g += ([shid[i]]*sh_lenbytype[i,0])
 	shid_g = np.array(shid_g,dtype='i4')
 
 	
@@ -3036,7 +3036,7 @@ def MBIIgroupparticledata(gno, sno='085', shtd=None, sh_groupid=None, sh_lenbyty
 	f.close()
 
 	shid_dm = []
-	for i in xrange(Nsh): shid_dm += ([shid[i]]*sh_lenbytype[i,1])
+	for i in range(Nsh): shid_dm += ([shid[i]]*sh_lenbytype[i,1])
 	shid_dm = np.array(shid_dm,dtype='i4')
 
 	
@@ -3059,7 +3059,7 @@ def MBIIgroupparticledata(gno, sno='085', shtd=None, sh_groupid=None, sh_lenbyty
 	f.close()
 	
 	shid_s = []
-	for i in xrange(Nsh): shid_s += ([shid[i]]*sh_lenbytype[i,4])
+	for i in range(Nsh): shid_s += ([shid[i]]*sh_lenbytype[i,4])
 	shid_s = np.array(shid_s,dtype='i4')
 	
 	
@@ -3082,7 +3082,7 @@ def MBIIgroupparticledata(gno, sno='085', shtd=None, sh_groupid=None, sh_lenbyty
 	f.close()
 	
 	shid_bh = []
-	for i in xrange(Nsh): shid_bh += ([shid[i]]*sh_lenbytype[i,5])
+	for i in range(Nsh): shid_bh += ([shid[i]]*sh_lenbytype[i,5])
 	shid_bh = np.array(shid_bh,dtype='i4')
 
 	return [pos_g[0],pos_g[1],pos_g[2],vel_g[0],vel_g[1],vel_g[2],mass_g,sfr_g,shid_g], [pos_dm[0],pos_dm[1],pos_dm[2],vel_dm[0],vel_dm[1],vel_dm[2],mass_dm,shid_dm], [pos_s[0],pos_s[1],pos_s[2],vel_s[0],vel_s[1],vel_s[2],mass_s,shid_s], [pos_bh[0],pos_bh[1],pos_bh[2],vel_bh[0],vel_bh[1],vel_bh[2],mass_bh,shid_bh], shid
@@ -3875,7 +3875,7 @@ def md14data(h=0.678, Omega_R=0, Omega_M=0.3089, Omega_L=0.6911):
     z = (data[:,0]+data[:,1])/2
     z_err = (data[:,1]-data[:,0])/2
     SFRD = data[:,2] - 0.2 # converts from Salpeter to Chabrier
-    for i in xrange(len(z)):
+    for i in range(len(z)):
         SFRD[i] += np.log10( gc.z2dA(z[i], *my_cosmo) / gc.z2dA(z[i], *MD_cosmo) )**2 # adjust for assumed-cosmology influence on SFR calculations
     w = np.where(z_err>0)[0]
     for i in w:
@@ -3912,7 +3912,7 @@ def Driver18_data(h=0.678, Omega_R=0, Omega_M=0.3089, Omega_L=0.6911):
     z = 0.5*(data[:,1] + data[:,2])
     dz = data[:,2] - data[:,1]
     SFRD = data[:,3]
-    for i in xrange(len(z)):
+    for i in range(len(z)):
         SFRD[i] += np.log10( gc.z2dA(z[i], *my_cosmo) / gc.z2dA(z[i], *D18_cosmo) )**2 # adjust for assumed-cosmology influence on SFR calculations
         SFRD[i] += np.log10( (gc.comoving_distance(data[i,2], *D18_cosmo)**3 - gc.comoving_distance(data[i,1], *D18_cosmo)**3) / (gc.comoving_distance(data[i,2], *my_cosmo)**3 - gc.comoving_distance(data[i,1], *my_cosmo)**3) )# adjust for assumed-cosmology influence on comoving volume
     SFRD_err = np.sum(data[:,5:],axis=1)
@@ -3970,7 +3970,7 @@ def FaucherGiguere09():
 
 def csv_dict(fname, skiprows, dtypes, keylist=None, delimiter=',', head_delimiter=','):
     with open(fname, 'r') as f:
-        for i in xrange(skiprows): line = f.readline()
+        for i in range(skiprows): line = f.readline()
     keys = line.split(head_delimiter)
     keys[-1] = keys[-1][:-1] # gets rid of \n at the end
     if keylist==None: keylist = keys
@@ -3987,7 +3987,7 @@ def csv_dict(fname, skiprows, dtypes, keylist=None, delimiter=',', head_delimite
 
 def csv_dict_multifile(fpre, fsuf, fnumbers, skiprows, dtypes, keylist=None, delimiter=','):
     with open(fpre+str(fnumbers[0])+fsuf, 'r') as f:
-        for i in xrange(skiprows[0]): line = f.readline()
+        for i in range(skiprows[0]): line = f.readline()
     keys = line.split(',')
     keys[-1] = keys[-1][:-1] # gets rid of \n at the end
     if keylist==None: keylist = keys
@@ -4110,7 +4110,7 @@ def Brown_deltaHIfrac_satenv_4bins(h=0.6774, indir='/Users/adam/ALFALFA/'):
     B17_m, B17_s = Brown_HIfrac_satenv_4bins(h, indir)
     [logM_cen, logHIfrac_cen, logHIfrac_err_cen], [logM_sat, logHIfrac_sat, logHIfrac_err_sat], [logHIfrac_sSFR_cen, logsSFR_cen, logHIfrac_sSFR_err_cen], [logHIfrac_sSFR_sat, logsSFR_sat, logHIfrac_sSFR_err_sat], [logM_all, logHIfrac_all, logHIfrac_all_err], [logsSFR_all, logHIfrac_sSFR_all] = Brown_HI_fractions_satcen(h)
 
-    for i in xrange(len(B17_m)):
+    for i in range(len(B17_m)):
         B17_m[i][1,:] -= np.interp(B17_m[i][0,:], logM_sat, logHIfrac_sat)
         B17_s[i][1,:] -= np.interp(B17_s[i][0,:], logsSFR_sat-9, logHIfrac_sSFR_sat)
 
@@ -4545,7 +4545,7 @@ def HI_surface_density_profiles_obs(dir='/Users/adam/HI profiles/'):
     SigmaHI_profile = []
     gal_name = []
 
-    for i in xrange(ntot):
+    for i in range(ntot):
         if i<nT:
             rad = np.array(T[i][-2])
             SigHI = np.array(T[i][-1])

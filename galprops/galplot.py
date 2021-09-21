@@ -69,10 +69,10 @@ def im_contour_pcile(xp, yp, zz, pcs, c='k', ls='-', lw=2, ax=plt.gca(), zorder=
     zzsum = np.sum(zz)
     tol = 1e-3
     
-    for level in xrange(len(pcs)):
+    for level in range(len(pcs)):
         high_bound = np.max(zz)
         low_bound = np.min(zz)
-        for i in xrange(1000): # Arbitrary maximum number of iterations of 1000
+        for i in range(1000): # Arbitrary maximum number of iterations of 1000
             zval = (high_bound + low_bound)/2.
             pc_within = np.sum(zz[zz>=zval])/zzsum
             if pc_within < pcs[level]-tol:
@@ -471,7 +471,7 @@ def smoothplot(x,y,dx,plottype='b-',lw=1,label=r''):
 	#xint = np.arange(100*n)*dx/100 + min(x) # Same as xplot but with more points in between
 	#yint = np.interp(xint, x, y) # y-data but interpolated at lots of points for easiness
 	
-	for i in xrange(n):
+	for i in range(n):
 		x1 = min(x)+dx*i # First x-point in the bin
 		x2 = min(x)+dx*(i+1) # Last x-point in the bin
 		ydata = y[(x>=x1)*(x<x2)]
@@ -823,7 +823,7 @@ def smf_nifty_obs(h=0.7, z=0, c='purple', haxes=True, fulldata=True, bc03=False)
                              [10.3152,      10.5652,    0.00170499,  0.000864231],
                              [10.5652,      10.8152,    0.000731956,  0.000387435]])
     """(m,n) = data.shape
-    for i in xrange(m):
+    for i in range(m):
         plt.fill_between(data[i,0:2]/h, np.array([data[i,2],data[i,2]])+data[i,3], np.array([data[i,2],data[i,2]])-data[i,3], color='purple', alpha=0.3)"""
     #xdata = np.append(data[0,0], data[:,1]) - np.log10(h)
     #yhigh = np.append(data[0,2]+data[0,3], data[:,2]+data[:,3])
@@ -1715,7 +1715,7 @@ def kennicuttschmidt(redshift, GM, SFR, Radii, s3=False):
 		SFR = [SFR]
 
 	xdata, ydata = np.array([]), np.array([])
-	for i in xrange(len(GM)):
+	for i in range(len(GM)):
 		S = np.pi*Radii[i]**2 # Surface area
 		f = (S>0)*(GM[i]>0)*(SFR[i]>0) # Filter to remove any zero values
 
@@ -1821,7 +1821,7 @@ def smsfr(z, SM, SFR):
 		SFR = [SFR]
 
 	SM0, SM1, SM2, SFR0, SFR1, SFR2 = np.array([]), np.array([]), np.array([]), np.array([]), np.array([]), np.array([])
-	for i in xrange(len(SM)):
+	for i in range(len(SM)):
 		zerof = (SM[i]>0)*(SFR[i]>0) # Don't want zero-values.
 		SM0 = np.append(SM0, np.log10(SM[i][z0f*zerof]))
 		SM1 = np.append(SM1, np.log10(SM[i][z1f*zerof]))
