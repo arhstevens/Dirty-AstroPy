@@ -1,12 +1,12 @@
-# Adam Stevens, 2013-2020
+# Adam Stevens, 2013--2021
 # Plotting tools for galaxies
 
 from pylab import *
 from scipy import signal as ss
 from scipy import stats
 import scipy.interpolate as si
-import galcalc as gc
-import galread as gr
+from . import galcalc as gc
+from . import galread as gr
 from random import sample
 
 
@@ -35,7 +35,7 @@ def contour(x,y,Nbins=None,weights=None,range=None,Nlevels=25,c='k',ls='-',lw=2,
 #    im = ss.convolve2d(im,k,mode='same') # Smooth the image for cleaner contours
 
     if pcs is not None: # Passing pcs trumps Nlevels, where Nlevels now essentially becomes len(pcs)
-        print 'pcs is not None and len(x)=', len(x)
+        print('pcs is not None and len(x)=', len(x))
         if smooth:
             xx, yy = np.array([(Nbins+1)*[xedges]]), np.array([(Nbins+1)*[yedges]])
             xx, yy = xx[0,:,:], yy[0,:,:].T
@@ -82,7 +82,7 @@ def im_contour_pcile(xp, yp, zz, pcs, c='k', ls='-', lw=2, ax=plt.gca(), zorder=
             else:
                 break
         zzlevel[level] = zval
-    print 'zzlevel', zzlevel
+    print('zzlevel', zzlevel)
     if type(ls)==str:
         ax.contour(xp, yp, zz, zzlevel, colors=c, linestyles=ls, linewidths=lw, zorder=zorder)
     else:
@@ -191,7 +191,7 @@ def circle(r,colour='white',centre=[0,0],lw=3,ls='-',half='f',inclination=0.,fil
             filt = (y2<top)
             x, y1, y2 = x[filt], y1[filt], y2[filt]
             y1[y1>top] = top
-            print top
+            print(top)
         ax.fill_between(x, y1, y2, color=colour, alpha=alpha, zorder=zorder)
 
 
@@ -307,7 +307,7 @@ def plotgal(x,y,z,mass,thetadeg=0,phideg=0,xmax=40000.,Npixels=2048,pt=1,bright=
 			vmin, vmax = max(np.min(im2plot[im2plot>-10])-0.2,-10.02), np.max(im2plot) # If vran is an empty list, then plot the minimum to maximum range (brightening the dim end slightly)
 		else: # not plotting logarithmically, so can be simpler bounds
 			vmin, vmax = np.min(im2plot), np.max(im2plot)
-		print 'Plotting range', vmin, 'to', vmax
+		print('Plotting range', vmin, 'to', vmax)
 	else:
 		vmin, vmax = vran[0], vran[1]
 	
@@ -522,7 +522,7 @@ def massfunction(mass, Lbox, colour='k', label=r'Input', extra=0, fsize=28, pt=1
     else:
         lbound, ubound = range[0], range[1]
     if lbound>ubound:
-        print 'WTF, lbound, ubound =', lbound, ubound
+        print('WTF, lbound, ubound =', lbound, ubound)
         exit()
     lbound, ubound = np.float32(lbound), np.float32(ubound) # Try and stop BS histogram bug
     if binwidth is not None: 
@@ -532,10 +532,10 @@ def massfunction(mass, Lbox, colour='k', label=r'Input', extra=0, fsize=28, pt=1
             N, edges = np.histogram(masslog, bins=Nbins, range=[lbound,ubound]) # number of galaxies in each bin.  Doing a specific range for stars and gas.
             xhist, edges = np.histogram(masslog, bins=Nbins, range=[lbound,ubound], weights=10**masslog)
         except ValueError:
-            print 'Triggered ValueError'
-            print 'masslog', masslog
-            print 'Nbins', Nbins
-            print '[lbound,ubound]', [lbound,ubound]
+            print('Triggered ValueError')
+            print('masslog', masslog)
+            print('Nbins', Nbins)
+            print('[lbound,ubound]', [lbound,ubound])
             edges = np.linspace(lbound,ubound,Nbins)
             N = gc.histogram(masslog, edges)
             xhist = gc.histogram(masslog, edges, 10**masslog)
@@ -565,7 +565,7 @@ def massfunction(mass, Lbox, colour='k', label=r'Input', extra=0, fsize=28, pt=1
                 ax.plot(x, y, colour+'-', linewidth=lw, label=label, dashes=ls)
         ax.set_yscale('log', nonposy='clip')
 
-    if Print is not None: print Print, '\n', x, '\n', edges, '\n', y, '\n'
+    if Print is not None: print(Print, '\n', x, '\n', edges, '\n', y, '\n')
 
     if extra>0:
         axlogic(x,y,yscale='log') # Set axis
@@ -1236,7 +1236,7 @@ def coolinglum(Vvir, Cooling, extra=0, Nbins=50, ls='x', lw=2, c='k', label=r'In
 	HaloTemp = 35.9*(Vvir*Vvir) / 11604.5 / 1.0e3
 	CoolingLum = 10**(Cooling - 40.0)
 	HaloTemp, CoolingLum = gc.logten(HaloTemp), gc.logten(CoolingLum)
-	print 'average log cooling lum = ', np.mean(CoolingLum[HaloTemp>-0.3])
+	print('average log cooling lum = ', np.mean(CoolingLum[HaloTemp>-0.3]))
 	filt = (HaloTemp>-0.3)*(CoolingLum>-1) * (HaloTemp<1.1)*(CoolingLum<6)
 	HaloTemp, CoolingLum = HaloTemp[filt], CoolingLum[filt]
     #print 'N plotted for coolinglum =', len(HaloTemp)
@@ -1248,7 +1248,7 @@ def coolinglum(Vvir, Cooling, extra=0, Nbins=50, ls='x', lw=2, c='k', label=r'In
 		inds = np.arange(len(HaloTemp))
 		if len(inds) > points:
 			inds = sample(inds, points)
-		print 'points in axes/printed/requested for coolinglum is', len(HaloTemp), len(HaloTemp[inds]), points
+		print('points in axes/printed/requested for coolinglum is', len(HaloTemp), len(HaloTemp[inds]), points)
 		plt.plot(HaloTemp[inds], CoolingLum[inds], ls, c=c, ms=ms, alpha=alpha, mew=mew, label=label) if label is not None else plt.plot(HaloTemp[inds], CoolingLum[inds], ls, c=c, ms=ms, alpha=alpha, mew=mew)
 	else:
 		contour(HaloTemp,CoolingLum,Nbins=Nbins,weights=None,range=None,Nlevels=5,c=c,ls=ls,lw=lw)
@@ -1995,7 +1995,7 @@ def build_gas_image_array(x, y, mass, vol, Npix=2000, boundary=None, vol_mode='v
         rad = 1.0*vol
     else:
         rad = np.cbrt(vol * 0.75 / np.pi) # convert volume into a spherical radius
-        if not vol_mode=='v': print 'gp.build_gas_image_array(): Invalid vol_mode provided -- assuming the default of v'
+        if not vol_mode=='v': print('gp.build_gas_image_array(): Invalid vol_mode provided -- assuming the default of v')
         
     pixel_halfsize = boundary/Npix
     pixel_size = 2.0*pixel_halfsize
@@ -2014,11 +2014,11 @@ def build_gas_image_array(x, y, mass, vol, Npix=2000, boundary=None, vol_mode='v
     plist_part = np.where(~f_main * ~f_singular * (abs(x)-rad<boundary) * (abs(y)-rad<boundary))[0] # only part of the cell's flux will contribute to the image
 
     # Initialise image array with elements that entirely fit into one pixel each
-    print 'gp.build_gas_image_array(): Number of singular-pixel cells to histogram', len(x[f_singular])
+    print('gp.build_gas_image_array(): Number of singular-pixel cells to histogram', len(x[f_singular]))
     Image, _, _ = np.histogram2d(x[f_singular], y[f_singular], bins=Npix, weights=mass[f_singular], range=[[-boundary,boundary],[-boundary,boundary]])
 
     # Build the image contribution from the "safe" elements
-    print 'gp.build_gas_image_array(): Number of clean cells to process', len(plist_main)
+    print('gp.build_gas_image_array(): Number of clean cells to process', len(plist_main))
     for p in plist_main:
         kernel = mass[p] * gc.sphere2dk(rad[p], pixel_size, 2*rad[p]/pixel_size)
         Nk = (len(kernel)-1)/2
@@ -2027,7 +2027,7 @@ def build_gas_image_array(x, y, mass, vol, Npix=2000, boundary=None, vol_mode='v
         Image[ii_min:ii_max, ij_min:ij_max] += kernel
 
     # Build the contribution from the elements near the image boundary
-    print 'gp.build_gas_image_array(): Number of boundary cells to process', len(plist_part)
+    print('gp.build_gas_image_array(): Number of boundary cells to process', len(plist_part))
     for p in plist_part:
         kernel = mass[p] * gc.sphere2dk(rad[p], pixel_size, 2*rad[p]/pixel_size)
         Nkf = len(kernel)

@@ -1,9 +1,9 @@
-# Adam Stevens, 2013-2020
+# Adam Stevens, 2013--2021
 # Functions for calculating properties of galaxies in a general, pipelined manner.
 
 import numpy as np
 import math
-import galread as gr
+from . import galread as gr
 from scipy import optimize as op
 from scipy import signal as ss
 from scipy import interpolate
@@ -274,7 +274,7 @@ def diskfit(r,Sigma):
 		Sigma_fitted = expdecay(r,pfit[0],pfit[1])# Create the fitted curve
 	except RuntimeError or ValueError: # Catch any lack of fitting
 		Sigma_fitted, pfit = None, [0,0]
-		print 'diskfit did not converge'
+		print('diskfit did not converge')
 	
 	return Sigma_fitted, pfit
 
@@ -297,7 +297,7 @@ def bulgefit(r,Sigma,Sigma_disk=None):
 		Sigma_fitted = Sersic(r,pfit[0],pfit[1],pfit[2])
 	except RuntimeError or ValueError: # Catch any lack of fitting
 		Sigma_fitted, pfit = None, [0,0,0]
-		print 'bulgefit did not converge'
+		print('bulgefit did not converge')
 	
 	return Sigma_fitted, pfit
 
@@ -317,7 +317,7 @@ def galfit(r,Sigma):
 	Sigma_bulge, p_bulge = bulgefit(r2fit,Sigma2fit,Sigma_disk) # Do bulgefit to get the best parameter guesses
 	
 	while len(Sigma2fit_new)!=len(Sigma2fit):  # Once there's no high chi squared points fitted, the loop will break, ensuring satellites are removed from the fit.
-		print '\n(Re)fitting surface density profile\n'
+		print('\n(Re)fitting surface density profile\n')
 		
 		if len(Sigma2fit_new)>2: # On the first run, this needs to not happen, otherwise keep refitting with new arrays.
 			r2fit, Sigma2fit = np.array(r2fit_new), np.array(Sigma2fit_new)
@@ -329,7 +329,7 @@ def galfit(r,Sigma):
 		except RuntimeError or ValueError: # If the fit didn't work, capture the error and just let all the outputs be None or zeroes.
 			pfit = [0,0,0,0,0]
 			r2fit_new, Sigma2fit_new = None, None
-			print 'galfit did not converge\n'
+			print('galfit did not converge\n')
 			break
 		
 		chi = np.log10(Sigma2fit)-np.log10(Sigma2fit_fitted) # Find the chi vector (rather than chisqr just because it's easier to read on a graph)
@@ -468,7 +468,7 @@ def recentre(x,y,z,vx,vy,vz,mass,r=0):
         filt = ((x**2+y**2+z**2)<r**2)
 
     if len(filt[filt])==0:
-        print 'gc.recentre() found no particles within r =', r
+        print('gc.recentre() found no particles within r =', r)
         return x, y, z, vx, vy, vz
 
     xcom, ycom, zcom = com(x[filt], y[filt], z[filt], mass[filt])
@@ -482,7 +482,7 @@ def recentre(x,y,z,vx,vy,vz,mass,r=0):
     vzc = vz-vzcom
 
     if str(max(xc))=='nan': # Can get NaNs and not sure how else to stop this.  Just return nothing new if it occurs.
-        print 'Ignored results of recentre for r=',r, 'as NaNs returned'
+        print('Ignored results of recentre for r=',r, 'as NaNs returned')
         return x, y, z, vx, vy, vz
     else:
         return xc, yc, zc, vxc, vyc, vzc
@@ -629,7 +629,7 @@ def rotategalall(x,y,z,vx,vy,vz,m,r=25000.,extra=False):
 					x[i],y[i],z[i] = rotate(x[i],y[i],z[i],axis,angle)
 					vx[i],vy[i],vz[i] = rotate(vx[i],vy[i],vz[i],axis,angle)
 	except RuntimeWarning:
-		print 'Runtime Warning in rotategalall'
+		print('Runtime Warning in rotategalall')
 	if extra:
 		return x,y,z,vx,vy,vz,axis,angle
 	else:
@@ -769,7 +769,7 @@ def centreonhalo(haloid,star,gas,dm,bh=None,use_baryons=True):
             axis, angle = compute_rotation_to_z(xf,yf,zf,vxf,vyf,vzf,mf)
             rot = True
         else: # If still not enough, then don't bother with rotating
-            print 'centreonhalo will not rotate particles due to lack of baryons'
+            print('centreonhalo will not rotate particles due to lack of baryons')
             rot = False
                                             
         halo_coords = -np.array([delta_x, delta_y, delta_z])
@@ -809,7 +809,7 @@ def centreonhalo(haloid,star,gas,dm,bh=None,use_baryons=True):
         
     else: # Just in case one gets through that doesn't actually have any particles (happened in trials)
         halo_coords, halo_vel = np.array([0,0,0]), np.array([0,0,0])
-        print 'centreonhalo failed due to lack of particles in the desired halo'
+        print('centreonhalo failed due to lack of particles in the desired halo')
     
     assert np.all(np.isfinite(x))
     
@@ -993,7 +993,7 @@ def virial_radius(mass,r,rho_crit,r_max=400000.,it_max=400,densfac=200.):
 		else:
 			right = r_try
 	#print('Time on virrad = '+str(time()-start)+' s after '+str(i+1)+' iterations\n')
-	if i==it_max-1: print 'virrad hit max no. of iterations after', time()-start, 's'
+	if i==it_max-1: print('virrad hit max no. of iterations after', time()-start, 's')
 	return r_try
 
 
@@ -1168,10 +1168,10 @@ def PolyLog(s,z,eps=1e-7):
         try:
             pl_new = pl + (z**k)/(k**s)
         except OverflowError:
-            print 'Overflow Error arose'
+            print('Overflow Error arose')
             break
         k += 1
-    print k
+    print(k)
     return pl_new
 
 def piecewise_linear_parabola(x, xbreak, l0, l1, p0, p1):
@@ -1333,7 +1333,7 @@ def lum2ABmag(L, d_L, band=None, respint=None):
 		dwl = np.diff(wl)
 		respint = np.sum(resp[:-1]*dwl + np.diff(resp)*dwl)
 	else:
-		print 'Please specify a band'
+		print('Please specify a band')
 	mag = -2.5*np.log10(flux/respint) - 48.6
 	return mag
 	
@@ -1598,9 +1598,9 @@ def groupparticles(x,y,z,mass,soft, Nbins=100,xmax=None,ymax=None,zmax=None,r2ma
 	
 	# Bin the mass.  Widths must be at least the softening scale. Values in binmass are densities if normed=True in histogram3d
 	binmass, step, Nbins = histogram3d(xf, yf, zf, bins=Nbins, weights=mf, minwidth=soft, normed=True)
-	print Nbins
+	print(Nbins)
 	#print binmass
-	print 'Step is', step
+	print('Step is', step)
 	
 	# Initial cell IDs.  Says which cell each particle is actually in.
 	xid, yid, zid = np.array((xf-np.min(xf))/step[0], dtype='i8'), np.array((yf-np.min(yf))/step[1], dtype='i8'), np.array((zf-np.min(zf))/step[2], dtype='i8')
@@ -1621,7 +1621,7 @@ def groupparticles(x,y,z,mass,soft, Nbins=100,xmax=None,ymax=None,zmax=None,r2ma
 				adj += [binmass[xi,yi,zi-1]] if zi!=0 else [0]
 				adj += [binmass[xi,yi,zi+1]] if zi!=Nbins[2]-1 else [0]
 				if max(adj)<cellmass: maxima += [[xi,yi,zi]] # Obtain all the local maxima
-				print cellmass, adj
+				print(cellmass, adj)
 
 	Nmax = len(maxima) # Number of maxima
 	k = 0 # Just an index
@@ -1655,7 +1655,7 @@ def groupparticles(x,y,z,mass,soft, Nbins=100,xmax=None,ymax=None,zmax=None,r2ma
 				
 				xi, yi, zi = i, j, k # Indices for each dimension
 				inlist = [] # Initialise index list
-				if binid[xi,yi,zi] == -1: print 'Next cell to check', [i,j,k],', id', binid[xi,yi,zi]
+				if binid[xi,yi,zi] == -1: print('Next cell to check', [i,j,k],', id', binid[xi,yi,zi])
 				
 				while binid[xi,yi,zi] == -1: # If a cell has an ID, move on to the next cell
 					
@@ -1694,7 +1694,7 @@ def groupparticles(x,y,z,mass,soft, Nbins=100,xmax=None,ymax=None,zmax=None,r2ma
 						zi += 1
 						"""
 					idcell = binid[xi,yi,zi] # When this is not -1, the loop will be broken and all cells considered will be given the same ID as this cell
-					print 'Moving to cell', [xi,yi,zi]
+					print('Moving to cell', [xi,yi,zi])
 				for m in xrange(len(inlist)): binid[inlist[m]] = idcell # Add the appropriate ID to each cell in the sequence
 
 	groupid[fi] = binid[xid,yid,zid]
@@ -1755,7 +1755,7 @@ def partdens(x,y,z,mass,soft, Nbins=128,minpart=5,filt=None,xmax=None,ymax=None,
 	
 	#print 'Calculated gas particles densities in ', time()-start, 's'
 	if printon==True:
-		print 'Number of untrustworthy particle densities', len(rhofi[rhofi==0]), 'from', len(rhofi)
+		print('Number of untrustworthy particle densities', len(rhofi[rhofi==0]), 'from', len(rhofi))
 	#print 'Exiting partdens'
 	if masson==False:
 		return rho
@@ -1852,7 +1852,7 @@ def partdensnn(x,y,z,mass,nn=5,ids=None,id1=None,arg=None):
 	if ids!=None and id1!=None:
 		arg = np.argwhere(ids==id1)
 	elif ids==None and id1==None and arg==None:
-		print 'partdensnn ERROR: Need to specify the particle'
+		print('partdensnn ERROR: Need to specify the particle')
 
 	x, y, z = x-x[arg], y-y[arg], z-z[arg] # Centre coords on the particle
 	r = np.sqrt(x**2 + y**2 + z**2) # Distance of each particle from the one concerned
@@ -1878,11 +1878,11 @@ def partdensmarie(x,y,z,mass,r_gal=5e4,r_vir=1e5):
 	rho = np.array([rho1,rho2,rho3,rho4,rho5,rho6]).max(axis=0) # Take the maximum value from each resolution
 	
 	zeroargs = np.argwhere(rho==0)
-	print '\nNumber of subthreshold particles =', len(zeroargs)
+	print('\nNumber of subthreshold particles =', len(zeroargs))
 	preloop = time()
 	for arg in zeroargs:
 		rho[arg] = partdensnn(x, y, z, mass, 5, arg=arg)
-	print 'Loop time for them = ', time()-preloop, 's'
+	print('Loop time for them = ', time()-preloop, 's')
 	
 	return rho
 
@@ -1892,7 +1892,7 @@ def partdensMBII(x,y,z,mass,h=0.702):
 	soft = 1850/h # Softening scale of the simulation
 	Npart = len(x) # number of particles
 	maxNcells = int(max(np.max(x)-np.min(x), np.max(y)-np.min(y), np.max(z)-np.min(z))/soft)
-	print 'maxNcells', maxNcells
+	print('maxNcells', maxNcells)
 	if maxNcells>256:
 		try:
 			rho1,mass1 = partdens(x,y,z,mass,soft,512,masson=True,minpart=4)
@@ -1959,7 +1959,7 @@ def partdensMBII(x,y,z,mass,h=0.702):
 	rho[arg5] = rho5[arg5]
 	rho[arg6] = rho6[arg6]
 
-	print 'Number non-zero rho-values', len(rho1[rho1>0]), len(rho2[rho2>0]), len(rho3[rho3>0]), len(rho4[rho4>0]), len(rho5[rho5>0]), len(rho6[rho6>0]), len(rho[rho>0])
+	print('Number non-zero rho-values', len(rho1[rho1>0]), len(rho2[rho2>0]), len(rho3[rho3>0]), len(rho4[rho4>0]), len(rho5[rho5>0]), len(rho6[rho6>0]), len(rho[rho>0]))
 	return rho
 
 
@@ -2025,7 +2025,7 @@ def logten(x):
 	elif x>0:
 		logx = np.log10(x)
 	else:
-		print 'logten(0) value set to -100'
+		print('logten(0) value set to -100')
 		logx = -100
 	return logx
 
@@ -2094,7 +2094,7 @@ def compute_rotation_to_z(x,y,z,vx,vy,vz,m):
         axis[0]=Lytot/Lnorm2
         axis[1]=-Lxtot/Lnorm2
     else:
-        print 'No appropriate rotation axis found in compute_rotation_to_z'
+        print('No appropriate rotation axis found in compute_rotation_to_z')
         axis[0] = 0.
         axis[1] = 0.
     axis[2]=0.
@@ -2102,7 +2102,7 @@ def compute_rotation_to_z(x,y,z,vx,vy,vz,m):
     if Lnorm>0:
         angle = np.arccos(Lztot/Lnorm)
     else:
-        print 'No appropriate angle found in compute_rotation_to_z'
+        print('No appropriate angle found in compute_rotation_to_z')
         angle = 0.
     
     return axis, angle
@@ -2159,7 +2159,7 @@ def hist_Nmin(x, bins, Nmin, hard_bins=np.array([])):
         elif np.all(~((bins[ii] <= 1.01*hard_bins) * (bins[ii] >= 0.99*hard_bins))):
             bins = np.delete(bins,ii)
         else:
-            print 'hard_bins prevented gc.hist_Nmin() from enforcing Nmin.  Try using wider input bins.'
+            print('hard_bins prevented gc.hist_Nmin() from enforcing Nmin.  Try using wider input bins.')
             ij += 1
 #            Nhist, bins = np.histogram(x, bins)
 #            break
@@ -2213,10 +2213,10 @@ def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xran
                 y_high_wci[i,[0,2]] = pcile_pciles[:,2]
     fN = (N>0) if Nmin>0 else np.array([True]*Nbins)
     if len(fN[~fN])>0:
-        print '\npercentiles: fN =', fN
-        print 'percentiles: bins =', bins
-        print 'percentiles: N =', N
-        print 'percentiles: max(x) =', np.max(x)
+        print('\npercentiles: fN =', fN)
+        print('percentiles: bins =', bins)
+        print('percentiles: N =', N)
+        print('percentiles: max(x) =', np.max(x))
 
     if bootstrap:
         y_low_wci[:,1] = 1.0*y_low
@@ -2580,7 +2580,7 @@ def rahmati2013_neutral_frac(redshift, nH, T, onlyA1=True,noCol = False,onlyCol 
 #;      Further edits by Adam Stevens, Jan 2018
 #; --------------------------------------------------------------------------------------------
     if redshift>5:
-        print 'Using the z=5 relation for rahmati2013_neutral_frac when really z=',redshift
+        print('Using the z=5 relation for rahmati2013_neutral_frac when really z=',redshift)
         redshift = 5.0
     if redshift < 1.0:
         dlogz = (np.log10(1+redshift) - 0.0)/np.log10(2.)
@@ -2665,7 +2665,7 @@ def rahmati2013_neutral_frac(redshift, nH, T, onlyA1=True,noCol = False,onlyCol 
         beta_hi      =  1.77
         f_hi         =  0.01
     else:
-        print '[rahmati2013_neutral_frac] ERROR: parameters only valid for z < 5, you asked for z = ', redshift
+        print('[rahmati2013_neutral_frac] ERROR: parameters only valid for z < 5, you asked for z = ', redshift)
         exit()
 
     # [Adam] All of this code could be massively reduced by just putting the hi/low values into a table and using np.interp....
@@ -2749,7 +2749,7 @@ def fH2_Gnedin_ParticleBasis(SFR,m,Zgas,nH,Density_Tot,T,fneutral,redshift):
     #;fH2_Gnedin_ParticleBasis,SFR,Zgas,nH,T,redshift,Fh2_SFR
     #;Writen by Claudia Lagos, converted to python by Michelle Furlong
     # Further editing by me
-    print 'WARNING: YOU ARE CALLING AN OLD FUNCTION FOR THE GK11 HI/H2 PRESCRIPTION THAT PROBABLY SHOULD NOT BE USED FOR SCIENCE!'
+    print('WARNING: YOU ARE CALLING AN OLD FUNCTION FOR THE GK11 HI/H2 PRESCRIPTION THAT PROBABLY SHOULD NOT BE USED FOR SCIENCE!')
 
     
     SFRMW        = 6.62e-21 #; in units of gr/s/cm^2. SFR density of the local neighbourhood (Bonatto+11)
@@ -2779,13 +2779,13 @@ def fH2_Gnedin_ParticleBasis(SFR,m,Zgas,nH,Density_Tot,T,fneutral,redshift):
     lowSFR = np.where(SF_UMW <= 0.0)[0]
     if (len(lowSFR) > 0):
         SF_UMW[lowSFR]=SFRfloor
-        print 'Interstellar Radiation Field hit floor'
+        print('Interstellar Radiation Field hit floor')
 
     SF_DMW = Zgas                       #;it's already in units of solar metallicities.
     LowZ=np.where(SF_DMW < Zfloor)[0]    #;apply floor to metallicities.
     if (len(LowZ) > 0):
         SF_DMW[LowZ]=Zfloor
-        print 'Dust ratio hit floor'
+        print('Dust ratio hit floor')
 
     SF_Dstar      = 1.5e-3*np.log(1.0+(3.0*SF_UMW)**(1.7))
     SF_alpha      = 5.0*(SF_UMW/2.0)/(1.0+(SF_UMW/2.0)**2.0)
@@ -2828,7 +2828,7 @@ def fH2_Krumholz_ParticleBasis(SFR,m,Zgas,nH,Density_Tot,T,fneutral,redshift):
     #;Writen by Claudia Lagos, converted to python by Michelle Furlong
     # Further editing by me
     
-    print 'WARNING: YOU ARE CALLING AN OLD FUNCTION FOR THE K13 HI/H2 PRESCRIPTION THAT PROBABLY SHOULD NOT BE USED FOR SCIENCE!'
+    print('WARNING: YOU ARE CALLING AN OLD FUNCTION FOR THE K13 HI/H2 PRESCRIPTION THAT PROBABLY SHOULD NOT BE USED FOR SCIENCE!')
     
     SFRMW        = 6.62e-21          #;in units of gr/s/cm^2. SFR density of the local neighbourhood (Bonatto+11)
     Zfloor       = 1e-5              #;Arbitrary floor applied to metallicities.
@@ -2994,7 +2994,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
 
     # Set floor of interstellar radiation field from UV background, in units of Milky Way field
     if UVB not in ['HM12', 'FG09', 'FG09-Dec11']:
-        print 'Could not interpret input for UVB.  UVB should be set to either HM12, FG09, or FG09-Dec11.  Defaulting to FG09-Dec11.'
+        print('Could not interpret input for UVB.  UVB should be set to either HM12, FG09, or FG09-Dec11.  Defaulting to FG09-Dec11.')
         UVB = 'FG09-Dec11'
     
     if UVB=='FG09-Dec11':
@@ -3038,7 +3038,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
     
     if method==1: # GK11, eq6
         for it in xrange(it_max):
-            if it==it_max-1: print 'iterations hit maximum for GK11, eq6 in HI_H2_masses()'
+            if it==it_max-1: print('iterations hit maximum for GK11, eq6 in HI_H2_masses()')
             f_mol = X*fneutral*f_H2_old /  (X+Y)
             if gamma_fixed is None: gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
             if mu_fixed is None: mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
@@ -3067,7 +3067,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
 
     if method==2 or method==0: # GK11, eq10 (entry 0 for method==0)
         for it in xrange(it_max):
-            if it==it_max-1: print 'iterations hit maximum for GK11, eq11 in HI_H2_masses()'
+            if it==it_max-1: print('iterations hit maximum for GK11, eq11 in HI_H2_masses()')
             f_mol = X*fneutral*f_H2_old /  (X+Y)
             if gamma_fixed is None: gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
             if mu_fixed is None: mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
@@ -3101,7 +3101,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
 
     if method==3: # GD14, eq6
         for it in xrange(it_max):
-            if it==it_max-1: print 'iterations hit maximum for GD14, eq6 in HI_H2_masses()'
+            if it==it_max-1: print('iterations hit maximum for GD14, eq6 in HI_H2_masses()')
             f_mol = X*fneutral*f_H2_old /  (X+Y)
             if gamma_fixed is None: gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
             if mu_fixed is None: mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
@@ -3131,7 +3131,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
     if method==5 or method==0: # GD14, eq8 (entry 1 for method==0)
         # This has now replaced eq6 for the same output position when method=0
         for it in xrange(it_max):
-            if it==it_max-1: print 'iterations hit maximum for GD14, eq8 in HI_H2_masses()'
+            if it==it_max-1: print('iterations hit maximum for GD14, eq8 in HI_H2_masses()')
             f_mol = X*fneutral*f_H2_old /  (X+Y)
             if gamma_fixed is None: gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
             if mu_fixed is None: mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
@@ -3169,7 +3169,7 @@ def HI_H2_masses(mass, SFR, Z, rho, temp, fneutral, redshift, method=4, mode='T'
         f_w = 0.5
         c_w = 8e3 / m_per_pc * s_per_yr # sound speed of warm medium -- could calculate this better
         for it in xrange(it_max):
-            if it==it_max-1: print 'iterations hit maximum for K13, eq10 in HI_H2_masses()'
+            if it==it_max-1: print('iterations hit maximum for K13, eq10 in HI_H2_masses()')
             f_mol = X*fneutral*f_H2_old /  (X+Y)
             if gamma_fixed is None: gamma = (5./3.)*(1-f_mol) + 1.4*f_mol
             if mu_fixed is None: mu = (X + 4*Y) * (1.+ (1.-fneutral)/fneutral) / ((X+Y) * (1.+ 2*(1.-fneutral)/fneutral - f_H2_old/2.))
@@ -3646,7 +3646,7 @@ def fit_divide_SFMS(mass_stars, SFR, sSFR_init = 10**-10.5):
         bincen = 0.5*(bins[1:]+bins[:-1])
         p3 = np.polyfit(bincen[minima>-40], minima[minima>-40], 1)
         sf = (np.log10(SFR) >= p3[0]*np.log10(mass_stars) + p3[1])
-        if its>990: print its, np.allclose(p3, p3_old, rtol=1e-2, atol=1e-5), p3, p3_old, chisqr(minima[minima>-40], p3[0]*bincen[minima>-40]+p3[1])
+        if its>990: print(its, np.allclose(p3, p3_old, rtol=1e-2, atol=1e-5), p3, p3_old, chisqr(minima[minima>-40], p3[0]*bincen[minima>-40]+p3[1]))
         if its==1000: break
         
         f = (SFR >= sSFR_init * mass_stars) * (np.isfinite(SFR)) * (logSM<10.5)
@@ -3778,8 +3778,8 @@ def build_data_cube(x, y, vz, m, rad, vtherm, xmax, vmax, pixel_size, vel_res, b
     
     # Particles whose mass is partially within and partially outside the cube boundaries
     plist_part = np.where(~f_main)[0]
-    print 'gc.build_data_cube(): Number of clean cells to process', len(plist_main)
-    print 'gc.build_data_cube(): Number of boundary cells to process', len(plist_part)
+    print('gc.build_data_cube(): Number of clean cells to process', len(plist_main))
+    print('gc.build_data_cube(): Number of boundary cells to process', len(plist_part))
     
     beam_in_pix = [beam[0]/pixel_size, beam[1]/pixel_size]
     
@@ -3848,10 +3848,10 @@ def integrate(x, integrand, xmin, xmax):
     # numerically integrate integrand as a function of x over the range xmin and xmax
     if xmin<np.min(x):
         xmin = np.min(x)
-        print 'gc.integrate(): xmin too small, reseting to', np.min(x)
+        print('gc.integrate(): xmin too small, reseting to', np.min(x))
     if xmax>np.max(x):
         xmax = np.max(x)
-        print 'gc.integrate(): xmax too large, reseting to', np.max(x)
+        print('gc.integrate(): xmax too large, reseting to', np.max(x))
    
     wmin = np.where(x==xmin)[0]
     if len(wmin)>0: 

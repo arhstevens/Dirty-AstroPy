@@ -1,20 +1,21 @@
-# Adam Stevens, 2013-2020
+# Adam Stevens, 2013--2021
 # Functions for reading in data files from simulations and models
 
 import numpy as np
 import math
 import sys
-import galcalc as gc
+from . import galcalc as gc
 import os
 
 sys.path.insert(0, '..')
-from read import read_marie
-from read import particles
+#from read import read_marie
+#from read import particles
 from time import time
 
 
 # ========== Marie's simulations ==========
 
+"""
 def readstars(filename,Lbox=800000.):
 	# Read in stellar data from one of Marie's simulation snapshots
 	file = read_marie.MarieParticleFile(filename)
@@ -100,7 +101,7 @@ def readall(filename,Lbox=800000.,band=''):
 	
 	else:
 		return time,[xrot,yrot,zrot,mass,id_s,hid_s,birth],[vxrot,vyrot,vzrot],[x_g,y_g,z_g,mass_g,id_g,hid_g],[vx_g,vy_g,vz_g],[x_dm,y_dm,z_dm,mass_dm,id_dm,hid_dm],[vx_dm,vy_dm,vz_dm]
-
+"""
 
 
 
@@ -413,9 +414,9 @@ def ahflargest(fname):
 	f = open(fname)
 	d = f.read()
 	ds = d.split()
-	print 'No. of subhaloes', ds[0]
+	print('No. of subhaloes', ds[0])
 	Npart = int(ds[1])
-	print 'No. of particles in largest', Npart
+	print('No. of particles in largest', Npart)
 	pid = np.array(ds[3::2][:Npart])
 	return pid
 
@@ -600,7 +601,7 @@ def mariebinarytrick(hno='106',sno='339'):
 	
 	Nbytes1 = np.fromfile(f, 'i4', 1)[0] # Number of bytes the header uses
 	N = np.fromfile(f, 'u4', 6) # Number of particles for each particle type in this file
-	print 'N', N
+	print('N', N)
 	Nsum = sum(N) # Total number of particles in the file
 	mass_pt = np.fromfile(f, 'f8', 6) # Mass of each particle type.  If 0 then it varies for each particle of that type
 	Nmass = sum(N[np.argwhere(mass_pt==0.0)]) # Number of particles in the file with individual masses to be read in
@@ -1438,7 +1439,7 @@ def sageoutsingle(fname, dir=0, suff='', new=False, disc=False, public=False, ol
     GalsPerTree = np.fromfile(fin, np.dtype((np.int32, Ntrees)),1) # Read the number of gals in each tree
     G = np.fromfile(fin, Galdesc, NtotGals) # Read all the galaxy data
     if NtotGals!=len(G): 
-        print 'Ngals in sageoutsingle seems contradictory', NtotGals, len(G)
+        print('Ngals in sageoutsingle seems contradictory', NtotGals, len(G))
         NtotGals = len(G)
     if new: return G, NtotGals # Literally new feature for easy combining (Feb 2015)
     G = G.view(np.recarray) # Convert into a record array
@@ -1557,7 +1558,7 @@ def tao_csv(fname, keylist=None):
     keys = line.split(',')
     keys[-1] = keys[-1][:-1] # gets rid of \n at the end
     if keylist==None: keylist = keys
-    print 'Number of properties =', len(keys)
+    print('Number of properties =', len(keys))
     dict = {}
     for i, key in enumerate(keys):
         
@@ -1568,7 +1569,7 @@ def tao_csv(fname, keylist=None):
         else:
             datatype = np.float32
         if key in keylist:
-            print 'Reading', i, key
+            print('Reading', i, key)
             dict[key] = np.loadtxt(fname, skiprows=1, usecols=(i,), dtype=datatype, delimiter=', ')
     return dict
 
@@ -1630,9 +1631,9 @@ def e5snapids(fpre, dir=0):
 		Nbytes += np.fromfile(f, 'i4', 1)[0]
 		f.seek(Nbytes+24)
 		
-		print np.fromfile(f, 'i4', 1)[0]
+		print(np.fromfile(f, 'i4', 1)[0])
 		ids = np.fromfile(f, 'u8', Nsum)
-		print np.fromfile(f, 'i4', 1)[0]
+		print(np.fromfile(f, 'i4', 1)[0])
 		
 		id_g[Naccum[0]:Naccum[0]+N[0]] = ids[:N[0]]
 		id_dm[Naccum[1]:Naccum[1]+N[1]] = ids[N[0]:N[0]+N[1]]
@@ -1706,7 +1707,7 @@ def e5snapfile(fname, dir=0, t=1366, n=0):
 		U = np.fromfile(f, 'f8', N[0]) # Internal energy per unit mass of the gas particles ((km/s)^2)
 		Nbytes6 = np.fromfile(f, 'i4', 1)[0]
 	else:
-		print 'NO GAS PARTICLES.  FREAK OUT!'
+		print('NO GAS PARTICLES.  FREAK OUT!')
 	
 	Nbytes7 = np.fromfile(f, 'i4', 1)[0] # Number of bytes the next block of data uses (local density of the gas particles)
 	rho = np.fromfile(f, 'f8', N[0]) # Local density of the gas particles (multiply by h^2 to have in 10^10 solar masses per cubic kiloparsec)
@@ -1785,29 +1786,29 @@ def e5snapfullold(fpre, dir=0):
 		fpre = start of the filename (a full filename will follow this with a dot and a number, e.g. ".0")
 		dir = directory where the files are held
 		"""
-	print 'Running e5snapfull'
+	print('Running e5snapfull')
 	start = time()
 	
 	if type(dir) != str:
 		dir = '/Users/astevens/Documents/6-MonthProject/e5/' # Default directory for files
 	
-	print 'Reading in header, t=', time()-start, ' s'
+	print('Reading in header, t=', time()-start, ' s')
 	z, Ntot, Nfiles, boxsize, Omega_M, Omega_L, h = e5snaphead(fpre,dir)
 	
 	if Ntot[2]!=0 or Ntot[3]!=0:
-		print "ERROR: There are bulge and disk particles in this snapshot.  e5snapfull needs to be updated to accommodate this."
+		print("ERROR: There are bulge and disk particles in this snapshot.  e5snapfull needs to be updated to accommodate this.")
 	
-	print 'Initializing variables, t=', time()-start, ' s'
+	print('Initializing variables, t=', time()-start, ' s')
 	# Initialize variables
 	x_g, y_g, z_g, x_dm, y_dm, z_dm, x_s, y_s, z_s, vx_g, vy_g, vz_g, vx_dm, vy_dm, vz_dm, vx_s, vy_s, vz_s, id_g, id_dm, id_s, mass_g, mass_dm, mass_s, met_g, met_s, sml, rho, U, sfr, birth_z = [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []
 	
 	for i in xrange(Nfiles):
 		fname = fpre + '.' + str(i)
 		
-		print '\nReading in snapfile ', i, ' t=', time()-start, ' s'
+		print('\nReading in snapfile ', i, ' t=', time()-start, ' s')
 		N, pos, vel, ids, mass, met, sml_f, rho_f, U_f, sfr_f, birth_z_f = e5snapfile(fname,dir) # The "_f" indicates for a single file.  Could clearly have written for each other variable too, but I don't want to use the others' names without "_f" for this function's output.
 		
-		print 'Splitting coordinates, t=', time()-start, ' s'
+		print('Splitting coordinates, t=', time()-start, ' s')
 		# Split coordinates of different particles and slot info of each subsequent file at the bottom
 		x_g += list(pos[:N[0],0])
 		y_g += list(pos[:N[0],1])
@@ -1820,7 +1821,7 @@ def e5snapfullold(fpre, dir=0):
 		z_s += list(pos[sum(N[:4]):sum(N[:5]),2]) # "_s" indicates star particles
 		del pos # Delete the old array to avoid clogging RAM unnecessarily
 		
-		print 'Splitting velocities, t=', time()-start, ' s'
+		print('Splitting velocities, t=', time()-start, ' s')
 		# Ditto velocities
 		vx_g += list(vel[:N[0],0])
 		vy_g += list(vel[:N[0],1])
@@ -1833,27 +1834,27 @@ def e5snapfullold(fpre, dir=0):
 		vz_s += list(vel[sum(N[:4]):sum(N[:5]),2])
 		del vel
 		
-		print 'Splitting IDs, t=', time()-start, ' s'
+		print('Splitting IDs, t=', time()-start, ' s')
 		# Ditto IDs
 		id_g += list(ids[:N[0]])
 		id_dm += list(ids[N[0]:N[0]+N[1]])
 		id_s += list(ids[sum(N[:4]):sum(N[:5])])
 		del ids
 		
-		print 'Splitting masses, t=', time()-start, ' s'
+		print('Splitting masses, t=', time()-start, ' s')
 		# Ditto masses
 		mass_g += list(mass[:N[0]])
 		mass_dm += list(mass[N[0]:N[0]+N[1]])
 		mass_s += list(mass[sum(N[:4]):sum(N[:5])])
 		del mass
 		
-		print 'Splitting metallicities, t=', time()-start, ' s'
+		print('Splitting metallicities, t=', time()-start, ' s')
 		# Ditto metallicities
 		met_g += list(met[:N[0]])
 		met_s += list(met[N[0]:N[0]+N[4]])
 		del met
 		
-		print 'Splitting other properties, t=', time()-start, ' s'
+		print('Splitting other properties, t=', time()-start, ' s')
 		# Add the remaining properties
 		sml += list(sml_f)
 		rho += list(rho_f)
@@ -1861,7 +1862,7 @@ def e5snapfullold(fpre, dir=0):
 		sfr += list(sfr_f)
 		birth_z += list(birth_z_f)
 	
-	print 'Converting to numpy arrays, t=', time()-start, ' s'
+	print('Converting to numpy arrays, t=', time()-start, ' s')
 	# Convert everything to numpy arrays before outputting
 	x_g, y_g, z_g, x_dm, y_dm, z_dm, x_s, y_s, z_s, vx_g, vy_g, vz_g, vx_dm, vy_dm, vz_dm, vx_s, vy_s, vz_s, id_g, id_dm, id_s, mass_g, mass_dm, mass_s, met_g, met_s, sml, rho, U, sfr, birth_z = np.array(x_g), np.array(y_g), np.array(z_g), np.array(x_dm), np.array(y_dm), np.array(z_dm), np.array(x_s), np.array(y_s), np.array(z_s), np.array(vx_g), np.array(vy_g), np.array(vz_g), np.array(vx_dm), np.array(vy_dm), np.array(vz_dm), np.array(vx_s), np.array(vy_s), np.array(vz_s), np.array(id_g), np.array(id_dm), np.array(id_s), np.array(mass_g), np.array(mass_dm), np.array(mass_s), np.array(met_g), np.array(met_s), np.array(sml), np.array(rho), np.array(U), np.array(sfr), np.array(birth_z)
 	
@@ -1875,7 +1876,7 @@ def e5snapfull(fpre=None, dir=0, t=1366, haloids=True):
     dir = directory where the files are held
     t = time/redshift indicator (i.e. which snapshot).  Might already be part of fpre if defined
     """
-    print 'Running e5snapfull'
+    print('Running e5snapfull')
     start = time()
 
     if fpre==None:
@@ -1884,31 +1885,31 @@ def e5snapfull(fpre=None, dir=0, t=1366, haloids=True):
     if type(dir) != str:
         dir = '/Users/astevens/Documents/6-MonthProject/e5/' # Default directory for files
 
-    print 'Reading in header, t=', time()-start, ' s'
+    print('Reading in header, t=', time()-start, ' s')
     z, Ntot, Nfiles, boxsize, Omega_M, Omega_L, h = e5snaphead(fpre,dir)
 
     if Ntot[2]!=0 or Ntot[3]!=0:
-        print "ERROR: There are bulge and disk particles in this snapshot.  e5snapfull needs to be updated to accommodate this."
+        print("ERROR: There are bulge and disk particles in this snapshot.  e5snapfull needs to be updated to accommodate this.")
 
     # Initialize variables
-    print 'Initializing gas variables, t=', time()-start, ' s'
+    print('Initializing gas variables, t=', time()-start, ' s')
     x_g, y_g, z_g, vx_g, vy_g, vz_g, id_g, mass_g, met_g, sml, rho, U, sfr = np.zeros(Ntot[0]), np.zeros(Ntot[0]), np.zeros(Ntot[0]), np.zeros(Ntot[0]), np.zeros(Ntot[0]), np.zeros(Ntot[0]), np.zeros(Ntot[0],dtype='u8'), np.zeros(Ntot[0]), np.zeros(Ntot[0]), np.zeros(Ntot[0]), np.zeros(Ntot[0]), np.zeros(Ntot[0]), np.zeros(Ntot[0])
-    print 'Initializing DM variables, t=', time()-start, ' s'
+    print('Initializing DM variables, t=', time()-start, ' s')
     x_dm, y_dm, z_dm, vx_dm, vy_dm, vz_dm, id_dm, mass_dm = np.zeros(Ntot[1]), np.zeros(Ntot[1]), np.zeros(Ntot[1]), np.zeros(Ntot[1]), np.zeros(Ntot[1]), np.zeros(Ntot[1]), np.zeros(Ntot[1],dtype='u8'), np.zeros(Ntot[1])
-    print 'Initializing star variables, t=', time()-start, ' s'
+    print('Initializing star variables, t=', time()-start, ' s')
     x_s, y_s, z_s, vx_s, vy_s, vz_s, id_s, mass_s, met_s, birth_z = np.zeros(Ntot[4]), np.zeros(Ntot[4]), np.zeros(Ntot[4]), np.zeros(Ntot[4]), np.zeros(Ntot[4]), np.zeros(Ntot[4]), np.zeros(Ntot[4],dtype='u8'), np.zeros(Ntot[4]), np.zeros(Ntot[4]), np.zeros(Ntot[4])
-    print 'Initializing black hole variables, t=', time()-start, ' s'
+    print('Initializing black hole variables, t=', time()-start, ' s')
     x_bh, y_bh, z_bh, vx_bh, vy_bh, vz_bh, id_bh, mass_bh, amass_bh, amdot_bh = np.zeros(Ntot[5]), np.zeros(Ntot[5]), np.zeros(Ntot[5]), np.zeros(Ntot[5]), np.zeros(Ntot[5]), np.zeros(Ntot[5]), np.zeros(Ntot[5],dtype='u8'), np.zeros(Ntot[5]), np.zeros(Ntot[5]), np.zeros(Ntot[5])
     Naccum = np.zeros(6) # Accumulative vector for N
 
-    print 'reading', Nfiles, 'files for snapshot'
+    print('reading', Nfiles, 'files for snapshot')
     for i in xrange(Nfiles):
         fname = fpre + '.' + str(i) if Nfiles>1 else fpre
 
-        print '\nReading in snapfile ', i, ' t=', time()-start, ' s'
+        print('\nReading in snapfile ', i, ' t=', time()-start, ' s')
         N, pos, vel, ids, mass, met, sml_f, rho_f, U_f, sfr_f, birth_z_f, bhm, bhmdot = e5snapfile(fname,dir) # The "_f" indicates for a single file.  Could clearly have written for each other variable too, but I don't want to use the others' names without "_f" for this function's output.
 
-        print 'Splitting coordinates, t=', time()-start, ' s'
+        print('Splitting coordinates, t=', time()-start, ' s')
         # Split coordinates of different particles and slot info of each subsequent file at the bottom
         x_g[Naccum[0]:Naccum[0]+N[0]] = pos[:N[0],0]
         y_g[Naccum[0]:Naccum[0]+N[0]] = pos[:N[0],1]
@@ -1922,10 +1923,10 @@ def e5snapfull(fpre=None, dir=0, t=1366, haloids=True):
         x_bh[Naccum[5]:Naccum[5]+N[5]] = pos[sum(N[:5]):,0]
         y_bh[Naccum[5]:Naccum[5]+N[5]] = pos[sum(N[:5]):,1]
         z_bh[Naccum[5]:Naccum[5]+N[5]] = pos[sum(N[:5]):,2] # "_bh" indicates black hole particles
-        print 'Deleting pos, t=', time()-start, ' s'
+        print('Deleting pos, t=', time()-start, ' s')
         del pos # Delete the old array to avoid clogging RAM unnecessarily
 
-        print 'Splitting velocities, t=', time()-start, ' s'
+        print('Splitting velocities, t=', time()-start, ' s')
         # Ditto velocities
         vx_g[Naccum[0]:Naccum[0]+N[0]] = vel[:N[0],0]
         vy_g[Naccum[0]:Naccum[0]+N[0]] = vel[:N[0],1]
@@ -1941,7 +1942,7 @@ def e5snapfull(fpre=None, dir=0, t=1366, haloids=True):
         vz_bh[Naccum[5]:Naccum[5]+N[5]] = vel[sum(N[:5]):,2]
         del vel
 
-        print 'Splitting IDs, t=', time()-start, ' s'
+        print('Splitting IDs, t=', time()-start, ' s')
         # Ditto IDs
         id_g[Naccum[0]:Naccum[0]+N[0]] = ids[:N[0]]
         id_dm[Naccum[1]:Naccum[1]+N[1]] = ids[N[0]:N[0]+N[1]]
@@ -1949,7 +1950,7 @@ def e5snapfull(fpre=None, dir=0, t=1366, haloids=True):
         id_bh[Naccum[5]:Naccum[5]+N[5]] = ids[sum(N[:5]):]
         del ids
 
-        print 'Splitting masses, t=', time()-start, ' s'
+        print('Splitting masses, t=', time()-start, ' s')
         # Ditto masses
         mass_g[Naccum[0]:Naccum[0]+N[0]] = mass[:N[0]]
         mass_dm[Naccum[1]:Naccum[1]+N[1]] = mass[N[0]:N[0]+N[1]]
@@ -1957,13 +1958,13 @@ def e5snapfull(fpre=None, dir=0, t=1366, haloids=True):
         mass_bh[Naccum[5]:Naccum[5]+N[5]] = mass[sum(N[:5]):]
         del mass
 
-        print 'Splitting metallicities, t=', time()-start, ' s'
+        print('Splitting metallicities, t=', time()-start, ' s')
         # Ditto metallicities
         met_g[Naccum[0]:Naccum[0]+N[0]] = met[:N[0]]
         met_s[Naccum[4]:Naccum[4]+N[4]] = met[N[0]:N[0]+N[4]]
         del met
 
-        print 'Splitting other properties, t=', time()-start, ' s'
+        print('Splitting other properties, t=', time()-start, ' s')
         # Add the remaining properties
         sml[Naccum[0]:Naccum[0]+N[0]] = sml_f
         rho[Naccum[0]:Naccum[0]+N[0]] = rho_f
@@ -1993,37 +1994,37 @@ def e5snapfull(fpre=None, dir=0, t=1366, haloids=True):
 
 def e5snapfullalt(fpre,dir=0,haloids=True):
     #Trying an alternative way to read in all the data for a snapshot at once
-    print 'Running e5snapfull'
+    print('Running e5snapfull')
     start = time()
         
     if type(dir) != str:
         dir = '/Users/astevens/Documents/6-MonthProject/e5/' # Default directory for files
                 
-    print 'Reading in header, t=', time()-start, ' s'
+    print('Reading in header, t=', time()-start, ' s')
     z, Ntot, Nfiles, boxsize, Omega_M, Omega_L, h = e5snaphead(fpre,dir)
     
     if Ntot[2]!=0 or Ntot[3]!=0:
-        print "ERROR: There are bulge and disk particles in this snapshot.  e5snapfull needs to be updated to accommodate this."
+        print("ERROR: There are bulge and disk particles in this snapshot.  e5snapfull needs to be updated to accommodate this.")
             
     # Initialize variables
-    print 'Initializing gas variables, t=', time()-start, ' s'
+    print('Initializing gas variables, t=', time()-start, ' s')
     x_g, y_g, z_g, vx_g, vy_g, vz_g, id_g, mass_g, met_g, sml, rho, U, sfr = np.array([]), np.array([]), np.array([]), np.array([]), np.array([]), np.array([]), np.zeros(Ntot[0],dtype='u8'), np.array([]), np.array([]), np.array([]), np.array([]), np.array([]), np.array([])
-    print 'Initializing DM variables, t=', time()-start, ' s'
+    print('Initializing DM variables, t=', time()-start, ' s')
     x_dm, y_dm, z_dm, vx_dm, vy_dm, vz_dm, id_dm, mass_dm = np.array([]), np.array([]), np.array([]), np.array([]), np.array([]), np.array([]), np.zeros(Ntot[1],dtype='u8'), np.array([])
-    print 'Initializing star variables, t=', time()-start, ' s'
+    print('Initializing star variables, t=', time()-start, ' s')
     x_s, y_s, z_s, vx_s, vy_s, vz_s, id_s, mass_s, met_s, birth_z = np.array([]), np.array([]), np.array([]), np.array([]), np.array([]), np.array([]), np.zeros(Ntot[4],dtype='u8'), np.array([]), np.array([]), np.array([])
-    print 'Initializing black hole variables, t=', time()-start, ' s'
+    print('Initializing black hole variables, t=', time()-start, ' s')
     x_bh, y_bh, z_bh, vx_bh, vy_bh, vz_bh, id_bh, mass_bh, amass_bh, amdot_bh = np.array([]), np.array([]), np.array([]), np.array([]), np.array([]), np.array([]), np.zeros(Ntot[5],dtype='u8'), np.array([]), np.array([]), np.array([])
     
     for i in xrange(Nfiles):
         fname = fpre + '.' + str(i)
 
-        print '\nReading in snapfile ', i, ' t=', time()-start, ' s'
+        print('\nReading in snapfile ', i, ' t=', time()-start, ' s')
         N, pos, vel, ids, mass, met, sml_f, rho_f, U_f, sfr_f, birth_z_f, bhm, bhmdot = e5snapfile(fname,dir) # The "_f" indicates for a single file.  Could clearly have written for each other variable too, but I don't want to use the others' names without "_f" for this function's output.
 
         N0, N1, N4, N5 = N[0], N[0]+N[1], sum(N[:4]), sum(N[:5])
 
-        print 'Appending coordinates, t=', time()-start, ' s'
+        print('Appending coordinates, t=', time()-start, ' s')
         # Split coordinates of different particles and slot info of each subsequent file at the bottom
         x_g = np.append(x_g, pos[:N0,0])
         y_g = np.append(y_g, pos[:N0,1])
@@ -2039,7 +2040,7 @@ def e5snapfullalt(fpre,dir=0,haloids=True):
         z_bh = np.append(z_bh, pos[N5:,2])
         del pos # Delete the old array to avoid clogging RAM unnecessarily
 
-        print 'Appending velocities, t=', time()-start, ' s'
+        print('Appending velocities, t=', time()-start, ' s')
         # Ditto velocities
         vx_g = np.append(vx_g, vel[:N0,0])
         vy_g = np.append(vy_g, vel[:N0,1])
@@ -2055,7 +2056,7 @@ def e5snapfullalt(fpre,dir=0,haloids=True):
         vz_bh = np.append(vz_bh, vel[N5:,2])
         del vel
 
-        print 'Appending IDs, t=', time()-start, ' s'
+        print('Appending IDs, t=', time()-start, ' s')
         # Ditto IDs
         id_g = np.append(id_g, ids[:N0])
         id_dm = np.append(id_dm, ids[N0:N1])
@@ -2063,7 +2064,7 @@ def e5snapfullalt(fpre,dir=0,haloids=True):
         id_bh = np.append(id_bh, ids[N5:])
         del ids
 
-        print 'Appending masses, t=', time()-start, ' s'
+        print('Appending masses, t=', time()-start, ' s')
         # Ditto masses
         mass_g = np.append(mass_g, mass[:N0])
         mass_dm = np.append(mass_dm, mass[N0:N1])
@@ -2071,13 +2072,13 @@ def e5snapfullalt(fpre,dir=0,haloids=True):
         mass_bh = np.append(mass_bh, mass[N5:])
         del mass
 
-        print 'Appending metallicities, t=', time()-start, ' s'
+        print('Appending metallicities, t=', time()-start, ' s')
         # Ditto metallicities
         met_g = np.append(met_g, met[:N0])
         met_s = np.append(met_s, met[N0:N0+N[4]])
         del met
 
-        print 'Appending other properties, t=', time()-start, ' s'
+        print('Appending other properties, t=', time()-start, ' s')
         # Add the remaining properties
         sml = np.append(sml, sml_f)
         rho = np.append(rho, rho_f)
@@ -2110,7 +2111,7 @@ def e5snappmi(t,dir=0):
 	# Designed to be efficient.  pmi = position, mass, IDs
 	# t = snapshot number (eg 1366)
 	start = time()
-	print 'Starting e5snappmi (printed times are internal to this)'
+	print('Starting e5snappmi (printed times are internal to this)')
 	
 	if type(dir) != str:
 		dir = '/Users/astevens/Documents/6-MonthProject/e5/' # Default directory for files
@@ -2128,7 +2129,7 @@ def e5snappmi(t,dir=0):
 	Naccum = np.zeros(6)
 	
 	for i in xrange(8):
-		print 'Starting snapfile', i, 'at', time()-start, 's'
+		print('Starting snapfile', i, 'at', time()-start, 's')
 		Nbytes = 0 # Number of bytes to skip to get to data wanted
 		fname = fpre + '.' + str(i)
 		f = open(dir+fname, 'rb')
@@ -2142,11 +2143,11 @@ def e5snappmi(t,dir=0):
 		for j in xrange(6):
 			if j==1:
 				if mass_pt[j]==0:
-					print 'DM PARTICLE MASSES ARE NOT THE SAME. ALTER e5snappmi CODE'
+					print('DM PARTICLE MASSES ARE NOT THE SAME. ALTER e5snappmi CODE')
 					return 'ERROR'
 			else:
 				if mass_pt[j]!=0:
-					print 'PARTICLE TYPE', j, 'HAS A STANDARD MASS.  e5snappmi CODE COULD BE MORE EFFICIENT'
+					print('PARTICLE TYPE', j, 'HAS A STANDARD MASS.  e5snappmi CODE COULD BE MORE EFFICIENT')
 					return 'ERROR'
 		
 		f.seek(Nbytes + 4*3)
@@ -2177,7 +2178,7 @@ def e5snappmi(t,dir=0):
 		f.close()
 	
 	mass_dm = (mass_pt[1]*1e10/h)*np.ones(Ntot[1])
-	print 'Finished e5snappmi at', time()-start, 's'
+	print('Finished e5snappmi at', time()-start, 's')
 	return [x_g, y_g, z_g, mass_g, id_g], [x_dm, y_dm, z_dm, mass_dm, id_dm], [x_s, y_s, z_s, mass_s, id_s], [x_bh, y_bh, z_bh, mass_bh, id_bh]
 
 def e5halohead(fname, dir=0):
@@ -2397,7 +2398,7 @@ def e5loadhalo(id1, t, idarr=None, dir=0):
 		idarr = np.fromfile(f, 'i4', sum(Ntot)) # Subhalo IDs
 		f.close()
 	
-	print t, id1, idarr, len(idarr)
+	print(t, id1, idarr, len(idarr))
 	idargs = np.argwhere(idarr==id1) # Arguments where idarr is equal to id1
 	
 	con_g = (idargs < Ntot[0]) # Condition to find the total number of gas particles in the halo
@@ -2407,7 +2408,7 @@ def e5loadhalo(id1, t, idarr=None, dir=0):
 	#print con_bh
 	
 	Nptot = np.array([len(idargs[con_g]), len(idargs[con_dm]), 0, 0, len(idargs[con_s]), len(idargs[con_bh])]) # Total number of particles in the halo in particle type
-	print 'Nptot is', Nptot
+	print('Nptot is', Nptot)
 	Naccum, Npaccum = np.zeros(6), np.zeros(6) # Initialize the accumulation of N
 	
 	# Initialize arrays that will contain the particle data
@@ -2599,7 +2600,7 @@ def e5loadhalo(id1, t, idarr=None, dir=0):
 				f.seek(32 + 19*4*Ngroups)
 				# Data for subhaloes
 				Nparts = np.fromfile(f, 'i4', Nsubgroups)[id2] # Number of particles in the subhalo
-				print 'Nparts', Nparts
+				print('Nparts', Nparts)
 				offset = np.fromfile(f, 'i4', Nsubgroups)[id2]
 				parent = np.fromfile(f, 'i4', Nsubgroups)[id2] # Index of parent (neither Yu nor I are sure what this is)
 				mass = np.fromfile(f, floattype, Nsubgroups)[id2] *1e10/h # Mass of the subhalo in solar masses (sum of all particle types)
@@ -3110,7 +3111,7 @@ def MBIIsubhaloparticledata(shno, sno='085', shtd=None, dir=None, head=None, loo
 	
 	# Read gas data
 	Ng = sh_Npart[shno,0]
-	print 'No. gas parts.', Ng
+	print('No. gas parts.', Ng)
 	
 	if Ng>0:
 		f = open(dir+sno+'/0/pos.raw','rb')
@@ -3147,7 +3148,7 @@ def MBIIsubhaloparticledata(shno, sno='085', shtd=None, dir=None, head=None, loo
 
 	# Read DM data
 	Ndm = sh_Npart[shno,1]
-	print 'No. DM parts.', Ndm
+	print('No. DM parts.', Ndm)
 
 	if Ndm>0:
 		f = open(dir+sno+'/1/pos.raw','rb')
@@ -3172,14 +3173,14 @@ def MBIIsubhaloparticledata(shno, sno='085', shtd=None, dir=None, head=None, loo
 
 	# Read star data
 	Ns = sh_Npart[shno,4]
-	print 'No. star parts.', Ns
+	print('No. star parts.', Ns)
 
 	if Ns>0:
 		f = open(dir+sno+'/4/pos.raw','rb')
 		f.seek(4*3*sum(sh_Npart[:shno,4]))
 		pos_s = np.fromfile(f, np.dtype(('f4',3)), Ns)*a*1e3/h
 		x_s, y_s, z_s = pos_s[:,0], pos_s[:,1], pos_s[:,2]
-		print len(x_s)
+		print(len(x_s))
 		f.close()
 		
 		f = open(dir+sno+'/4/vel.raw','rb')
@@ -3224,7 +3225,7 @@ def MBIIsubhaloparticledata(shno, sno='085', shtd=None, dir=None, head=None, loo
 
 	# Read black hole data
 	Nbh = sh_Npart[shno,5]
-	print 'No. black holes', Nbh
+	print('No. black holes', Nbh)
 
 	if Nbh>0:
 		f = open(dir+sno+'/5/pos.raw','rb')
@@ -3256,7 +3257,7 @@ def MBIIsubhalofile(hno, sno):
 	hno = str(hno)
 	f = open('MBII/'+sno+'/'+hno+'/particledata', 'rb')
 	N = np.fromfile(f, 'i8', 6)
-	print 'N is', N
+	print('N is', N)
 
 	if N[0]>0:
 		x_g = np.fromfile(f, 'f4', N[0])
@@ -3494,7 +3495,7 @@ def galmerg(sno, fpre=None):
 
 	Nbytes1 = np.fromfile(f, 'i4', 1)[0]	
 	N = np.fromfile(f, 'u4', 6) # Number of particles for each particle type in this file
-	print N
+	print(N)
 	Nsum = sum(N) # Total number of particles in the file
 	mass_pt = np.fromfile(f, 'f8', 6) # Mass of each particle type.  If 0 then it varies for each particle of that type
 	Nmass = sum(N[np.argwhere(mass_pt==0.0)]) # Number of particles in the file with individual masses to be read in
@@ -3528,7 +3529,7 @@ def galmerg2(sno, fpre=None):
 
 	Nbytes1 = np.fromfile(f, 'i4', 1)[0]	
 	N = np.fromfile(f, 'u4', 6) # Number of particles for each particle type in this file
-	print N
+	print(N)
 	Nsum = sum(N) # Total number of particles in the file
 	mass_pt = np.fromfile(f, 'f8', 6) # Mass of each particle type.  If 0 then it varies for each particle of that type
 	Nmass = sum(N[np.argwhere(mass_pt==0.0)]) # Number of particles in the file with individual masses to be read in
@@ -3565,7 +3566,7 @@ def lcdm_example(sno, fpre=None):
 
 	Nbytes1 = np.fromfile(f, 'i4', 1)[0]	
 	N = np.fromfile(f, 'u4', 6) # Number of particles for each particle type in this file
-	print N
+	print(N)
 	Nsum = sum(N) # Total number of particles in the file
 	mass_pt = np.fromfile(f, 'f8', 6) # Mass of each particle type.  If 0 then it varies for each particle of that type
 	Nmass = sum(N[np.argwhere(mass_pt==0.0)]) # Number of particles in the file with individual masses to be read in
@@ -3974,12 +3975,12 @@ def csv_dict(fname, skiprows, dtypes, keylist=None, delimiter=',', head_delimite
     keys[-1] = keys[-1][:-1] # gets rid of \n at the end
     if keylist==None: keylist = keys
     while keys[0][0]=='#' or keys[0][0]==' ': keys[0] = keys[0][1:] # get rid of comment mark for header if present
-    print 'Number of properties =', len(keys)
+    print('Number of properties =', len(keys))
     dict = {}
     for i, key in enumerate(keys):
         if key in keylist:
             j = np.where(np.array(keylist)==key)[0][0]
-            print 'Reading', j, i, key
+            print('Reading', j, i, key)
             dict[key] = np.loadtxt(fname, skiprows=skiprows, usecols=(i,), dtype=dtypes[j], delimiter=delimiter)
     return dict
 
@@ -3991,20 +3992,20 @@ def csv_dict_multifile(fpre, fsuf, fnumbers, skiprows, dtypes, keylist=None, del
     keys[-1] = keys[-1][:-1] # gets rid of \n at the end
     if keylist==None: keylist = keys
     if type(skiprows)==int: skiprows = np.array([skiprows]*len(fnumbers))
-    print 'Number of properties =', len(keys)
+    print('Number of properties =', len(keys))
     dict = {}
     fnum = np.array([],dtype=np.int32)
     for i, key in enumerate(keys):
         if key in keylist:
             j = np.where(np.array(keylist)==key)[0][0]
-            print 'Reading', j, i, key
+            print('Reading', j, i, key)
             prop = np.array([], dtype=dtypes[j])
             for fi, fno in enumerate(fnumbers):
                 prop = np.append(prop, np.loadtxt(fpre+str(fno)+fsuf, skiprows=skiprows[fi], usecols=(i,), dtype=dtypes[j], delimiter=delimiter))
                 if key==keylist[0]: fnum = np.append(fnum, fno*np.ones(len(prop)-len(fnum),dtype=np.int32))
             dict[key] = prop
     dict['FileNumber'] = fnum
-    print 'finished reading csv file'
+    print('finished reading csv file')
     return dict
 
 
@@ -4186,7 +4187,7 @@ def carnage(fname, dir='', addH=False, fields_of_interest=None):
     data = np.loadtxt(dir+fname, skiprows=1)
     dict = {}
     for i, field in enumerate(fields):
-        print 'Reading', field[0]
+        print('Reading', field[0])
         dict[field[0]] = np.array(data[:,cols[i]], dtype=field[1])
 
     if addH:
@@ -4842,7 +4843,7 @@ def TNG_gasprops(fname, highz=True, fname2=False, fmock=False, fmock_sfr=False):
     if not highz and fmock:
         f3 = open(fmock, 'rb')
         Ngal3 = np.fromfile(f3, 'i8', 1)[0]
-        if not Ngal3==Ngal: print Ngal, Ngal3
+        if not Ngal3==Ngal: print(Ngal, Ngal3)
         assert Ngal3==Ngal
         dict['mass_halo_mock'] = np.fromfile(f3, 'f4', Ngal)
         dict['mass_stars_mock'] = np.fromfile(f3, 'f4', Ngal)
@@ -4854,14 +4855,14 @@ def TNG_gasprops(fname, highz=True, fname2=False, fmock=False, fmock_sfr=False):
         # Wants fmock_ssfr to be a list of 2 files
         f4 = open(fmock_sfr[0], 'rb')
         Ngal4 = np.fromfile(f4, 'i8', 1)[0]
-        if not Ngal4==Ngal: print Ngal, Ngal4
+        if not Ngal4==Ngal: print(Ngal, Ngal4)
         assert Ngal4==Ngal
         dict['SFR_recent'] = np.fromfile(f4, 'f4', Ngal)
         f4.close()
         
         f4 = open(fmock_sfr[1], 'rb')
         Ngal4 = np.fromfile(f4, 'i8', 1)[0]
-        if not Ngal4==Ngal: print Ngal, Ngal4
+        if not Ngal4==Ngal: print(Ngal, Ngal4)
         assert Ngal4==Ngal
         dict['SFR_old'] = np.fromfile(f4, 'f4', Ngal)
         f4.close()
