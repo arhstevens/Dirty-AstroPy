@@ -2180,6 +2180,23 @@ def hist_Nmin(x, bins, Nmin, hard_bins=np.array([])):
     return Nhist, bins
 
 def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xrange=None, yrange=None, Nmin=10, weights=None, hard_bins=np.array([]), outBins=False, bootstrap=False, logout=False):
+    """
+    Calculate running percentiles for a set of two-dimensional data
+    
+    Input:
+    x = array of values for the dependent variable. This dimension defines the bins
+    y = array of values for the independent variable.  This dimension defines the percentiles within each bin
+    low, mid, high = lowest, middle, and highest of three percentiles to output (each expressed as a decimal, rather than an actual percentage -- i.e. 0.16 returns the 16th percentile, 0.5 is the median)
+    bins = either specify a number of bins (int) or feed in an array of floats for pre-defined bins.  If an int, will start with equal-sized bins across the full range of x-values.  Note that these bins are not strict -- they can be adjusted within the code (see below)
+    addMean = if True, adds an output for the running mean
+    xrange, yrange = list of 2 values each, used to cut any data whose x or y values respectively fall outside the specified range
+    Nmin = int, minimum number of data needed in each bin.  Where bins do not have data in them, their widths are expanded to meet this minimum
+    weights = array of float of len(x); specifies weights for each datum when calculating percentiles
+    hard_bins = array of floats that also exist in the array fed into bins.  These bin edges will not be changed in the function.  This overwrites the minimum number of data requirement for the adjacent bins
+    outBins = set to True if you want to output what the final bins in x were after adapting to meet minimum requirements
+    bootstrap = set to True if you want to output bootstrapping errors on the percentiles of interest.  Returns the 16th, 50th and 84th percentile OF EACH PERCENTILE OF THE DATA after resampling
+    logout = set to True if you want the outputs to be in log-space
+    """
     # Given some values to go on x and y axes, bin them along x and return the percentile ranges
     f = np.isfinite(x)*np.isfinite(y)
     if xrange is not None: f = (x>=xrange[0])*(x<=xrange[1])*f
