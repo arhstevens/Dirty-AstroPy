@@ -198,7 +198,7 @@ def cleancut(x_lim,y_lim,x_bin):
 	dx = np.diff(x_lim) # Check difference between each value in x_lim.  Want to eliminate any part where the y-data rises again.
 	indices = np.argwhere(dx>1.01*x_bin) # Finding the places where y_lim rises again
 	
-	if np.shape(indices)[0] is not 0: # Without this "if" statement, when there's no cut-off to be made, errors occur.
+	if np.shape(indices)[0] != 0: # Without this "if" statement, when there's no cut-off to be made, errors occur.
 		cutoff = np.min(indices) # Getting the cut-off point
 		if cutoff!=0: # Evidently need this too
 			x_lim = x_lim[:cutoff] # Removing the places where it rises again
@@ -1052,7 +1052,7 @@ def ztlookup(zmin=0, zmax=8, H_0=67.74, Omega_R=0, Omega_M=0.3089, Omega_Lambda=
     ### OUTPUT  ###
     # tarr = Array of time values corresponding to increments in z of 0.001 from 0 to zmax
 
-    if type(zmax) is not 'int':
+    if type(zmax) != 'int':
         zmax = int(zmax+1) # Round zmax up to the nearest integer
 
     tarr = np.zeros((zmax-zmin)*1000) # Produce empty array for time
