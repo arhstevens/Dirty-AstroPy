@@ -4917,16 +4917,16 @@ def TNG_HIlines(file, mainbox=True, extended=False):
 
 
 def age_bins_darksage(age_alist_file, Nage, h, Omega_M, Omega_L):
-    alist = np.loadtxt(age_alist_file)[::-1]
-    if Nage==len(alist)-1:
+    alist = np.loadtxt(age_alist_file)
+#    TimeBinEdge = np.zeros(Nage)
+    if Nage>=len(alist)-1:
+        alist[::-1]
         RedshiftBinEdge = 1./ alist - 1.
     else:
-        indices_float = np.arange(1,Nage) * (len(alist)-1.0) / Nage
+        indices_float = np.arange(Nage+1) * (len(alist)-1.0) / Nage
         indices = indices_float.astype(np.int32)
-        indices_residual = indices_float - indices
-        A_BinEdge = np.ones(Nage+1)
-        A_BinEdge[range(1,Nage)] = alist[indices] * (1-indices_residual) + alist[indices+1] * indices_residual
-        A_BinEdge[-1] = alist[-1]
-        RedshiftBinEdge = 1./ A_BinEdge - 1.
+        alist = alist[indices][::-1]
+        RedshiftBinEdge = 1./ alist - 1.
+        
     TimeBinEdge = np.array([gc.z2tL(z,h,Omega_M,Omega_L) for z in RedshiftBinEdge])
     return RedshiftBinEdge, TimeBinEdge

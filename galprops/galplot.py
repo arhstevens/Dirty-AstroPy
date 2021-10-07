@@ -1967,7 +1967,7 @@ def bigax_labels(xlab, ylab, fig=plt.gcf()):
     big_ax.set_ylabel(ylab)
     big_ax.set_frame_on(False)
     big_ax.set_ylim(-2,-1)
-    big_ax.tick_params(labelcolor='none', top='off', bottom='off', left='off', right='off')
+    big_ax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
 
 
 def build_gas_image_array(x, y, mass, vol, Npix=2000, boundary=None, vol_mode='v', log_out=False, floor=False):
