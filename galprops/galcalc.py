@@ -1079,8 +1079,9 @@ def t2z(t,tarr,zarr='None'):
 
 
 def Hubble(z,h=0.6774,Omega_R=0,Omega_M=0.3089,Omega_Lambda=0.6911):
-	H_0 = 100*h
-	return H_0*np.sqrt(Omega_R*(1+z)**4 + Omega_M*(1+z)**3 + Omega_Lambda)
+    H_0 = 100*h
+    Omega_k = 1.0 - Omega_R - Omega_M - Omega_Lambda
+    return H_0*np.sqrt(Omega_R*(1+z)**4 + Omega_M*(1+z)**3 + Omega_k + Omega_Lambda)
 
 def critdens(z,H_0=67.3,Omega_R=0,Omega_M=0.315,Omega_Lambda=0.685):
 	# Find critical density at redshift z.  Will probably need alteration as well
@@ -2255,7 +2256,7 @@ def percentiles(x, y, low=0.16, med=0.5, high=0.84, bins=20, addMean=False, xran
         y_high = 1.0*y_high_wci
     
     if logout:
-        x_av, y_high, y_med, y_low = np.log10(x_av), np.log10(y_high), np.log10(y_med), np.log10(y_low)
+        x_av, y_high, y_med, y_low, bins = np.log10(x_av), np.log10(y_high), np.log10(y_med), np.log10(y_low), np.log10(bins)
         try:
             floor = np.min(y_low[np.isfinite(y_low)]) - 10
         except ValueError:
@@ -3874,6 +3875,7 @@ def integrate(x, integrand, xmin, xmax):
     if len(wmin)>0: 
         wmin = wmin[0]
         x = x[wmin:]
+        integrand[wmin:]
     else:
         integrand_min = np.interp(xmin, x, integrand)
         wmin = np.where(x>xmin)[0][0]
@@ -3882,8 +3884,9 @@ def integrate(x, integrand, xmin, xmax):
         
     wmax = np.where(x==xmax)[0]
     if len(wmax)>0: 
-        wmax = wmax[0]
+        wmax = wmax[-1]
         x = x[:wmax+1]
+        integrand = integrand[:wmax+1]
     else:
         integrand_max = np.interp(xmax, x, integrand)
         wmax = np.where(x<xmax)[0][-1]
@@ -3940,3 +3943,28 @@ def return_fraction_and_SN_ChabrierIMF(m_min=0.1, m_max=100.0, A=0.84342328, k=0
     ncum_SN[m<1] = np.max(ncum_SN)
 
     return m, lifetime, returned_mass_fraction_integrated, ncum_SN
+
+
+def NFW_potential(r, Mvir, Mstellar, z, Rvir=None, H_0=67.74, Omega_R=0, Omega_M=0.3089, Omega_L=0.6911):
+    # input Mvir and Mstellar in units of [10^10 h^-1 Msun]
+    a = 0.520 + (0.905-0.520)*np.exp(-0.617*z**1.21)
+    b = -0.101 + 0.026*z
+    c_DM = 10.0**(a+b*log10(Mvir*0.01))
+    X = np.log10(Mstellar/Mvir)
+    c = c_DM * (1.0 + 3e-5 * np.exp(3.4*(X+4.5)))
+    h = 0.01 * H_0
+    if Rvir is None:
+        Rvir = Mvir2Rvir(Mvir*1e10/h, 200., z, H_0, Omega_R, Omega_M, Omega_L) * 1e-3 * h # converts to units of Mpc/h
+    r_2 = Rvir / c
+
+    UnitLength_in_cm = 3.08568e+24
+    UnitVelocity_in_cm_per_s = 100000.0
+    SEC_PER_MEGAYEAR = 3.1556736e13
+    UnitMass_in_g = 1.989e+43
+    UnitTime_in_s = UnitLength_in_cm / UnitVelocity_in_cm_per_s
+    UnitTime_in_Megayears = UnitTime_in_s / SEC_PER_MEGAYEAR
+    GRAVITY = 6.672e-8
+    G = GRAVITY / UnitLength_in_cm**3 * UnitMass_in_g * UnitTime_in_s**2
+
+    pot_energy = - G * Mvir / r * log(1.0 + r/r_2) / (log(1.0+Rvir/r_2) - Rvir/(Rvir+r_2))
+    return pot_energy

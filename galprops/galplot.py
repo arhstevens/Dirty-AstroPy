@@ -1962,7 +1962,7 @@ def Kband_obs(Hubble_h=0.6777):
 
 def bigax_labels(xlab, ylab, fig=plt.gcf()):
     # Add "big axes" that give a common x- and y-label for all subplots
-    big_ax = fig.add_subplot(111)
+    big_ax = fig.add_subplot(111, label='new')
     big_ax.set_xlabel(xlab)
     big_ax.set_ylabel(ylab)
     big_ax.set_frame_on(False)
@@ -2021,7 +2021,7 @@ def build_gas_image_array(x, y, mass, vol, Npix=2000, boundary=None, vol_mode='v
     print('gp.build_gas_image_array(): Number of clean cells to process', len(plist_main))
     for p in plist_main:
         kernel = mass[p] * gc.sphere2dk(rad[p], pixel_size, 2*rad[p]/pixel_size)
-        Nk = (len(kernel)-1)/2
+        Nk = (len(kernel)-1)//2
         ii_min, ii_max = ii[p]-Nk, ii[p]+Nk+1 # figure out the extreme pixels that this element will occupy
         ij_min, ij_max = ij[p]-Nk, ij[p]+Nk+1
         Image[ii_min:ii_max, ij_min:ij_max] += kernel
@@ -2031,7 +2031,7 @@ def build_gas_image_array(x, y, mass, vol, Npix=2000, boundary=None, vol_mode='v
     for p in plist_part:
         kernel = mass[p] * gc.sphere2dk(rad[p], pixel_size, 2*rad[p]/pixel_size)
         Nkf = len(kernel)
-        Nk = (Nkf-1)/2    
+        Nk = (Nkf-1)//2    
         ii_min, ii_max = ii[p]-Nk, ii[p]+Nk+1 # figure out the extreme pixels that this element will occupy
         ij_min, ij_max = ij[p]-Nk, ij[p]+Nk+1
         
@@ -2131,3 +2131,60 @@ def build_voronoi_image_array(x, y, z, rho, Npix=2000, boundary=None, log_out=Fa
     if log_out: im_2D = np.log10(im_2D)
     im_2D = im_2D[::-1,:].T
     return im_2D
+
+
+
+def recast_image_array(im, xedge, yedge, xedge_new, yedge_new, Nspawn=3):
+    """
+    # Change the resolution of a 2D image.
+    
+    im = 2D array of values (e.g. a surface density)
+    xedge = the boundaries of the pixels in the first dimension
+    yedge = the boundaries of the pixels in the second dimension
+    xedge_new, yedge_new = boundaries of the new, output pixels
+    Nspawn = number of particles per original pixel spawned in each dimension
+    """
+    
+    # don't want the new boundaries going outside what is already defined
+    assert(xedge[0]<=xedge_new[0])
+    assert(xedge[-1]>=xedge_new[-1])
+    assert(yedge[0]<=yedge_new[0])
+    assert(yedge[-1]>=yedge_new[-1])
+    
+    (Nx, Ny) = im.shape
+    dx = xedge[1]-xedge[0] # assuming the pixel sizes are the same for a given dimension
+    dy = yedge[1]-yedge[0]
+    
+    # number of particles to spawn in each dimension
+    Npx = Nspawn*Nx
+    Npy = Nspawn*Ny
+    
+    # first and last particle positions
+    xp0, xpf = xedge[0]+dx/(2*Nspawn), xedge[-1]-dx/(2*Nspawn)
+    yp0, ypf = yedge[0]+dy/(2*Nspawn), yedge[-1]-dy/(2*Nspawn)
+    
+    # 1D arrays of particle positions
+    xp = (np.linspace(xp0, xpf, Npx)[np.newaxis].T * np.ones(Npy)[np.newaxis]).astype(np.float32).ravel()
+    yp = (np.ones(Npx)[np.newaxis].T * np.linspace(yp0, ypf, Npy)[np.newaxis]).astype(np.float32).ravel()
+    
+    # pixel indices of particles
+    ixp = np.searchsorted(xedge, xp) - 1
+    iyp = np.searchsorted(yedge, yp) - 1
+        
+    # "mass" of particles based on the "surface density" of the pixel value they lie within
+    mp = im.astype(np.float32)[ixp,iyp] * dx * dy / Nspawn**2
+    
+    # take 2D histogram of particles and renormalise to build new image array
+    im_new, _, _ = np.histogram2d(xp, yp, weights=mp, bins=[xedge_new, yedge_new])
+    dx_new = xedge_new[1]-xedge_new[0]
+    dy_new = yedge_new[1]-yedge_new[0]
+    im_new /= (dx_new*dy_new)
+    
+    # check that the sum of the new pixels is the same as the old ones if they span the same coverage, otherwise make sure the new ones are lower
+#    print(np.sum(im)*dx*dy, np.sum(im_new)*dx_new*dy_new)
+    if xedge[0]==xedge_new[0] and xedge[-1]==xedge_new[-1] and yedge[0]==yedge_new[0] and yedge[-1]==yedge_new[-1]:
+        assert(np.isclose(np.sum(im)*dx*dy, np.sum(im_new)*dx_new*dy_new))
+    else:
+        assert(np.sum(im)*dx*dy > np.sum(im_new)*dx_new*dy_new)
+    
+    return im_new

@@ -4707,8 +4707,19 @@ def Pearson_MS(h=0.6774):
 def TNG_gasprops(fname, highz=True, fname2=False, fmock=False, fmock_sfr=False):
     # Read the data produced by z0_gasprops_fromFOF_v2.py OR zhigh_gasprops_fromFOF.py if highz=True, and put into a dictionary
     if fname[-4:]=='.pkl': # reading a pickle file
-        import cPickle as pickle
-        with open(fname, 'rb') as f: dict = pickle.load(f)
+#        import cPickle as pickle
+        try:
+            import cPickle as pickle
+            with open(fname, 'rb') as f: dict = pickle.load(f)
+        except: # Python3
+            import pickle
+            with open(fname, 'rb') as f: dict_b = pickle.load(f, encoding='bytes')
+            keys_b = list(dict_b.keys())
+            dict = {}
+            for key_b in keys_b:
+                key = str(key_b)[2:-1]
+                dict[key] = dict_b[key_b]
+
         Ngal = dict['Ngal']
         Nradii = dict['Nradii']
     else: # reading a raw binary file with specific structure
