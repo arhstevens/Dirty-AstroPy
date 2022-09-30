@@ -3,7 +3,10 @@
 
 import numpy as np
 import math
-from . import galread as gr
+try:
+    from . import galread as gr
+except ValueError:
+    import galread as gr
 from scipy import optimize as op
 from scipy import signal as ss
 from scipy import interpolate

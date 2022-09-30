@@ -5,8 +5,12 @@ from pylab import *
 from scipy import signal as ss
 from scipy import stats
 import scipy.interpolate as si
-from . import galcalc as gc
-from . import galread as gr
+try:
+    from . import galcalc as gc
+    from . import galread as gr
+except ValueError:
+    import galcalc as gc
+    import galread as gr
 from random import sample
 
 

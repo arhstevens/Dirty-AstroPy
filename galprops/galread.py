@@ -4,7 +4,10 @@
 import numpy as np
 import math
 import sys
-from . import galcalc as gc
+try:
+    from . import galcalc as gc
+except ValueError:
+    import galcalc as gc
 import os
 
 sys.path.insert(0, '..')
@@ -4941,3 +4944,18 @@ def age_bins_darksage(age_alist_file, Nage, h, Omega_M, Omega_L):
         
     TimeBinEdge = np.array([gc.z2tL(z,h,Omega_M,Omega_L) for z in RedshiftBinEdge])
     return RedshiftBinEdge, TimeBinEdge
+
+def TNG_HIH2_cells(filename):
+    gas_cells = {}
+    f = open(filename, 'rb')
+    Ngas = np.fromfile(f, 'i8', 1)[0]
+    gas_cells['ID'] = np.fromfile(f, 'i8', Ngas)
+    gas_cells['mHI_GK11'] = np.fromfile(f, 'f4', Ngas) # units are solar masses!
+    gas_cells['mHI_K13'] = np.fromfile(f, 'f4', Ngas)
+    gas_cells['mHI_GD14'] = np.fromfile(f, 'f4', Ngas)
+    gas_cells['mH2_GK11'] = np.fromfile(f, 'f4', Ngas)
+    gas_cells['mH2_K13'] = np.fromfile(f, 'f4', Ngas)
+    gas_cells['mH2_GD14'] = np.fromfile(f, 'f4', Ngas)
+    f.close()
+    return gas_cells
+        
