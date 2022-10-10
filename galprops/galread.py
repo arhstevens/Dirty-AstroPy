@@ -3916,7 +3916,7 @@ def Driver18_data(h=0.678, Omega_R=0, Omega_M=0.3089, Omega_L=0.6911):
     dz = data[:,2] - data[:,1]
     SFRD = data[:,3]
     for i in range(len(z)):
-        SFRD[i] += np.log10( gc.z2dA(z[i], *my_cosmo) / gc.z2dA(z[i], *D18_cosmo) )**2 # adjust for assumed-cosmology influence on SFR calculations
+        SFRD[i] += np.log10( gc.z2dA(z[i], *my_cosmo) / gc.z2dA(z[i], *D18_cosmo) )*2 # adjust for assumed-cosmology influence on SFR calculations
         SFRD[i] += np.log10( (gc.comoving_distance(data[i,2], *D18_cosmo)**3 - gc.comoving_distance(data[i,1], *D18_cosmo)**3) / (gc.comoving_distance(data[i,2], *my_cosmo)**3 - gc.comoving_distance(data[i,1], *my_cosmo)**3) )# adjust for assumed-cosmology influence on comoving volume
     SFRD_err = np.sum(data[:,5:],axis=1)
 
